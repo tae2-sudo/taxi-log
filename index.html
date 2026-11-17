@@ -3,55 +3,78 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0F4C81">
-<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#0B1120">
+<meta name="color-scheme" content="dark">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>개인택시 운행관리</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F4C81'/%3E%3Ctext x='32' y='45' font-size='32' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%ED%83%9D%3C/text%3E%3C/svg%3E">
+<title>taxi-log · 개인택시 운행관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305140F'/%3E%3Ctext x='32' y='45' font-size='32' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%ED%83%9D%3C/text%3E%3C/svg%3E">
 <style>
 :root{
-  --navy:#0F4C81;--navy2:#0B3C68;--navy50:#EAF1F8;
-  --red:#D92D20;--blue:#1565C0;--gray-ink:#4B5563;
-  --ink:#111827;--muted:#6B7280;--line:#E5EAF1;--bg:#F3F5F9;--card:#fff;
-  --green:#16A34A;--amber:#B54708;
-  --r:16px;--shadow:0 1px 2px rgba(16,24,40,.06),0 6px 16px rgba(16,24,40,.05);
+  --bg:#0B1120;--bg-deep:#05080F;--surface:#131C31;--surface2:#1A2539;--surface3:#0F172A;
+  --line:#243049;--line-soft:#1B2540;
+  --text:#E8EDF5;--muted:#8391A7;--dim:#5D6B84;
+  --emerald:#10B981;--emerald-2:#34D399;--emerald-ink:#05261A;
+  --amber:#F59E0B;--amber-2:#F5B342;--amber-ink:#2B1A00;
+  --sky:#60A5FA;--rose:#F87171;
+  --r:20px;--r-sm:14px;--shadow:0 10px 30px rgba(0,0,0,.28);
 }
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;padding-bottom:env(safe-area-inset-bottom)}
+html{-webkit-text-size-adjust:100%;background:#05080F}
+body{
+  margin:0;font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+  background:radial-gradient(900px 460px at 50% -14%,#17243d 0%,#0B1120 46%,#070B15 100%) no-repeat,#070B15;
+  background-attachment:fixed;
+  color:var(--text);font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom);
+}
 button{font-family:inherit}
-a{color:var(--navy);text-decoration:none}
+a{color:var(--emerald-2);text-decoration:none}
 h1,h2,h3,p{margin:0}
-
-.app-header{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,#12538C,#0A3963);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 12px rgba(10,57,99,.28)}
-.brand{display:flex;align-items:center;gap:9px;min-width:0}
-.brand .logo{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-.brand h1{font-size:16px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
-.brand .sub{font-size:11px;opacity:.82;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.plate-chip{font-size:11px;font-weight:800;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:5px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto}
-
-main{padding:12px 12px calc(92px + env(safe-area-inset-bottom));max-width:980px;margin:0 auto}
-.screen-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:2px 2px 10px}
-.screen-title h2{font-size:18px;font-weight:800;letter-spacing:-.3px}
-.screen-title .date-line{font-size:14px;font-weight:700;color:var(--navy)}
-.screen-title .date-line span{color:var(--muted);font-weight:600}
-
-.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
-.card.tight{padding:12px}
-.card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.card-t{font-size:14px;font-weight:800;color:#25303F;display:flex;align-items:center;gap:7px}
-.card-t::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--navy);display:inline-block}
-.card-sub{font-size:12px;color:var(--muted);font-weight:600}
-.muted{color:var(--muted)}
-.small{font-size:12px}
-.tiny{font-size:11px}
+::selection{background:rgba(16,185,129,.28)}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .mono{font-variant-numeric:tabular-nums}
+
+/* ---------- 상단 바 ---------- */
+.app-header{position:sticky;top:0;z-index:30;background:rgba(11,17,32,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line-soft);
+  padding:calc(9px + env(safe-area-inset-top)) 16px 9px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand .logo{width:32px;height:32px;border-radius:11px;background:linear-gradient(140deg,#1E3A5F,#131C31);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--emerald-2)}
+.brand h1{font-size:15px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.brand .sub{font-size:10.5px;color:var(--muted);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate-chip{font-size:11px;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--line);
+  padding:6px 10px;border-radius:999px;white-space:nowrap;flex:0 0 auto;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px}
+.plate-chip svg{width:13px;height:13px;color:var(--muted)}
+
+/* ---------- 레이아웃 ---------- */
+main{padding:6px 16px calc(104px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto}
+.screen-title{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:10px 2px 14px}
+.screen-title h2{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.screen-title .date-line{font-size:13px;font-weight:600;color:var(--muted)}
+.screen-title .date-line span{color:var(--muted)}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.tiny{font-size:11.5px}
 .right{text-align:right}
 .center{text-align:center}
 .nowrap{white-space:nowrap}
 .spacer{flex:1}
+
+/* ---------- 카드 ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card.tight{padding:13px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+.card-t{font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px;letter-spacing:-.01em}
+.card-t::before{content:"";width:3px;height:13px;border-radius:2px;background:var(--emerald);display:inline-block}
+.card-sub{font-size:12px;color:var(--muted);font-weight:600}
+.section-h{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 10px}
+.section-h h2{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.section-h a,.section-h .sec-meta{font-size:12.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:2px}
+.section-h svg{width:14px;height:14px}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -59,215 +82,296 @@ main{padding:12px 12px calc(92px + env(safe-area-inset-bottom));max-width:980px;
 .between{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .wrap{flex-wrap:wrap}
 
-.btn{min-height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#25303F;font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;cursor:pointer;line-height:1.2}
+/* ---------- 버튼 ---------- */
+.btn{min-height:44px;border-radius:13px;border:1px solid var(--line);background:var(--surface2);color:var(--text);
+  font-size:13.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;cursor:pointer;line-height:1.2}
 .btn:active{transform:translateY(1px)}
-.btn-primary{background:var(--navy);border-color:var(--navy);color:#fff}
-.btn-green{background:var(--green);border-color:var(--green);color:#fff}
-.btn-red{background:var(--red);border-color:var(--red);color:#fff}
-.btn-soft{background:var(--navy50);border-color:#D5E3F1;color:var(--navy)}
-.btn-ghost{background:transparent;border-color:transparent;color:var(--navy)}
-.btn-danger-ghost{background:#FFF4F3;border-color:#FBD5D1;color:#B42318}
-.btn-sm{min-height:34px;font-size:12.5px;padding:0 10px;border-radius:9px}
+.btn-primary{background:linear-gradient(135deg,#34D399,#10B981);border-color:transparent;color:var(--emerald-ink);font-weight:800}
+.btn-green{background:linear-gradient(135deg,#34D399,#10B981);border-color:transparent;color:var(--emerald-ink)}
+.btn-red{background:linear-gradient(135deg,#FBBF24,#F59E0B);border-color:transparent;color:var(--amber-ink);font-weight:800}
+.btn-soft{background:rgba(52,211,153,.09);border-color:rgba(52,211,153,.22);color:var(--emerald-2)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--emerald-2)}
+.btn-danger-ghost{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.22);color:var(--rose)}
+.btn-sm{min-height:34px;font-size:12.5px;padding:0 11px;border-radius:10px}
 .btn-block{width:100%}
-.btn:disabled,.btn[aria-disabled="true"]{opacity:.45;cursor:default;transform:none}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.4;cursor:default;transform:none}
+.btn svg{width:16px;height:16px}
 
-.big-btn{width:100%;min-height:66px;border-radius:16px;font-size:21px;font-weight:800;letter-spacing:1px;border:0;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
-.big-start{background:linear-gradient(135deg,#22A85C,#15803D);box-shadow:0 8px 18px rgba(22,163,74,.26)}
-.big-stop{background:linear-gradient(135deg,#E34A3F,#B42318);box-shadow:0 8px 18px rgba(220,38,38,.26)}
-.big-btn:active{transform:translateY(1px)}
+/* ---------- 홈 ---------- */
+.home-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 2px 18px}
+.home-head .date{font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.01em}
+.home-head .hello{font-size:23px;font-weight:800;letter-spacing:-.035em;margin-top:3px;line-height:1.2}
+.home-head .hello em{font-style:normal;color:var(--emerald-2)}
+.veh-badge{width:46px;height:46px;border-radius:16px;background:var(--surface2);border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--muted);flex:0 0 auto;position:relative}
+.veh-badge svg{width:22px;height:22px}
+.veh-badge .live-dot{position:absolute;top:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--amber);
+  border:2px solid var(--bg);box-shadow:0 0 0 3px rgba(245,158,11,.18)}
 
-.clock{font-size:44px;font-weight:800;letter-spacing:1px;text-align:center;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.15;margin:2px 0 2px}
-.clock.idle{color:#C9D4E1}
-.run-sub{text-align:center;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:12px;min-height:18px}
-.run-state{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;border-radius:999px;padding:4px 9px;background:#F1F5F9;color:#64748B}
-.run-state.live{background:#E7F7EE;color:#15803D}
-.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
-.dot.pulse{animation:pulse 1.6s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.summary .card{margin-bottom:0;padding:15px 16px}
+.summary .card.hero{grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+  background:linear-gradient(135deg,#182642 0%,#131C31 62%);border-color:#26334d;border-radius:22px;padding:18px}
+.label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.label svg{width:14px;height:14px}
+.value{font-size:20px;font-weight:800;margin-top:8px;letter-spacing:-.03em;white-space:nowrap}
+.card.hero .value{font-size:32px;letter-spacing:-.045em;color:#F4F8FF}
+.unit{font-size:13.5px;color:var(--muted);font-weight:600;margin-left:2px;letter-spacing:0}
+.card.hero .unit{font-size:15px;color:#9FB0C7;margin-left:4px}
+.card.hero .sub{margin-top:6px;font-size:12px;color:#93A2B9}
+.sub{font-size:11.5px;color:var(--muted);margin-top:5px}
+.amber{color:var(--amber-2)}
+.emerald{color:var(--emerald-2)}
+.chip{font-size:11.5px;font-weight:700;color:var(--emerald-2);background:rgba(52,211,153,.1);
+  border:1px solid rgba(52,211,153,.16);padding:5px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.chip svg{width:12px;height:12px}
+.chip.off{color:var(--amber-2);background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.18)}
+.chip.red{color:var(--rose);background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.18)}
 
-.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
-.kpi{background:#F7F9FC;border-radius:12px;padding:9px 8px;text-align:center}
-.kpi .v{font-size:15px;font-weight:800;color:#1F2937;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
-.kpi .v.money{font-size:12.5px;letter-spacing:-.5px;white-space:nowrap}
-.kpi .v.time{font-size:12.5px;letter-spacing:-.4px;white-space:nowrap}
-.kpi .l{font-size:10.5px;color:var(--muted);font-weight:700;margin-top:2px}
+.drive{display:flex;flex-direction:column;align-items:center;padding:6px 0 4px;margin-bottom:14px}
+.elapsed-label{font-size:12px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.running .dot{background:var(--amber);box-shadow:0 0 0 4px rgba(245,158,11,.16);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 9px rgba(245,158,11,0)}}
+.elapsed{font-size:46px;font-weight:800;letter-spacing:-.04em;line-height:1.12;margin-top:2px;font-variant-numeric:tabular-nums}
+.running .elapsed{color:var(--amber-2)}
+.btn-wrap{position:relative;margin:20px 0 22px;display:grid;place-items:center}
+.ring{position:absolute;width:232px;height:232px;border-radius:50%;border:1px solid rgba(52,211,153,.16)}
+.running .ring{border-color:rgba(245,158,11,.22);animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.055);opacity:.55}}
+.toggle{width:190px;height:190px;border-radius:50%;border:0;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,#5CEBB8,#10B981 72%);color:var(--emerald-ink);
+  box-shadow:0 18px 46px rgba(16,185,129,.32),inset 0 -6px 16px rgba(0,0,0,.18);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  font-family:inherit;transition:transform .12s ease,background .3s;touch-action:manipulation}
+.toggle:active{transform:scale(.96)}
+.toggle:focus-visible{outline:3px solid #fff;outline-offset:6px}
+.toggle svg{width:32px;height:32px}
+.toggle .t{font-size:30px;font-weight:800;letter-spacing:.05em}
+.toggle .s{font-size:11.5px;font-weight:700;opacity:.7}
+.running .toggle{background:radial-gradient(circle at 35% 30%,#FFD27A,#F59E0B 72%);color:var(--amber-ink);
+  box-shadow:0 18px 46px rgba(245,158,11,.3),inset 0 -6px 16px rgba(0,0,0,.16)}
+.times{display:grid;grid-template-columns:1fr 1px 1fr;width:100%;max-width:340px;background:var(--surface);
+  border:1px solid var(--line);border-radius:18px;padding:12px 0}
+.times .div{background:var(--line)}
+.times .t{text-align:center}
+.times .k{font-size:11.5px;color:var(--muted);font-weight:600}
+.times .v{font-size:19px;font-weight:800;margin-top:3px;letter-spacing:-.02em}
+.times .v.empty{color:#3F4C64}
+.run-sub{text-align:center;font-size:12.5px;color:var(--muted);font-weight:600;margin-top:6px;min-height:18px}
 
-.sum-card{background:linear-gradient(150deg,#14609F 0%,#0C4272 60%,#0A3559 100%);color:#fff;border-radius:var(--r);padding:16px;box-shadow:0 10px 24px rgba(10,57,99,.24);margin-bottom:12px}
-.sum-card .sum-head{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:700;opacity:.9}
-.sum-card .big{font-size:27px;font-weight:800;letter-spacing:-.6px;margin:4px 0 10px;font-variant-numeric:tabular-nums}
-.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
-.sum-item{background:rgba(255,255,255,.10);border-radius:10px;padding:8px 10px}
-.sum-item .k{font-size:11px;opacity:.82;font-weight:700}
-.sum-item .v{font-size:14.5px;font-weight:800;margin-top:1px;font-variant-numeric:tabular-nums}
-.sum-hi{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16)}
-.sum-hi .k{font-size:11px;opacity:.82;font-weight:700}
+/* ---------- 지도 ---------- */
+.map{padding:0;overflow:hidden}
+.map-view{position:relative}
+.map-box{height:170px;width:100%}
+.map-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;
+  font-size:12px;color:var(--muted);background:linear-gradient(160deg,#101a2e,#131C31);line-height:1.55}
+.map-msg.hide{display:none}
+.map-msg.err{background:rgba(245,158,11,.07);color:#E9B66A}
+.map-hint{background:linear-gradient(160deg,#101a2e,#131C31);border:1px dashed var(--line);border-radius:14px;padding:16px;
+  font-size:12px;color:var(--muted);line-height:1.6}
+.map-wrap{position:relative;border-radius:0;overflow:hidden;background:#0F172A}
+.map-stats{display:grid;grid-template-columns:repeat(3,1fr);padding:12px 16px 4px;gap:6px}
+.map-stats .k{font-size:11px;color:var(--muted);font-weight:600}
+.map-stats .v{font-size:16px;font-weight:800;margin-top:3px;letter-spacing:-.02em}
+.map-stats .v.hi{color:var(--emerald-2)}
+.map-foot{padding:10px 14px 14px}
+.gpin{width:26px;height:26px;border-radius:50% 50% 50% 4px;transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.gpin i{transform:rotate(-45deg);font-style:normal;font-size:11px;font-weight:800;color:#fff;font-family:-apple-system,sans-serif}
+
+/* ---------- 월간 요약 ---------- */
+.sum-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.sum-card .sum-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;color:var(--muted)}
+.sum-card .big{font-size:27px;font-weight:800;letter-spacing:-.04em;margin:5px 0 12px;font-variant-numeric:tabular-nums}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sum-item{background:var(--surface3);border:1px solid var(--line-soft);border-radius:12px;padding:9px 10px}
+.sum-item .k{font-size:10.5px;color:var(--muted);font-weight:600}
+.sum-item .v{font-size:13.5px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.sum-hi{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line-soft)}
+.sum-hi .k{font-size:11px;color:var(--muted);font-weight:600}
 .sum-hi .v{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
-.sum-foot{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.16);font-size:11.5px;opacity:.9;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sum-foot{margin-top:11px;padding-top:10px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--muted);
+  display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:600}
+.sum-foot b{color:var(--text);font-variant-numeric:tabular-nums}
 
+/* ---------- KPI ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.kpi{background:var(--surface3);border:1px solid var(--line-soft);border-radius:13px;padding:10px 8px;text-align:center}
+.kpi .v{font-size:14.5px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.kpi .v.money{font-size:12.5px;letter-spacing:-.04em;white-space:nowrap}
+.kpi .v.time{font-size:12.5px;letter-spacing:-.03em;white-space:nowrap}
+.kpi .v.hi{color:var(--emerald-2)}
+.kpi .v.amber{color:var(--amber-2)}
+.kpi .v.sky{color:var(--sky)}
+.kpi .l{font-size:10.5px;color:var(--muted);font-weight:600;margin-top:3px}
+
+/* ---------- 폼 ---------- */
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
-.field>label{font-size:11.5px;color:var(--muted);font-weight:700}
-input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-height:42px;width:100%;min-width:0}
+.field>label{font-size:11.5px;color:var(--muted);font-weight:600}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--text);background:var(--surface3);
+  border:1px solid var(--line);border-radius:11px;padding:9px 10px;min-height:42px;width:100%;min-width:0}
+input::placeholder,textarea::placeholder{color:#4E5C74}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
 textarea{resize:vertical;min-height:80px;line-height:1.5}
-input:focus,select:focus,textarea:focus{outline:2px solid #BBD3EA;outline-offset:0;border-color:var(--navy)}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(52,211,153,.4);outline-offset:0;border-color:rgba(52,211,153,.55)}
 input.num,select.num{text-align:right;font-variant-numeric:tabular-nums}
-input[type=datetime-local],input[type=month],input[type=date]{font-size:14px;padding:8px 8px}
+input[type=datetime-local],input[type=month],input[type=date]{font-size:13.5px;padding:8px 8px;color-scheme:dark}
 .field .unit{position:relative}
 .field .unit input{padding-right:34px}
 .field .unit span{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);font-weight:700}
 
-.seg{display:flex;background:#EFF3F8;border-radius:10px;padding:3px;gap:3px}
-.seg button{flex:1;border:0;background:transparent;border-radius:8px;min-height:34px;font-size:12.5px;font-weight:800;color:#64748B;cursor:pointer}
-.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.seg{display:flex;background:var(--surface3);border:1px solid var(--line-soft);border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;min-height:32px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--surface2);color:var(--emerald-2);box-shadow:0 1px 3px rgba(0,0,0,.35)}
 
-.hint-box{background:#F5F8FC;border:1px solid #E1EAF4;border-radius:12px;padding:10px 12px;font-size:12px;color:#43536A;line-height:1.55}
-.hint-box b{color:var(--navy)}
-.warn-box{background:#FFF8EB;border:1px solid #F7E0B8;border-radius:12px;padding:10px 12px;font-size:12px;color:#8A5410;line-height:1.55}
-.ok-box{background:#EFFAF3;border:1px solid #C9EBD6;border-radius:12px;padding:10px 12px;font-size:12px;color:#17663A;line-height:1.55}
+.hint-box{background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.18);border-radius:13px;padding:11px 12px;font-size:12px;color:#B9C7DA;line-height:1.6}
+.hint-box b{color:#DCE6F5}
+.warn-box{background:rgba(245,158,11,.09);border:1px solid rgba(245,158,11,.24);border-radius:13px;padding:11px 12px;font-size:12px;color:#EFC077;line-height:1.6}
+.warn-box b{color:#FFD79A}
+.ok-box{background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.24);border-radius:13px;padding:11px 12px;font-size:12px;color:#8FE5C2;line-height:1.6}
 
-.run-row{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#FBFCFE}
+.run-row{border:1px solid var(--line-soft);border-radius:13px;padding:11px;margin-bottom:8px;background:var(--surface3)}
 .run-row .rr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .run-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;border-radius:999px;padding:3px 8px;background:#EEF3F9;color:#40597A}
-.chip.live{background:#E7F7EE;color:#15803D}
-.chip.red{background:#FEECEA;color:#B42318}
-
-.list-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#FBFCFE;position:relative}
+.list-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;border:1px solid var(--line-soft);border-radius:13px;padding:11px;margin-bottom:8px;background:var(--surface3);position:relative}
 .list-row .full{grid-column:1 / -1}
 .list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
-.list-head b{font-size:12px;color:#41506B}
-.del-x{border:0;background:#F1F4F8;color:#64748B;width:28px;height:28px;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;line-height:1}
-.del-x:active{background:#E3E9F0}
+.list-head b{font-size:12px;color:var(--muted);font-weight:700}
+.del-x{border:0;background:rgba(255,255,255,.05);color:var(--muted);width:28px;height:28px;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;line-height:1}
+.del-x:active{background:rgba(255,255,255,.1)}
 .station-pick{display:flex;flex-direction:column;gap:6px}
 .station-pick select{font-size:13.5px;font-weight:700}
-.st-row{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;background:#FBFCFE}
-.st-row .st-name{font-size:13px;font-weight:800;color:#31425C;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.st-row .st-unit{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;flex:none}
+.st-row{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line-soft);border-radius:11px;padding:9px 10px;margin-bottom:6px;background:var(--surface3)}
+.st-row .st-name{font-size:13px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-row .st-unit{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--emerald-2);font-variant-numeric:tabular-nums;flex:none}
 
-.total-line{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#F7F9FC;border-radius:10px;padding:9px 11px;font-size:12.5px;font-weight:700;color:#41506B;margin-top:2px}
-.total-line b{font-size:14.5px;color:var(--navy)}
+.total-line{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--surface3);border:1px solid var(--line-soft);border-radius:11px;padding:10px 12px;font-size:12.5px;font-weight:600;color:var(--muted);margin-top:2px}
+.total-line b{font-size:14.5px;color:var(--text);font-variant-numeric:tabular-nums}
 
-.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);font-weight:700;margin-top:8px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);font-weight:600;margin-top:9px}
 .legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0}
 
-.off-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:12px;padding:12px 13px;border:1px dashed #D6DEE9;background:#FBFCFE}
-.off-toggle.on{background:#FFF4F3;border-color:#F6C7C2}
+.off-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:13px;border:1px dashed var(--line);background:var(--surface3)}
+.off-toggle.on{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.28)}
 .off-toggle .t{font-size:13.5px;font-weight:800}
 .off-toggle .s{font-size:11.5px;color:var(--muted);margin-top:2px}
 
+/* ---------- 달력 ---------- */
 .cal-wrap{margin-top:2px}
-.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
-.cal-dow div{text-align:center;font-size:11px;font-weight:800;color:var(--muted)}
-.cal-dow div:first-child{color:#C2413A}
-.cal-dow div:last-child{color:var(--blue)}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:5px}
+.cal-dow div{text-align:center;font-size:11px;font-weight:700;color:var(--muted)}
+.cal-dow div:first-child{color:#F08A8A}
+.cal-dow div:last-child{color:var(--sky)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cell{min-height:72px;border-radius:9px;background:#F8FAFD;border:1px solid #EEF2F7;padding:3px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;position:relative;overflow:hidden}
+.cell{min-height:74px;border-radius:10px;background:var(--surface3);border:1px solid var(--line-soft);padding:4px 2px 3px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;position:relative;overflow:hidden}
 .cell.empty{background:transparent;border-color:transparent;cursor:default}
-.cell .d{font-size:11px;font-weight:800;color:#374151;line-height:1.1}
-.cell.sun .d{color:#C2413A}
-.cell.sat .d{color:var(--blue)}
-.cell .hr{font-size:9px;font-weight:800;background:var(--navy);color:#fff;border-radius:5px;padding:0 3px;line-height:13px;letter-spacing:-.2px;white-space:nowrap}
-.cell .amt{font-size:9px;line-height:1.12;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
-.cell .amt.sales{color:var(--red);font-weight:800}
-.cell .amt.card{color:var(--blue);font-weight:700}
-.cell .amt.cash{color:#4B5563;font-weight:700}
-.cell.pat{background:#EDF1F6}
-.cell.off{background:#FFF3F1;border-color:#F8DCD7}
-.cell.today{outline:2px solid var(--navy);outline-offset:-2px}
-.cell .offtag{font-size:8px;font-weight:800;color:#B42318;background:#FEE4E2;border-radius:4px;padding:0 3px;line-height:12px}
+.cell .d{font-size:11px;font-weight:700;color:#A9B6C9;line-height:1.1}
+.cell.sun .d{color:#F08A8A}
+.cell.sat .d{color:var(--sky)}
+.cell .hr{font-size:9px;font-weight:800;background:rgba(52,211,153,.16);color:var(--emerald-2);border-radius:5px;padding:0 3px;line-height:14px;letter-spacing:-.2px;white-space:nowrap}
+.cell .amt{font-size:9px;line-height:1.14;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.cell .amt.sales{color:var(--emerald-2);font-weight:800}
+.cell .amt.kcard{color:var(--sky);font-weight:700}
+.cell .amt.kcash{color:#A9B6C9;font-weight:700}
+.cell.pat{background:rgba(255,255,255,.035)}
+.cell.off{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.18)}
+.cell.today{outline:2px solid rgba(52,211,153,.7);outline-offset:-2px}
+.cell .offtag{font-size:8px;font-weight:800;color:var(--amber-2);background:rgba(245,158,11,.16);border-radius:4px;padding:0 3px;line-height:12px}
 .cell.mini{min-height:44px}
 
 .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:2px -4px 0;padding-bottom:2px}
 .chart-scroll svg{display:block;width:100%;min-width:600px;height:auto}
-.chart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;font-weight:700;color:#54617A;margin:6px 2px 0}
+.chart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;font-weight:600;color:var(--muted);margin:8px 2px 0}
 .chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
 
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table.data{border-collapse:collapse;width:100%;font-size:12px;min-width:560px;font-variant-numeric:tabular-nums}
-table.data th,table.data td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.data th,table.data td{padding:8px 6px;border-bottom:1px solid var(--line-soft);text-align:right;white-space:nowrap;color:#C6D2E2}
 table.data th:first-child,table.data td:first-child{text-align:left}
-table.data thead th{color:var(--muted);font-weight:800;background:#F7F9FC;position:sticky;top:0}
-table.data tfoot td{font-weight:800;background:#F7F9FC}
-table.data td.red{color:var(--red);font-weight:700}
-table.data td.blue{color:var(--blue)}
+table.data thead th{color:var(--muted);font-weight:700;background:var(--surface3);position:sticky;top:0}
+table.data tfoot td{font-weight:800;background:var(--surface3);color:var(--text)}
+table.data td.red{color:var(--emerald-2);font-weight:700}
+table.data td.blue{color:var(--sky)}
 
-.map-wrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#EFF3F8}
-.map-box{height:200px;width:100%}
-.map-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:12px;color:#54617A;background:#F3F6FA;line-height:1.5}
-.map-msg.hide{display:none}
-.map-msg.err{background:#FFF8EB;color:#8A5410}
-.map-hint{background:#F5F8FC;border:1px dashed #D9E4F0;border-radius:12px;padding:12px;font-size:12px;color:#54617A;line-height:1.55}
-.gpin{width:26px;height:26px;border-radius:50% 50% 50% 4px;transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
-.gpin i{transform:rotate(-45deg);font-style:normal;font-size:11px;font-weight:800;color:#fff;font-family:-apple-system,sans-serif}
-
+/* ---------- 사진 · 검색 · 설정 ---------- */
 .photos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-.photo{position:relative;aspect-ratio:1/1;border-radius:9px;overflow:hidden;background:#EDF1F6}
+.photo{position:relative;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:var(--surface3)}
 .photo img{width:100%;height:100%;object-fit:cover;display:block}
-.photo .x{position:absolute;top:3px;right:3px;border:0;background:rgba(17,24,39,.62);color:#fff;width:22px;height:22px;border-radius:50%;font-size:13px;font-weight:800;line-height:1;cursor:pointer}
+.photo .x{position:absolute;top:3px;right:3px;border:0;background:rgba(5,8,15,.72);color:#fff;width:22px;height:22px;border-radius:50%;font-size:13px;font-weight:800;line-height:1;cursor:pointer}
 .photo-btn{display:inline-flex;align-items:center;gap:6px}
-
-.search-result{display:flex;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.search-result{display:flex;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line-soft);cursor:pointer}
 .search-result:last-child{border-bottom:0}
-.search-result .dt{font-size:11.5px;font-weight:800;color:var(--navy);white-space:nowrap}
-.search-result .tx{font-size:12px;color:#43536A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-.settings-block{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.search-result .dt{font-size:11.5px;font-weight:700;color:var(--emerald-2);white-space:nowrap}
+.search-result .tx{font-size:12px;color:#B9C7DA;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settings-block{border-top:1px solid var(--line-soft);margin-top:14px;padding-top:14px}
 .settings-block:first-of-type{border-top:0;margin-top:0;padding-top:0}
-.settings-block h3{font-size:13px;font-weight:800;color:#25303F;margin-bottom:8px}
+.settings-block h3{font-size:13.5px;font-weight:800;color:var(--text);margin-bottom:9px;letter-spacing:-.01em}
 .week-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.week-btns button{min-height:40px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:800;color:#54617A;cursor:pointer}
-.week-btns button.on{background:var(--navy);border-color:var(--navy);color:#fff}
-.week-btns button.sun.on{background:#C2413A;border-color:#C2413A}
-.week-btns button.sat.on{background:var(--blue);border-color:var(--blue)}
+.week-btns button{min-height:40px;border-radius:11px;border:1px solid var(--line);background:var(--surface3);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.week-btns button.on{background:linear-gradient(135deg,#34D399,#10B981);border-color:transparent;color:var(--emerald-ink);font-weight:800}
+.week-btns button.sun.on{background:linear-gradient(135deg,#FBBF24,#F59E0B);color:var(--amber-ink)}
+.week-btns button.sat.on{background:linear-gradient(135deg,#60A5FA,#3B82F6);color:#04121F}
+.stor-meter{height:8px;border-radius:99px;background:var(--surface3);border:1px solid var(--line-soft);overflow:hidden;margin:8px 0 4px}
+.stor-meter i{display:block;height:100%;background:linear-gradient(90deg,#34D399,#10B981);width:0}
 
-.stor-meter{height:8px;border-radius:99px;background:#E9EEF5;overflow:hidden;margin:8px 0 4px}
-.stor-meter i{display:block;height:100%;background:linear-gradient(90deg,#1E6BB0,#0F4C81);width:0}
-
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.98);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 12px rgba(16,24,40,.05)}
-.tab{background:none;border:0;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:#8A94A6;font-weight:800;min-height:58px;cursor:pointer}
+/* ---------- 하단 탭 ---------- */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(11,17,32,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);align-items:center;
+  padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
+.tab{background:none;border:0;padding:4px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;color:#5D6B84;font-weight:700;min-height:52px;cursor:pointer;justify-content:center}
 .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.tab.active{color:var(--navy)}
+.tab.active{color:var(--text)}
+.tab.active svg{color:var(--emerald-2)}
+.tab.plus .ico{width:46px;height:46px;border-radius:16px;background:var(--surface2);border:1px solid var(--line);
+  display:grid;place-items:center;color:var(--amber-2);margin-top:-16px;box-shadow:0 8px 18px rgba(0,0,0,.4)}
+.tab.plus .ico svg{width:22px;height:22px}
+.tab.plus.active .ico{border-color:rgba(52,211,153,.45);color:var(--emerald-2);background:rgba(52,211,153,.1)}
+.tab.plus.active svg{color:var(--emerald-2)}
 
-.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(17,24,39,.94);color:#fff;font-size:13px;font-weight:700;padding:10px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;max-width:calc(100vw - 40px);text-align:center;line-height:1.4}
+.toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);
+  background:rgba(26,37,57,.97);border:1px solid var(--line);color:var(--text);font-size:12.5px;font-weight:600;
+  padding:11px 16px;border-radius:14px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;
+  max-width:calc(100vw - 40px);text-align:center;line-height:1.45;box-shadow:0 12px 30px rgba(0,0,0,.45)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-.modal{position:fixed;inset:0;background:rgba(9,14,22,.9);display:none;align-items:center;justify-content:center;z-index:70;padding:18px}
+.modal{position:fixed;inset:0;background:rgba(4,7,13,.94);display:none;align-items:center;justify-content:center;z-index:70;padding:18px}
 .modal.show{display:flex}
-.modal img{max-width:100%;max-height:86vh;border-radius:10px}
-.modal .x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;background:rgba(255,255,255,.16);border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;font-weight:700;cursor:pointer}
+.modal img{max-width:100%;max-height:86vh;border-radius:12px}
+.modal .x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;background:rgba(255,255,255,.14);border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:19px;font-weight:700;cursor:pointer}
 
-@media (min-width:600px){
-  main{padding:16px 16px 96px}
-  .grid2{grid-template-columns:1fr 1fr}
-  .sum-grid{grid-template-columns:repeat(3,1fr)}
-  .home-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
-  .home-2col .card{margin-bottom:0}
-  .home-2col .col{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
-  .cell{min-height:88px}
+@media (min-width:560px){
+  main{max-width:600px;padding-left:20px;padding-right:20px}
+  .cell{min-height:84px}
   .cell .d{font-size:12px}
-  .cell .hr{font-size:10px;line-height:15px}
-  .cell .amt{font-size:10.5px}
-  .map-box{height:260px}
-}
-@media (max-width:430px){
-  .run-fields{grid-template-columns:1fr}
+  .cell .hr{font-size:9.5px;line-height:15px}
+  .cell .amt{font-size:10px}
+  .map-box{height:200px}
 }
 @media (max-width:360px){
-  .clock{font-size:38px}
-  .sum-card .big{font-size:24px}
-  .kpi .v{font-size:13.5px}
-  .cell{min-height:60px}
+  .elapsed{font-size:40px}
+  .toggle{width:172px;height:172px}
+  .ring{width:212px;height:212px}
+  .card.hero .value{font-size:28px}
+  .kpi .v{font-size:13px}
+  .cell{min-height:64px}
+  .run-fields{grid-template-columns:1fr}
 }
-@media print{.tabbar,.app-header{display:none}}
+@media print{.tabbar,.app-header{display:none}body{background:#fff}}
+.card.map .map-hint{border:0;border-radius:0}
+.card.map .map-wrap{border-radius:0}
 </style>
 </head>
 <body>
 <header class="app-header">
   <div class="brand">
     <div class="logo" aria-hidden="true">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5l1.6-3.2A2 2 0 0 1 9.4 5h5.2a2 2 0 0 1 1.8 1.3L18 9.5V17"/><path d="M4 17h16"/><circle cx="8" cy="18.5" r="1.4"/><circle cx="16" cy="18.5" r="1.4"/><path d="M6 11h12"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5h16"/><path d="M5.5 16.5V10.2l1.7-3.7A2 2 0 0 1 9 5.3h6a2 2 0 0 1 1.8 1.2l1.7 3.7v6.3"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/><path d="M5.5 12.2h13"/></svg>
     </div>
     <div style="min-width:0">
-      <h1>개인택시 운행관리</h1>
+      <h1>taxi-log</h1>
       <div class="sub" id="hdrSub">내 기록만 · 광고 없음</div>
     </div>
   </div>
@@ -277,10 +381,10 @@ table.data td.blue{color:var(--blue)}
 <main id="app" aria-live="polite"></main>
 <noscript><div style="padding:24px;font-family:sans-serif;font-size:15px;line-height:1.6">이 앱은 자바스크립트가 필요합니다. Chrome 같은 브라우저에서 열어 주세요.</div></noscript>
 
-<nav class="tabbar" id="tabbar">
+<nav class="tabbar" id="tabbar" aria-label="주요 메뉴">
   <button class="tab" data-act="nav" data-screen="home"><svg viewBox="0 0 24 24"><path d="M3 10.6 12 3l9 7.6"/><path d="M5 9.6V21h14V9.6"/><path d="M9.5 21v-6h5v6"/></svg><span>홈</span></button>
-  <button class="tab" data-act="nav" data-screen="input"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.6 9.4a2.7 2.7 0 0 0-3.8-3.8L4 16v4Z"/><path d="M13.5 7.5l3 3"/></svg><span>입력</span></button>
   <button class="tab" data-act="nav" data-screen="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>달력</span></button>
+  <button class="tab plus" data-act="nav" data-screen="input" aria-label="입력"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.6 9.4a2.7 2.7 0 0 0-3.8-3.8L4 16v4Z"/><path d="M13.5 7.5l3 3"/></svg></span><span>입력</span></button>
   <button class="tab" data-act="nav" data-screen="stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/><path d="M3 20h18"/></svg><span>통계</span></button>
   <button class="tab" data-act="nav" data-screen="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>설정</span></button>
 </nav>
@@ -629,8 +733,8 @@ function groupedBarChart(labels, series, opts){
   for(var i=0;i<=4;i++){
     var y = f.padT + f.plotH - (f.plotH*i/4);
     var val = top*i/4;
-    s += '<line x1="'+f.padL+'" y1="'+y.toFixed(1)+'" x2="'+(f.W-f.padR)+'" y2="'+y.toFixed(1)+'" stroke="'+(i===0?'#C7D2DE':'#EDF1F6')+'" stroke-width="1"/>';
-    s += '<text x="'+(f.padL-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#8A94A6">'+fmtAxis(val, unit)+'</text>';
+    s += '<line x1="'+f.padL+'" y1="'+y.toFixed(1)+'" x2="'+(f.W-f.padR)+'" y2="'+y.toFixed(1)+'" stroke="'+(i===0?'#33415C':'#1C2740')+'" stroke-width="1"/>';
+    s += '<text x="'+(f.padL-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#8391A7">'+fmtAxis(val, unit)+'</text>';
   }
   labels.forEach(function(lab, i){
     var gx = f.padL + gw*i + (gw-groupW)/2;
@@ -641,7 +745,7 @@ function groupedBarChart(labels, series, opts){
       var yy = f.padT + f.plotH - h;
       s += '<rect x="'+x.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="2" fill="'+se.color+'"><title>'+esc(lab+' '+se.name+' '+(se.fmt?se.fmt(v):fmtNum(v)))+'</title></rect>';
     });
-    s += '<text x="'+(f.padL+gw*i+gw/2).toFixed(1)+'" y="'+(f.H-f.padB+18)+'" text-anchor="middle" font-size="12" fill="#5A6577">'+esc(lab)+'</text>';
+    s += '<text x="'+(f.padL+gw*i+gw/2).toFixed(1)+'" y="'+(f.H-f.padB+18)+'" text-anchor="middle" font-size="12" fill="#7D8CA3">'+esc(lab)+'</text>';
   });
   s += '</svg>';
   return s;
@@ -658,17 +762,17 @@ function comboTimeChart(labels, totalHours, avgHours, hourly, opts){
   for(var i=0;i<=4;i++){
     var y = f.padT + f.plotH - (f.plotH*i/4);
     var lv = leftMax*i/4, rv = rightMax*i/4;
-    s += '<line x1="'+f.padL+'" y1="'+y.toFixed(1)+'" x2="'+(f.W-f.padR)+'" y2="'+y.toFixed(1)+'" stroke="'+(i===0?'#C7D2DE':'#EDF1F6')+'" stroke-width="1"/>';
-    s += '<text x="'+(f.padL-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#8A94A6">'+fmtAxis(lv,'hour')+'</text>';
-    s += '<text x="'+(f.W-f.padR+7)+'" y="'+(y+4).toFixed(1)+'" text-anchor="start" font-size="11" fill="#B08A4A">'+(fmtAxis(rv,'man'))+'</text>';
+    s += '<line x1="'+f.padL+'" y1="'+y.toFixed(1)+'" x2="'+(f.W-f.padR)+'" y2="'+y.toFixed(1)+'" stroke="'+(i===0?'#33415C':'#1C2740')+'" stroke-width="1"/>';
+    s += '<text x="'+(f.padL-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#8391A7">'+fmtAxis(lv,'hour')+'</text>';
+    s += '<text x="'+(f.W-f.padR+7)+'" y="'+(y+4).toFixed(1)+'" text-anchor="start" font-size="11" fill="#C69A52">'+(fmtAxis(rv,'man'))+'</text>';
   }
   labels.forEach(function(lab,i){
     var v = Math.max(0, Number(totalHours[i])||0);
     var h = leftMax>0 ? f.plotH*v/leftMax : 0;
     var x = f.padL + gw*i + (gw-bw)/2;
     var yy = f.padT + f.plotH - h;
-    s += '<rect x="'+x.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="2" fill="#2E6FA8"><title>'+esc(lab+' 총 운행 '+(Math.round(v*10)/10)+'시간')+'</title></rect>';
-    s += '<text x="'+(f.padL+gw*i+gw/2).toFixed(1)+'" y="'+(f.H-f.padB+18)+'" text-anchor="middle" font-size="12" fill="#5A6577">'+esc(lab)+'</text>';
+    s += '<rect x="'+x.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="2" fill="#10B981"><title>'+esc(lab+' 총 운행 '+(Math.round(v*10)/10)+'시간')+'</title></rect>';
+    s += '<text x="'+(f.padL+gw*i+gw/2).toFixed(1)+'" y="'+(f.H-f.padB+18)+'" text-anchor="middle" font-size="12" fill="#7D8CA3">'+esc(lab)+'</text>';
   });
   function drawLine(vals, max, color, name){
     var pts=[];
@@ -680,11 +784,11 @@ function comboTimeChart(labels, totalHours, avgHours, hourly, opts){
     s += '<polyline points="'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
     pts.forEach(function(p,i){
       var label = name+' '+((Math.round((Number(vals[i])||0)*10)/10));
-      s += '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3" fill="#fff" stroke="'+color+'" stroke-width="2"><title>'+esc(labels[i]+' '+label)+'</title></circle>';
+      s += '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3" fill="#0B1120" stroke="'+color+'" stroke-width="2"><title>'+esc(labels[i]+' '+label)+'</title></circle>';
     });
   }
-  drawLine(avgHours, leftMax, '#C2413A', '일평균');
-  drawLine(hourly, rightMax, '#C08A2E', '시간당 매출');
+  drawLine(avgHours, leftMax, '#F5B342', '일평균');
+  drawLine(hourly, rightMax, '#60A5FA', '시간당 매출');
   s += '</svg>';
   return s;
 }
@@ -1204,6 +1308,8 @@ function loadAll(){
     var m = localStorage.getItem(SYNC_META_KEY);
     if(m){ var p = JSON.parse(m); if(p && typeof p==='object'){ syncMeta.email = p.email||''; syncMeta.lastSyncAt = num(p.lastSyncAt); syncMeta.fileId = p.fileId||''; } }
   }catch(e){}
+  /* 저장된 세션 표시가 없어도 기록에 남은 미종료 운행을 운행 중으로 되살린다. */
+  try{ if(recoverSession()) saveLocal(); }catch(e){}
 }
 function saveSyncMeta(){
   try{ localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); }catch(e){}
@@ -1238,6 +1344,31 @@ function touchDay(key){
 }
 function touchSettings(){ state.settingsUpdated = Date.now(); }
 function todayKey(){ return dateKey(new Date()); }
+
+/* START를 누른 뒤 페이지가 새로 열리거나 동기화가 들어와 화면 상태가 비어도,
+   오늘(또는 어제) 기록에 시작만 있고 종료가 비어 있는 운행이 있으면 운행 중
+   상태로 되살린다. STOP 버튼이 사라지고 다시 START가 뜨는 일을 막는다. */
+function recoverSession(){
+  if(!state || !state.days) return false;
+  if(state.session) return false;
+  var now = new Date();
+  var keys = [dateKey(now)];
+  var y = new Date(now.getTime());
+  y.setDate(y.getDate() - 1);
+  keys.push(dateKey(y));
+  for(var i=0;i<keys.length;i++){
+    var d = state.days[keys[i]];
+    var runs = (d && Array.isArray(d.runs)) ? d.runs : [];
+    for(var j=runs.length-1;j>=0;j--){
+      var r = runs[j];
+      if(r && r.s && !r.e && parseDT(r.s)){
+        state.session = {start: String(r.s), dayKey: keys[i]};
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 function initUi(){
   var now = new Date();
@@ -1306,6 +1437,21 @@ function coursePoints(){
   return (d && d.gps && d.gps.points) || [];
 }
 
+/* ---------- 아이콘 (외부 스크립트 없이 인라인 SVG) ---------- */
+var ICONS = {
+  car:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.5h16M5.5 16.5V10.2l1.7-3.7A2 2 0 0 1 9 5.3h6a2 2 0 0 1 1.8 1.2l1.7 3.7v6.3"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/><path d="M5.5 12.2h13"/></svg>',
+  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10.5h18"/><circle cx="17" cy="14.8" r="1.2"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 2"/></svg>',
+  fuel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20.5V5a2 2 0 0 1 2-2h4.5a2 2 0 0 1 2 2v15.5"/><path d="M3.4 20.5h12"/><path d="M7.2 8h4"/><path d="M15.5 10h2.3a2 2 0 0 1 2 2v4.4a1.8 1.8 0 0 0 3.6 0V9"/></svg>',
+  play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.4 5.6v12.8L19 12z" fill="currentColor"/></svg>',
+  stop:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.4" y="6.4" width="11.2" height="11.2" rx="2.6" fill="currentColor"/></svg>',
+  trend:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16.5l5.5-5.5 3.5 3.5L20 7"/><path d="M15.4 7H20v4.6"/></svg>',
+  chevron:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>',
+  route:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6.5" r="2.4"/><circle cx="18" cy="17.5" r="2.4"/><path d="M8.4 6.5h5.1a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h5.6"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.6"/><path d="M3.5 10h17M8 3.4V6M16 3.4V6"/></svg>'
+};
+function icon(name){ return ICONS[name] || ''; }
+
 /* ---------- 홈 ---------- */
 views.home = function(){
   var now = new Date(), ts = now.getTime();
@@ -1320,39 +1466,105 @@ views.home = function(){
   var stale = !!(sess && elapsed > 20*3600*1000);
   var pts = (day && day.gps && day.gps.points) || [];
   var courseUrl = buildMapsDirUrl(pts);
-  var pattern = (state.settings.offWeekdays || []).map(function(d){ return WEEKDAYS[d]; }).join('·');
-  var todayHourly = todayMin > 0 ? fmtNum(inc.sales/(todayMin/60))+'원' : '－';
+  var pattern = (state.settings.offWeekdays || []).map(function(x){ return WEEKDAYS[x]; }).join('·');
+  var todayHourly = todayMin > 0 ? fmtNum(inc.sales/(todayMin/60))+'원' : '';
+  var ch = chargeTotals(day);
+  var chUnit = ch.liters > 0 ? Math.round(ch.amount/ch.liters) : 0;
+  var dist = (day && day.distance) || {};
+  var km = num(dist.total), bizKm = num(dist.business);
+  var rideRate = km > 0 ? round1(bizKm/km*100) : null;
+  var runs = runsOf(day);
+  var lastRun = null;
+  for(var ri=0; ri<runs.length; ri++){ if(runs[ri] && runs[ri].s) lastRun = runs[ri]; }
+  var startTxt = sess ? hm(sess.start) : (lastRun ? hm(lastRun.s) : '--:--');
+  var endTxt = sess ? '--:--' : ((lastRun && lastRun.e) ? hm(lastRun.e) : '--:--');
+  var clockTxt = sess ? fmtClock(elapsed) : fmtClock(todayMin*60000);
+  var subTxt = sess
+    ? (hm(sess.start) + ' 시작 · ' + fmtDur(elapsed/60000) + ' 경과')
+    : (todayMin > 0 ? ('오늘 누적 ' + fmtDur(todayMin) + ' · 영업금액 ' + fmtWon(inc.sales)) : 'START를 누르면 오늘 운행이 기록됩니다');
+  var workVal = Math.floor(todayMin/60) + '<span class="unit">h</span> ' + pad2(todayMin%60) + '<span class="unit">m</span>';
+  var dayChip = (day && day.off)
+    ? '<span class="chip off">휴무</span>'
+    : (sess ? '<span class="chip off">' + icon('clock') + '운행 중</span>'
+            : (todayMin > 0 ? '<span class="chip">' + icon('trend') + '영업일</span>' : '<span class="chip off">기록 전</span>'));
 
-  var staleBox = stale ? ('<div class="warn-box" style="margin-bottom:12px">'
+  var staleBox = stale ? ('<div class="warn-box" style="margin:0 0 12px">'
     + '<b>START가 ' + fmtDur(elapsed/60000) + '째 켜져 있습니다.</b><br>'
     + '잠깐 누른 채 잊으셨다면 지금 STOP을 누르거나, 입력 화면에서 종료 시각을 직접 고쳐 주세요.'
-    + '<div class="row" style="margin-top:8px;gap:6px"><button class="btn btn-sm btn-soft" data-act="goInputToday">입력에서 고치기</button>'
+    + '<div class="row" style="margin-top:9px;gap:6px"><button class="btn btn-sm btn-soft" data-act="goInputToday">입력에서 고치기</button>'
     + '<button class="btn btn-sm btn-red" data-act="stop">지금 STOP</button></div></div>') : '';
 
   return ''
-  + '<div class="screen-title"><div class="date-line">' + dateLabelKR(today) + ' <span>(' + weekdayKR(today) + ')</span></div>'
-  + '<div class="small muted">' + (day && day.off ? '휴무' : (todayMin > 0 ? '영업일' : '기록 전')) + '</div></div>'
   + staleBox
-  + (storageOK ? '' : '<div class="warn-box" style="margin-bottom:12px"><b>이 브라우저에서는 자동 저장이 막혀 있습니다.</b><br>기록이 사라질 수 있으니 https:// 주소로 올려 열거나, 설정에서 JSON 백업을 자주 받아 두세요.</div>')
-  + '<section class="card">'
-  +   '<div class="card-h"><div class="card-t">운행 기록</div>'
-  +     '<span class="run-state ' + (sess ? 'live' : '') + '">' + (sess ? '<i class="dot pulse"></i>운행 중' : '대기 중') + '</span></div>'
-  +   '<div class="clock ' + (sess ? '' : 'idle') + '" id="elapsedClock">' + (sess ? fmtClock(elapsed) : '00:00:00') + '</div>'
-  +   '<div class="run-sub" id="runSub">' + (sess
-        ? (hm(sess.start) + ' 시작 · ' + fmtDur(elapsed/60000) + ' 경과')
-        : ('오늘 누적 ' + fmtDur(todayMin) + ' · 영업금액 ' + fmtWon(inc.sales))) + '</div>'
-  +   (sess
-        ? '<button class="big-btn big-stop" data-act="stop">■ STOP</button>'
-        : '<button class="big-btn big-start" data-act="start">▶ START</button>')
-  +   '<div class="kpi-grid">'
-  +     '<div class="kpi"><div class="v">' + fmtDur(todayMin) + '</div><div class="l">오늘 일한 시간</div></div>'
-  +     '<div class="kpi"><div class="v">' + fmtWon(inc.sales) + '</div><div class="l">오늘 영업금액</div></div>'
-  +     '<div class="kpi"><div class="v">' + todayHourly + '</div><div class="l">시간당 매출</div></div>'
+  + (storageOK ? '' : '<div class="warn-box" style="margin:0 0 12px"><b>이 브라우저에서는 자동 저장이 막혀 있습니다.</b><br>기록이 사라질 수 있으니 https:// 주소로 올려 열거나, 설정에서 JSON 백업을 자주 받아 두세요.</div>')
+  + '<div class="home-head">'
+  +   '<div><p class="date">' + (now.getMonth()+1) + '월 ' + now.getDate() + '일 ' + WEEKDAYS[now.getDay()] + '요일</p>'
+  +   '<h1 class="hello">오늘도 <em>안전운행</em></h1></div>'
+  +   '<div class="veh-badge" title="' + esc(state.settings.plate || '') + '" aria-label="내 차량 ' + esc(state.settings.plate || '') + '">' + icon('car')
+  +     (sess ? '<span class="live-dot" aria-hidden="true"></span>' : '') + '</div>'
+  + '</div>'
+
+  + '<section class="summary" aria-label="오늘 요약">'
+  +   '<div class="card hero">'
+  +     '<div>'
+  +       '<p class="label">' + icon('wallet') + '오늘 운송수입금</p>'
+  +       '<p class="value num" id="todaySales">' + fmtWon(inc.sales) + '</p>'
+  +       '<p class="sub">카드 ' + fmtWon(inc.card) + ' · 현금 ' + fmtWon(inc.cash) + (inc.toll ? ' · 통행료 ' + fmtWon(inc.toll) : '') + '</p>'
+  +     '</div>'
+  +     dayChip
   +   '</div>'
-  +   '<div class="tiny muted" style="margin-top:9px;text-align:center" id="gpsLine"></div>'
+  +   '<div class="card">'
+  +     '<p class="label">' + icon('clock') + '오늘 일한 시간</p>'
+  +     '<p class="value num" id="todayWork">' + workVal + '</p>'
+  +     '<p class="sub">' + (todayHourly ? '시간당 매출 ' + todayHourly : 'START를 누르면 시간이 쌓입니다') + '</p>'
+  +   '</div>'
+  +   '<div class="card">'
+  +     '<p class="label">' + icon('fuel') + '오늘 LPG 충전</p>'
+  +     '<p class="value num">' + (ch.amount ? fmtWon(ch.amount) : '－') + '</p>'
+  +     '<p class="sub">' + (ch.liters > 0
+          ? ('<span class="amber num">' + fmtDec1(ch.liters) + 'L</span>' + (chUnit > 0 ? ' · ' + fmtNum(chUnit) + '원/L' : ''))
+          : '충전 기록 없음') + '</p>'
+  +   '</div>'
   + '</section>'
+
+  + '<section class="drive' + (sess ? ' running' : '') + '" id="drive" aria-label="운행 기록">'
+  +   '<p class="elapsed-label"><span class="dot"></span><span id="stateLabel">' + (sess ? '운행 중' : '대기 중') + '</span></p>'
+  +   '<p class="elapsed num" id="elapsedClock" aria-live="polite">' + clockTxt + '</p>'
+  +   '<p class="run-sub" id="runSub">' + esc(subTxt) + '</p>'
+  +   '<div class="btn-wrap">'
+  +     '<span class="ring" aria-hidden="true"></span>'
+  +     (sess
+        ? '<button class="toggle" id="toggle" data-act="stop" aria-pressed="true">' + icon('stop') + '<span class="t">STOP</span><span class="s">운행 종료</span></button>'
+        : '<button class="toggle" id="toggle" data-act="start" aria-pressed="false">' + icon('play') + '<span class="t">START</span><span class="s">운행 시작</span></button>')
+  +   '</div>'
+  +   '<div class="times">'
+  +     '<div class="t"><p class="k">시작 시각</p><p class="v num' + (startTxt === '--:--' ? ' empty' : '') + '" id="startAt">' + startTxt + '</p></div>'
+  +     '<span class="div" aria-hidden="true"></span>'
+  +     '<div class="t"><p class="k">종료 시각</p><p class="v num' + (endTxt === '--:--' ? ' empty' : '') + '" id="endAt">' + endTxt + '</p></div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<section aria-label="오늘 운행 코스">'
+  +   '<div class="section-h"><h2>오늘 운행 코스</h2><span class="sec-meta">GPS ' + pts.length + '지점</span></div>'
+  +   '<div class="card map">'
+  +     mapBoxHtml('homeMap', pts)
+  +     '<div class="map-stats">'
+  +       '<div><p class="k">주행거리</p><p class="v num">' + fmtDec1(km) + '<span class="unit">km</span></p></div>'
+  +       '<div><p class="k">영업거리</p><p class="v num">' + fmtDec1(bizKm) + '<span class="unit">km</span></p></div>'
+  +       '<div><p class="k">승차율</p><p class="v num' + (rideRate === null ? '' : ' hi') + '">' + (rideRate === null ? '－' : rideRate + '<span class="unit">%</span>') + '</p></div>'
+  +     '</div>'
+  +     '<div class="map-foot">'
+  +       (courseUrl
+          ? '<a class="btn btn-primary btn-block" href="' + esc(courseUrl) + '" target="_blank" rel="noopener">구글 지도에서 오늘 코스 열기</a>'
+          : '<button class="btn btn-block" disabled>구글 지도에서 오늘 코스 열기</button>')
+  +       '<div class="tiny muted" style="margin-top:8px;line-height:1.5;text-align:center" id="gpsLine"></div>'
+  +     '</div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<div class="section-h" style="margin-top:6px"><h2>이번 달</h2><a href="#" data-act="nav" data-screen="calendar">전체 보기 ' + icon('chevron') + '</a></div>'
   + '<section class="sum-card">'
-  +   '<div class="sum-head"><span>' + ymLabel(ym) + '</span><span>근무 ' + stats.workDays + '일' + (pattern ? ' · 부제: ' + pattern : '') + '</span></div>'
+  +   '<div class="sum-head"><span>' + ymLabel(ym) + '</span><span>근무 ' + stats.workDays + '일' + (pattern ? ' · 부제 ' + pattern : '') + '</span></div>'
   +   '<div class="big">' + fmtWon(stats.sales) + '</div>'
   +   '<div class="sum-grid">'
   +     '<div class="sum-item"><div class="k">카드수입</div><div class="v">' + fmtWon(stats.card) + '</div></div>'
@@ -1362,44 +1574,27 @@ views.home = function(){
   +     '<div class="sum-item"><div class="k">일평균 운행시간</div><div class="v">' + (stats.workDays ? fmtDur(stats.avgMinutes) : '－') + '</div></div>'
   +     '<div class="sum-item"><div class="k">시간당 평균 매출</div><div class="v">' + (stats.workMinutes > 0 ? fmtNum(stats.hourly)+'원/h' : '－') + '</div></div>'
   +   '</div>'
-  +   '<div class="sum-foot"><span>지출 ' + fmtWon(stats.expenses) + '</span><span>충전 ' + fmtWon(stats.chargeAmount) + '</span><span>순수입 ' + fmtWon(stats.net) + '</span></div>'
+  +   '<div class="sum-foot"><span>지출 <b>' + fmtWon(stats.expenses) + '</b></span><span>충전 <b>' + fmtWon(stats.chargeAmount) + '</b></span><span>순수입 <b>' + fmtWon(stats.net) + '</b></span></div>'
   + '</section>'
-  + '<div class="home-2col">'
-  +   '<div class="col">'
-  +     '<section class="card">'
-  +       '<div class="card-h"><div class="card-t">주행</div><div class="card-sub">' + ymLabel(ym) + '</div></div>'
-  +       '<div class="grid3">'
-  +         '<div class="kpi"><div class="v">' + fmtDec1(stats.km) + '<span class="tiny muted"> km</span></div><div class="l">총 주행거리</div></div>'
-  +         '<div class="kpi"><div class="v">' + fmtDec1(stats.bizKm) + '<span class="tiny muted"> km</span></div><div class="l">영업거리</div></div>'
-  +         '<div class="kpi"><div class="v">' + (stats.rideRate===null ? '－' : stats.rideRate + '%') + '</div><div class="l">승차율</div></div>'
-  +       '</div>'
-  +     '</section>'
-  +     '<section class="card">'
-  +       '<div class="card-h"><div class="card-t">LPG 충전</div><div class="card-sub">' + ymLabel(ym) + '</div></div>'
-  +       '<div class="grid3">'
-  +         '<div class="kpi"><div class="v">' + fmtDec1(stats.chargeLiters) + '<span class="tiny muted"> L</span></div><div class="l">총 충전량</div></div>'
-  +         '<div class="kpi"><div class="v">' + fmtWon(stats.chargeAmount) + '</div><div class="l">충전금액</div></div>'
-  +         '<div class="kpi"><div class="v">' + (stats.fuelEco===null ? '－' : stats.fuelEco) + '<span class="tiny muted"> km/L</span></div><div class="l">평균 연비</div></div>'
-  +       '</div>'
-  +     '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">주행 · LPG</div><div class="card-sub">' + ymLabel(ym) + '</div></div>'
+  +   '<div class="grid3">'
+  +     '<div class="kpi"><div class="v">' + fmtDec1(stats.km) + '<span class="tiny muted"> km</span></div><div class="l">총 주행거리</div></div>'
+  +     '<div class="kpi"><div class="v">' + fmtDec1(stats.bizKm) + '<span class="tiny muted"> km</span></div><div class="l">영업거리</div></div>'
+  +     '<div class="kpi"><div class="v hi">' + (stats.rideRate===null ? '－' : stats.rideRate + '%') + '</div><div class="l">승차율</div></div>'
   +   '</div>'
-  +   '<div class="col">'
-  +     '<section class="card">'
-  +       '<div class="card-h"><div class="card-t">오늘 코스</div><div class="card-sub">GPS ' + pts.length + '지점</div></div>'
-  +       mapBoxHtml('homeMap', pts)
-  +       '<div style="margin-top:10px">' + (courseUrl
-          ? '<a class="btn btn-primary btn-block" href="' + esc(courseUrl) + '" target="_blank" rel="noopener">구글 지도에서 오늘 코스 보기</a>'
-          : '<button class="btn btn-block" disabled>구글 지도에서 오늘 코스 보기</button>') + '</div>'
-  +       '<div class="tiny muted" style="margin-top:7px;line-height:1.5">' + (pts.length
-          ? '출발·도착·경유지로 구글 지도를 엽니다. (경유지 최대 9곳)'
-          : 'START를 누르고 위치를 허용하면 이동한 좌표가 쌓입니다.') + '</div>'
-  +     '</section>'
-  +     '<section class="card">'
-  +       '<div class="card-h"><div class="card-t">이번 달 달력</div><a class="small" href="#" data-act="nav" data-screen="calendar">전체 보기 ›</a></div>'
-  +       miniCalendarHtml(today)
-  +     '</section>'
+  +   '<div class="grid3" style="margin-top:8px">'
+  +     '<div class="kpi"><div class="v">' + fmtDec1(stats.chargeLiters) + '<span class="tiny muted"> L</span></div><div class="l">총 충전량</div></div>'
+  +     '<div class="kpi"><div class="v amber">' + fmtWon(stats.chargeAmount) + '</div><div class="l">충전금액</div></div>'
+  +     '<div class="kpi"><div class="v">' + (stats.fuelEco===null ? '－' : stats.fuelEco) + '<span class="tiny muted"> km/L</span></div><div class="l">평균 연비</div></div>'
   +   '</div>'
-  + '</div>';
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">이번 달 달력</div><a class="small" href="#" data-act="nav" data-screen="calendar" style="color:var(--muted)">전체 보기 ›</a></div>'
+  +   miniCalendarHtml(today)
+  + '</section>';
 };
 
 function miniCalendarHtml(today){
@@ -1423,7 +1618,7 @@ function miniCalendarHtml(today){
       + '</div>';
   });
   html += '</div>';
-  html += '<div class="legend"><span><i style="background:#FFF3F1;border:1px solid #F8DCD7"></i>휴무</span><span><i style="background:#EDF1F6"></i>부제</span><span><i style="background:#0F4C81"></i>일한 시간</span></div>';
+  html += '<div class="legend"><span><i style="background:rgba(245,158,11,.16)"></i>휴무</span><span><i style="background:rgba(255,255,255,.06)"></i>부제</span><span><i style="background:#34D399"></i>일한 시간</span></div>';
   return html;
 }
 
@@ -1485,7 +1680,7 @@ views.input = function(){
   +   '</div>'
   +   '<div class="total-line" style="margin-top:10px"><span>총 일한 시간</span><b id="workTotal">' + fmtDur(work) + '</b></div>'
   +   '<div class="total-line" style="margin-top:6px"><span>시간당 매출</span><b id="hourlyRev">' + (work>0 ? fmtNum(inc.sales/(work/60))+'원' : '－') + '</b></div>'
-  +   '<div class="tiny" id="runWarn" style="margin-top:7px;color:#B42318;' + (warn?'':'display:none') + '">' + esc(warn) + '</div>'
+  +   '<div class="tiny" id="runWarn" style="margin-top:7px;color:var(--rose);' + (warn?'':'display:none') + '">' + esc(warn) + '</div>'
   + '</section>'
 
   + '<section class="card">'
@@ -1562,7 +1757,7 @@ views.input = function(){
   +   mapBoxHtml('inputMap', pts)
   +   '<div class="row wrap" style="gap:8px;margin-top:10px">'
   +     (courseUrl ? '<a class="btn btn-sm btn-primary" id="courseLink" href="' + esc(courseUrl) + '" target="_blank" rel="noopener">구글 지도에서 코스 열기</a>' : '<button class="btn btn-sm" disabled>구글 지도에서 코스 열기</button>')
-  +     (pts.length ? '<button class="btn btn-sm" data-act="clearGps" style="color:#B42318">GPS 기록 지우기</button>' : '')
+  +     (pts.length ? '<button class="btn btn-sm btn-danger-ghost" data-act="clearGps">GPS 기록 지우기</button>' : '')
   +   '</div>'
   +   (gpsKm > 0 ? '<div class="hint-box" style="margin-top:10px"><b>GPS 이동거리 약 ' + fmtNum(gpsKm) + ' km</b> <span class="tiny">(참고값 · 화면이 꺼지면 일부 빠짐)</span><br><button class="btn btn-sm btn-soft" style="margin-top:7px" data-act="applyGpsKm" data-km="' + gpsKm + '">총 주행거리에 넣기</button></div>' : '')
   +   '<div class="field" style="margin-top:12px"><label>메모</label><textarea placeholder="오늘 특이사항, 손님, 사고, 정비 예정…" data-day="' + key + '" data-field="memo">' + esc(d.memo||'') + '</textarea></div>'
@@ -1612,21 +1807,21 @@ views.calendar = function(){
   + '</section>'
   + '<section class="card tight">'
   +   '<div class="grid2" style="gap:8px">'
-  +     '<div class="kpi"><div class="v money" style="color:#D92D20">' + fmtWon(stats.sales) + '</div><div class="l">영업금액</div></div>'
-  +     '<div class="kpi"><div class="v money" style="color:#1565C0">' + fmtWon(stats.card) + '</div><div class="l">카드수입</div></div>'
-  +     '<div class="kpi"><div class="v money" style="color:#4B5563">' + fmtWon(stats.cash) + '</div><div class="l">현금수입</div></div>'
+  +     '<div class="kpi"><div class="v money hi">' + fmtWon(stats.sales) + '</div><div class="l">영업금액</div></div>'
+  +     '<div class="kpi"><div class="v money sky">' + fmtWon(stats.card) + '</div><div class="l">카드수입</div></div>'
+  +     '<div class="kpi"><div class="v money">' + fmtWon(stats.cash) + '</div><div class="l">현금수입</div></div>'
   +     '<div class="kpi"><div class="v money">' + fmtWon(stats.expenses) + '</div><div class="l">지출금액</div></div>'
   +     '<div class="kpi"><div class="v time">' + fmtDur(stats.workMinutes) + '</div><div class="l">총 운행시간</div></div>'
   +     '<div class="kpi"><div class="v time">' + (stats.workDays ? fmtDur(stats.avgMinutes) : '－') + '</div><div class="l">일평균 운행시간</div></div>'
   +   '</div>'
-  +   '<div class="sum-foot" style="color:#6B7280;border-top:1px solid #E5EAF1;margin-top:10px;padding-top:9px;display:flex;justify-content:space-between;font-size:11.5px;font-weight:700"><span>근무 ' + stats.workDays + '일</span><span>충전 ' + fmtWon(stats.chargeAmount) + '</span><span>부제: ' + (pattern || '없음') + '</span></div>'
+  +   '<div class="sum-foot"><span>근무 ' + stats.workDays + '일</span><span>충전 ' + fmtWon(stats.chargeAmount) + '</span><span>부제: ' + (pattern || '없음') + '</span></div>'
   + '</section>'
   + '<section class="card tight">'
   +   '<div class="cal-wrap">'
   +     '<div class="cal-dow">' + WEEKDAYS.map(function(w){ return '<div>' + w + '</div>'; }).join('') + '</div>'
   +     '<div class="cal-grid">' + cells.map(function(c){ return calCellHtml(c, today); }).join('') + '</div>'
   +   '</div>'
-  +   '<div class="legend"><span><i style="background:#D92D20"></i>영업금액</span><span><i style="background:#1565C0"></i>카드</span><span><i style="background:#4B5563"></i>현금</span><span><i style="background:#0F4C81"></i>일한 시간</span><span>금액 단위: 만원</span></div>'
+  +   '<div class="legend"><span><i style="background:#34D399"></i>영업금액</span><span><i style="background:#60A5FA"></i>카드</span><span><i style="background:#A9B6C9"></i>현금</span><span><i style="background:rgba(52,211,153,.35)"></i>일한 시간</span><span>금액 단위: 만원</span></div>'
   + '</section>'
   + '<div class="tiny muted center" style="padding:0 8px 6px">날짜를 누르면 그 날의 입력 화면으로 갑니다.</div>';
   return html;
@@ -1645,8 +1840,8 @@ function calCellHtml(c, today){
   if(mins > 0) html += '<div class="hr">' + fmtDurShort(mins) + '</div>';
   if(off) html += '<div class="offtag">휴무</div>';
   if(inc.sales > 0) html += '<div class="amt sales">' + fmtMan(inc.sales) + '</div>';
-  if(inc.card > 0) html += '<div class="amt card">' + fmtMan(inc.card) + '</div>';
-  if(inc.cash > 0) html += '<div class="amt cash">' + fmtMan(inc.cash) + '</div>';
+  if(inc.card > 0) html += '<div class="amt kcard">' + fmtMan(inc.card) + '</div>';
+  if(inc.cash > 0) html += '<div class="amt kcash">' + fmtMan(inc.cash) + '</div>';
   html += '</div>';
   return html;
 }
@@ -1667,9 +1862,9 @@ views.stats = function(){
   var hasAny = months.some(function(x){ return x.sales>0 || x.workMinutes>0; });
 
   var salesChart = groupedBarChart(labels, [
-    {name:'영업금액', color:'#0F4C81', values: months.map(function(x){ return x.sales; }), fmt: fmtWon},
-    {name:'카드수입', color:'#4C8FD1', values: months.map(function(x){ return x.card; }), fmt: fmtWon},
-    {name:'현금수입', color:'#94A3B8', values: months.map(function(x){ return x.cash; }), fmt: fmtWon}
+    {name:'영업금액', color:'#34D399', values: months.map(function(x){ return x.sales; }), fmt: fmtWon},
+    {name:'카드수입', color:'#60A5FA', values: months.map(function(x){ return x.card; }), fmt: fmtWon},
+    {name:'현금수입', color:'#64748B', values: months.map(function(x){ return x.cash; }), fmt: fmtWon}
   ], {unit:'won', height:300, title:y + '년 월별 수입'});
 
   var timeChart = comboTimeChart(labels, totalHours, avgHours, hourly, {height:300, title:y + '년 월별 운행시간'});
@@ -1678,12 +1873,12 @@ views.stats = function(){
     ? ('<section class="card">'
       +   '<div class="card-h"><div class="card-t">월별 수입</div><div class="card-sub">단위 만원</div></div>'
       +   '<div class="chart-scroll">' + salesChart + '</div>'
-      +   '<div class="chart-legend"><span><i style="background:#0F4C81"></i>영업금액</span><span><i style="background:#4C8FD1"></i>카드수입</span><span><i style="background:#94A3B8"></i>현금수입</span></div>'
+      +   '<div class="chart-legend"><span><i style="background:#34D399"></i>영업금액</span><span><i style="background:#60A5FA"></i>카드수입</span><span><i style="background:#64748B"></i>현금수입</span></div>'
       + '</section>'
       + '<section class="card">'
       +   '<div class="card-h"><div class="card-t">월별 운행시간 · 시간당 매출</div><div class="card-sub">막대 h · 꺾은선</div></div>'
       +   '<div class="chart-scroll">' + timeChart + '</div>'
-      +   '<div class="chart-legend"><span><i style="background:#2E6FA8"></i>총 운행시간(h)</span><span><i style="background:#C2413A"></i>일평균 운행시간(h)</span><span><i style="background:#C08A2E"></i>시간당 매출(오른쪽 축, 만원)</span></div>'
+      +   '<div class="chart-legend"><span><i style="background:#34D399"></i>총 운행시간(h)</span><span><i style="background:#F5B342"></i>일평균 운행시간(h)</span><span><i style="background:#60A5FA"></i>시간당 매출(오른쪽 축, 만원)</span></div>'
       + '</section>')
     : ('<section class="card"><div class="card-h"><div class="card-t">월별 추이</div></div>'
       + '<div class="small muted center" style="padding:20px 6px;line-height:1.8">' + y + '년 기록이 아직 없습니다.<br>입력 화면에서 기록하거나 설정에서 샘플 데이터를 넣어 보세요.</div></section>');
@@ -1696,7 +1891,7 @@ views.stats = function(){
   + '</div></div>'
   + '<section class="card tight">'
   +   '<div class="grid3">'
-  +     '<div class="kpi"><div class="v money" style="color:#D92D20">' + fmtWon(totSales) + '</div><div class="l">연간 영업금액</div></div>'
+  +     '<div class="kpi"><div class="v money hi">' + fmtWon(totSales) + '</div><div class="l">연간 영업금액</div></div>'
   +     '<div class="kpi"><div class="v time">' + fmtDur(totMin) + '</div><div class="l">연간 운행시간</div></div>'
   +     '<div class="kpi"><div class="v">' + totDays + '일</div><div class="l">연간 근무일</div></div>'
   +   '</div>'
@@ -2046,7 +2241,7 @@ function drawRoute(id, pts){
       center: path[0], zoom: 14, mapTypeControl: false, streetViewControl: false,
       fullscreenControl: false, clickableIcons: false, gestureHandling: 'cooperative'
     });
-    var line = new google.maps.Polyline({path: path, strokeColor: '#0F4C81', strokeOpacity: 0.9, strokeWeight: 5, map: map});
+    var line = new google.maps.Polyline({path: path, strokeColor: '#10B981', strokeOpacity: 0.9, strokeWeight: 5, map: map});
     var markers = [];
     try{ markers.push(new google.maps.Marker({map: map, position: path[0], title: '출발', label: '출'})); }catch(e){}
     if(path.length > 1){
@@ -2195,6 +2390,7 @@ function handleRestore(input){
       var next = normalizeState(raw);
       next.session = session;
       state = next;
+      try{ recoverSession(); }catch(e){}
       saveNow(); render();
       toast('복원 완료 · ' + n + '일치');
     }catch(e){
@@ -2411,6 +2607,8 @@ async function syncNow(opts){
     next.settings.oauthClientId = localCid;
     next.settings.opinetKey = localOpinet;
     state = next;
+    /* 병합 결과에 세션 표시가 없어도 미종료 운행이 있으면 운행 중으로 되살린다. */
+    try{ recoverSession(); }catch(e){}
     syncMeta.fileId = (saved && saved.id) || (file && file.id) || '';
     syncMeta.lastSyncAt = Date.now();
     saveSyncMeta();
@@ -2931,6 +3129,12 @@ function tick(){
   if(sub) sub.textContent = hm(state.session.start) + ' 시작 · ' + fmtDur(ms/60000) + ' 경과';
   var chip = document.getElementById('liveChip');
   if(chip) chip.textContent = '운행 중 ' + fmtClock(ms);
+  var tod = document.getElementById('todayWork');
+  if(tod){
+    var td = state.days[state.session.dayKey || todayKey()];
+    var tm = dayWorkMinutes(td, Date.now());
+    tod.innerHTML = Math.floor(tm/60) + '<span class="unit">h</span> ' + pad2(tm%60) + '<span class="unit">m</span>';
+  }
 }
 
 /* ---------- 시작 ---------- */
