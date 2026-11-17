@@ -409,9 +409,10 @@ function badge(hours, flags){
   if(hours === '24시간') out.push('<span class="b hot">🌙 24시간 상시</span>');
   else {
     var o = openState(hours);
-    if(o === true) out.push('<span class="b hot">🟢 지금 영업중</span>');
-    else if(o === false) out.push('<span class="b warn">🔴 지금 닫힘</span>');
-    else out.push('<span class="b off">🕐 ' + esc(hours) + '</span>');
+    var label = (hours === '영업시작~종료' || !hours || hours === '정보없음') ? '운영시간 미상' : hours;
+    if(o === true) out.push('<span class="b hot">🟢 지금 영업중</span><span class="b off">🕐 ' + esc(label) + '</span>');
+    else if(o === false) out.push('<span class="b warn">🔴 지금 닫힘</span><span class="b off">🕐 ' + esc(label) + '</span>');
+    else out.push('<span class="b off">🕐 ' + esc(label) + '</span>');
   }
   if(flags & F_GAS) out.push('<span class="b gas">⛽ ' + (flags & F_LPG ? 'LPG 충전소' : '주유·충전소') + '</span>');
   if(flags & F_PARK) out.push('<span class="b">🅿️ 주차</span>');
