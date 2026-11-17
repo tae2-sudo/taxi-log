@@ -2272,7 +2272,7 @@ function errText(err){
   if(m === 'interaction_required' || m === 'login_required') return '다시 로그인해 주세요';
   if(m === 'auth') return '구글 인증에 실패했습니다';
   if(/^HTTP 401/.test(m)) return '로그인이 만료되었습니다. 다시 로그인해 주세요';
-  if(/^HTTP 403/.test(m)) return '드라이브 접근이 거부되었습니다 (Drive API 사용 설정 확인)';
+  if(/^HTTP 403/.test(m)) return '드라이브 접근이 거부되었습니다 (' + (m.slice(9, 100) || 'Drive API/권한 확인') + ')';
   if(/^HTTP 404/.test(m)) return '동기화 파일을 찾지 못했습니다';
   if(/^HTTP /.test(m)) return '구글 서버 오류 (' + m.slice(0, 60) + ')';
   if(/Failed to fetch|NetworkError|network/i.test(m)) return '네트워크에 연결하지 못했습니다';
@@ -2365,7 +2365,8 @@ async function downloadSyncFile(id){
 }
 async function uploadSync(payload, fileId){
   var boundary = '----thtaxi' + Date.now();
-  var meta = JSON.stringify({name: SYNC_FILE, mimeType: 'application/json'});
+  var metaObj = fileId ? {name: SYNC_FILE, mimeType: 'application/json'} : {name: SYNC_FILE, mimeType: 'application/json', parents: ['appDataFolder']};
+  var meta = JSON.stringify(metaObj);
   var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta
     + '\r\n--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(payload)
     + '\r\n--' + boundary + '--';
