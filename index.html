@@ -367,6 +367,33 @@ table.data td.blue{color:var(--sky)}
 @media print{.tabbar,.app-header{display:none}body{background:#fff}}
 .card.map .map-hint{border:0;border-radius:0}
 .card.map .map-wrap{border-radius:0}
+
+/* ---------- 월간 요약 ---------- */
+.month-card{background:linear-gradient(155deg,#1D3054 0%,#17253F 46%,#131C31 100%);border:1px solid #2A3B5C;border-radius:22px;padding:15px 18px 6px;margin-bottom:18px;box-shadow:0 16px 38px rgba(0,0,0,.34)}
+.month-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:11px;border-bottom:1px solid rgba(255,255,255,.07)}
+.month-head .mt{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.month-head .my{font-size:11.5px;color:#9FB0C7;font-weight:600;font-variant-numeric:tabular-nums}
+.month-rows{display:flex;flex-direction:column}
+.mrow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.045)}
+.mrow:last-child{border-bottom:0;padding-bottom:11px}
+.mrow .mk{font-size:13px;color:#A9B8CE;font-weight:600;flex:0 0 auto;padding-top:2px}
+.mrow .mv{font-size:15px;font-weight:700;color:#EAF1FB;font-variant-numeric:tabular-nums;letter-spacing:-.01em;text-align:right;display:block}
+.mrow .mv .u{font-size:11.5px;color:#93A3BE;font-weight:600;margin-left:3px}
+.mrow .mv .note{display:block;font-size:10.5px;color:#7F90A9;font-weight:600;margin-top:3px;letter-spacing:0}
+.mrow.major{padding:8px 0 12px;border-bottom:1px solid rgba(255,255,255,.09)}
+.mrow.major .mk{font-size:13.5px;color:#DCE7F7;font-weight:700;padding-top:6px}
+.mrow.major .mv{font-size:24px;font-weight:800;color:#F4F8FF;letter-spacing:-.035em}
+.mrow .mv.hi{color:var(--emerald-2)}
+
+/* ---------- AI ---------- */
+.ai-card{border-color:rgba(52,211,153,.22);background:linear-gradient(160deg,#152238,#131C31 60%)}
+.ai-pick{display:flex;align-items:center;gap:9px;margin-bottom:9px;flex-wrap:wrap}
+.ai-card textarea{min-height:74px;font-size:13.5px}
+.ai-answer{font-size:13px;line-height:1.7;color:#CBD7E7}
+.ai-answer p{margin:0 0 9px}
+.ai-answer ul{margin:0 0 9px;padding-left:16px}
+.ai-answer li{margin:3px 0}
+.ai-answer b{color:#EAF1FB}
 </style>
 </head>
 <body>
@@ -497,7 +524,7 @@ function setPath(obj, path, val){
 function blankDay(){
   return {
     runs: [],
-    income: {card:'', cash:'', toll:'', direct:'', mode:'auto'},
+    income: {card:'', cash:'', kakaoCash:'', toll:'', direct:'', mode:'auto'},
     distance: {total:'', business:''},
     expenses: [],
     charges: [],
@@ -530,6 +557,7 @@ function normalizeDay(d){
   out.income = {
     card: inc.card===undefined?'':inc.card,
     cash: inc.cash===undefined?'':inc.cash,
+    kakaoCash: inc.kakaoCash===undefined?'':inc.kakaoCash,
     toll: inc.toll===undefined?'':inc.toll,
     direct: inc.direct===undefined?'':inc.direct,
     mode: inc.mode==='direct'?'direct':'auto'
@@ -578,11 +606,11 @@ function daySpan(day){
 }
 function incomeOf(day){
   var inc = (day && day.income) || {};
-  var card = num(inc.card), cash = num(inc.cash), toll = num(inc.toll);
-  var auto = card + cash;
+  var card = num(inc.card), cash = num(inc.cash), kakao = num(inc.kakaoCash), toll = num(inc.toll);
+  var auto = card + cash + kakao;
   var directOn = inc.mode === 'direct' && inc.direct !== '' && inc.direct !== null && inc.direct !== undefined;
   var sales = directOn ? num(inc.direct) : auto;
-  return {card:card, cash:cash, toll:toll, sales:sales, auto:auto, direct:!!directOn};
+  return {card:card, cash:cash, kakaoCash:kakao, toll:toll, sales:sales, auto:auto, direct:!!directOn};
 }
 function expenseTotal(day){
   var s=0; ((day&&day.expenses)||[]).forEach(function(e){ s += num(e.amount); }); return Math.round(s);
@@ -600,7 +628,7 @@ function chargeTotals(day){
 function dayHasData(d){
   if(!d) return false;
   var inc = d.income||{}, ds = d.distance||{};
-  return !!((d.runs&&d.runs.length)||num(inc.card)||num(inc.cash)||num(inc.direct)||num(inc.toll)||num(ds.total)||num(ds.business)||
+  return !!((d.runs&&d.runs.length)||num(inc.card)||num(inc.cash)||num(inc.kakaoCash)||num(inc.direct)||num(inc.toll)||num(ds.total)||num(ds.business)||
     (d.expenses&&d.expenses.length)||(d.charges&&d.charges.length)||(d.memo&&String(d.memo).trim())||
     (d.photos&&d.photos.length)||d.off||(d.gps&&d.gps.points&&d.gps.points.length));
 }
@@ -610,13 +638,13 @@ function workDayOf(d, nowTs){
   return !d.off && (dayWorkMinutes(d, nowTs)>0 || inc.sales>0);
 }
 function monthStats(days, ym, nowTs){
-  var out = {ym:ym, sales:0, card:0, cash:0, toll:0, expenses:0, chargeLiters:0, chargeAmount:0,
+  var out = {ym:ym, sales:0, card:0, cash:0, kakaoCash:0, toll:0, expenses:0, chargeLiters:0, chargeAmount:0,
     km:0, bizKm:0, workMinutes:0, workDays:0, rideRate:null, fuelEco:null, avgMinutes:0, hourly:0, net:0, gpsPoints:0};
   var keys = Object.keys(days||{}).filter(function(k){ return k.slice(0,7)===ym; });
   keys.forEach(function(k){
     var d = days[k]; if(!d) return;
     var inc = incomeOf(d);
-    out.sales += inc.sales; out.card += inc.card; out.cash += inc.cash; out.toll += inc.toll;
+    out.sales += inc.sales; out.card += inc.card; out.cash += inc.cash; out.kakaoCash += inc.kakaoCash; out.toll += inc.toll;
     out.expenses += expenseTotal(d);
     var c = chargeTotals(d);
     out.chargeLiters += c.liters; out.chargeAmount += c.amount;
@@ -803,10 +831,10 @@ function csvEscape(v){
   return s;
 }
 function monthCsv(days, ym, nowTs){
-  var head = ['날짜','요일','휴무','운행시작','운행종료','총운행(분)','총운행시간','영업금액','카드수입','현금수입','통행료','총주행(km)','영업주행(km)','승차율(%)','충전량(L)','충전금액','지출합계','순수입','메모','GPS지점'];
+  var head = ['날짜','요일','휴무','운행시작','운행종료','총운행(분)','총운행시간','영업금액','카드수입','현금수입','카콜현금','통행료','총주행(km)','영업주행(km)','승차율(%)','충전량(L)','충전금액','지출합계','순수입','메모','GPS지점'];
   var rows = [head];
   var keys = Object.keys(days||{}).filter(function(k){ return k.slice(0,7)===ym; }).sort();
-  var tot = {min:0,sales:0,card:0,cash:0,toll:0,km:0,biz:0,L:0,A:0,ex:0,net:0,gps:0};
+  var tot = {min:0,sales:0,card:0,cash:0,kakao:0,toll:0,km:0,biz:0,L:0,A:0,ex:0,net:0,gps:0};
   keys.forEach(function(k){
     var d = days[k] || {};
     var inc = incomeOf(d);
@@ -819,11 +847,11 @@ function monthCsv(days, ym, nowTs){
     var ends = runs.map(function(r){ return r.e?hm(r.e):''; }).filter(Boolean);
     var gps = (d.gps && d.gps.points) ? d.gps.points.length : 0;
     rows.push([k, WEEKDAYS[keyDate(k).getDay()], d.off?'휴무':'', starts[0]||'', ends[ends.length-1]||'', w, fmtDur(w),
-      inc.sales, inc.card, inc.cash, inc.toll, km, biz, km>0?round1(biz/km*100):'', ch.liters, ch.amount, ex, inc.sales-ex-ch.amount, d.memo||'', gps]);
-    tot.min+=w; tot.sales+=inc.sales; tot.card+=inc.card; tot.cash+=inc.cash; tot.toll+=inc.toll;
+      inc.sales, inc.card, inc.cash, inc.kakaoCash, inc.toll, km, biz, km>0?round1(biz/km*100):'', ch.liters, ch.amount, ex, inc.sales-ex-ch.amount, d.memo||'', gps]);
+    tot.min+=w; tot.sales+=inc.sales; tot.card+=inc.card; tot.cash+=inc.cash; tot.kakao+=inc.kakaoCash; tot.toll+=inc.toll;
     tot.km+=km; tot.biz+=biz; tot.L+=ch.liters; tot.A+=ch.amount; tot.ex+=ex; tot.net+=inc.sales-ex-ch.amount; tot.gps+=gps;
   });
-  rows.push(['합계','','','','', tot.min, fmtDur(tot.min), tot.sales, tot.card, tot.cash, tot.toll,
+  rows.push(['합계','','','','', tot.min, fmtDur(tot.min), tot.sales, tot.card, tot.cash, tot.kakao, tot.toll,
     round1(tot.km), round1(tot.biz), tot.km>0?round1(tot.biz/tot.km*100):'', round1(tot.L), tot.A, tot.ex, tot.net, '', tot.gps]);
   return '\ufeff' + rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
 }
@@ -839,6 +867,9 @@ function mergeStates(local, remote){
     (Array.isArray(ls.stations) ? ls.stations : []).concat(Array.isArray(rs.stations) ? rs.stations : [])
   );
   mergedSettings.stationsSeeded = Math.max(num(ls.stationsSeeded), num(rs.stationsSeeded)) || num(baseSettings.stationsSeeded);
+  /* 제미나이 키·모델은 어느 기기에서 넣었든 남겨서 함께 동기화한다(공개 소스에는 없음). */
+  mergedSettings.geminiKey = (baseSettings && baseSettings.geminiKey) ? baseSettings.geminiKey : ((ls.geminiKey || rs.geminiKey) || '');
+  mergedSettings.geminiModel = (baseSettings && baseSettings.geminiModel) ? baseSettings.geminiModel : ((ls.geminiModel || rs.geminiModel) || '');
   var out = {
     version: 1,
     settings: mergedSettings,
@@ -1218,6 +1249,35 @@ function wgs84ToKatec(lat, lng){
   if(!isFinite(xy.x) || !isFinite(xy.y)) return null;
   return {x: Math.round(xy.x * 100) / 100, y: Math.round(xy.y * 100) / 100};
 }
+/* ---------- 제미나이 AI 도우미(순수 함수) ---------- */
+function aiNum(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(typeof v === 'number') return isFinite(v) ? v : null;
+  var s = String(v).replace(/[^0-9.\-]/g, '');
+  if(!s || s === '-' || s === '.') return null;
+  var n = Number(s);
+  return isFinite(n) ? n : null;
+}
+function parseAiJson(text){
+  var s = String(text===null||text===undefined?'':text).trim();
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  var i = s.indexOf('{'), j = s.lastIndexOf('}');
+  if(i === -1 || j === -1 || j <= i) return null;
+  try{ return JSON.parse(s.slice(i, j+1)); }catch(e){ return null; }
+}
+function geminiUrl(model, key){
+  return 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(String(model||'')) + ':generateContent?key=' + encodeURIComponent(String(key||''));
+}
+function geminiBody(parts, opts){
+  opts = opts || {};
+  var body = {contents:[{role:'user', parts: parts || []}]};
+  if(opts.system) body.systemInstruction = {parts:[{text:String(opts.system)}]};
+  var gen = {temperature: (opts.temperature === undefined ? 0.2 : opts.temperature)};
+  if(opts.schema){ gen.responseMimeType = 'application/json'; gen.responseSchema = opts.schema; }
+  body.generationConfig = gen;
+  return body;
+}
+
 /* ===== CORE END ===== */
 
 /* ===== APP ===== */
@@ -1246,7 +1306,7 @@ function checkStorage(){
 function defaultState(){
   return {
     version: 1,
-    settings: {vehicle:'K5 LPI', plate:'서울 00자 0000', fuel:'LPG', offWeekdays:[], offMemo:'', gmapsKey:'', oauthClientId:'', opinetKey:'', opinetProxyUrl:'', opinetAt:0, stations:defaultStations(), stationsSeeded:DEFAULT_STATIONS_SEED},
+    settings: {vehicle:'K5 LPI', plate:'서울 00자 0000', fuel:'LPG', offWeekdays:[], offMemo:'', gmapsKey:'', oauthClientId:'', opinetKey:'', opinetProxyUrl:'', opinetAt:0, geminiKey:'', geminiModel:'gemini-3.1-flash-lite', stations:defaultStations(), stationsSeeded:DEFAULT_STATIONS_SEED},
     settingsUpdated: 0,
     days: {},
     deleted: {},
@@ -1271,6 +1331,8 @@ function normalizeState(raw){
     opinetKey: typeof st.opinetKey==='string' ? st.opinetKey : '',
     opinetProxyUrl: typeof st.opinetProxyUrl==='string' ? st.opinetProxyUrl : '',
     opinetAt: num(st.opinetAt),
+    geminiKey: typeof st.geminiKey==='string' ? st.geminiKey : '',
+    geminiModel: (typeof st.geminiModel==='string' && st.geminiModel) ? st.geminiModel : 'gemini-3.1-flash-lite',
     /* 저장된 목록이 아직 없는 상태(처음 실행·예전 기록)면 기본 충전소를 깔아 둔다. */
     stations: hasStations ? normalizeStations(st.stations) : defaultStations(),
     stationsSeeded: hasStations ? num(st.stationsSeeded) : DEFAULT_STATIONS_SEED
@@ -1471,10 +1533,7 @@ views.home = function(){
   var stale = !!(sess && elapsed > 20*3600*1000);
   var pts = (day && day.gps && day.gps.points) || [];
   var courseUrl = buildMapsDirUrl(pts);
-  var pattern = (state.settings.offWeekdays || []).map(function(x){ return WEEKDAYS[x]; }).join('·');
-  var todayHourly = todayMin > 0 ? fmtNum(inc.sales/(todayMin/60))+'원' : '';
   var ch = chargeTotals(day);
-  var chUnit = ch.liters > 0 ? Math.round(ch.amount/ch.liters) : 0;
   var dist = (day && day.distance) || {};
   var km = num(dist.total), bizKm = num(dist.business);
   var rideRate = km > 0 ? round1(bizKm/km*100) : null;
@@ -1488,10 +1547,9 @@ views.home = function(){
     ? (hm(sess.start) + ' 시작 · ' + fmtDur(elapsed/60000) + ' 경과')
     : (todayMin > 0 ? ('오늘 누적 ' + fmtDur(todayMin) + ' · 영업금액 ' + fmtWon(inc.sales)) : 'START를 누르면 오늘 운행이 기록됩니다');
   var workVal = Math.floor(todayMin/60) + '<span class="unit">h</span> ' + pad2(todayMin%60) + '<span class="unit">m</span>';
-  var dayChip = (day && day.off)
-    ? '<span class="chip off">휴무</span>'
-    : (sess ? '<span class="chip off">' + icon('clock') + '운행 중</span>'
-            : (todayMin > 0 ? '<span class="chip">' + icon('trend') + '영업일</span>' : '<span class="chip off">기록 전</span>'));
+  var avgSale = stats.workDays > 0 ? Math.round(stats.sales / stats.workDays / 100) * 100 : 0;
+  var avgMin = stats.workDays > 0 ? Math.round(stats.workMinutes / stats.workDays) : 0;
+  function won(v){ return fmtNum(v) + '<span class="u">원</span>'; }
 
   var staleBox = stale ? ('<div class="warn-box" style="margin:0 0 12px">'
     + '<b>START가 ' + fmtDur(elapsed/60000) + '째 켜져 있습니다.</b><br>'
@@ -1509,30 +1567,24 @@ views.home = function(){
   +     (sess ? '<span class="live-dot" aria-hidden="true"></span>' : '') + '</div>'
   + '</div>'
 
-  + '<section class="summary" aria-label="오늘 요약">'
-  +   '<div class="card hero">'
-  +     '<div>'
-  +       '<p class="label">' + icon('wallet') + '오늘 운송수입금</p>'
-  +       '<p class="value num" id="todaySales">' + fmtWon(inc.sales) + '</p>'
-  +       '<p class="sub">카드 ' + fmtWon(inc.card) + ' · 현금 ' + fmtWon(inc.cash) + (inc.toll ? ' · 통행료 ' + fmtWon(inc.toll) : '') + '</p>'
-  +     '</div>'
-  +     dayChip
-  +   '</div>'
-  +   '<div class="card">'
-  +     '<p class="label">' + icon('clock') + '오늘 일한 시간</p>'
-  +     '<p class="value num" id="todayWork">' + workVal + '</p>'
-  +     '<p class="sub">' + (sess ? ('지금 ' + fmtDur(elapsed/60000) + ' 경과' + (todayHourly ? ' · 시간당 ' + todayHourly : ''))
-        : (todayHourly ? '시간당 매출 ' + todayHourly : 'START를 누르면 시간이 쌓입니다')) + '</p>'
-  +   '</div>'
-  +   '<div class="card">'
-  +     '<p class="label">' + icon('fuel') + '오늘 LPG 충전</p>'
-  +     '<p class="value num">' + (ch.amount ? fmtWon(ch.amount) : '－') + '</p>'
-  +     '<p class="sub">' + (ch.liters > 0
-          ? ('<span class="amber num">' + fmtDec1(ch.liters) + 'L</span>' + (chUnit > 0 ? ' · ' + fmtNum(chUnit) + '원/L' : ''))
-          : '충전 기록 없음') + '</p>'
+  /* 1) 맨 위: 이번 달 요약 */
+  + '<section class="month-card" aria-label="월간 요약">'
+  +   '<div class="month-head"><span class="mt">월간</span><span class="my">' + ymLabel(ym) + ' · 근무 ' + stats.workDays + '일</span></div>'
+  +   '<div class="month-rows">'
+  +     '<div class="mrow major"><span class="mk">영업금액</span><b class="mv">' + won(stats.sales) + '</b></div>'
+  +     '<div class="mrow"><span class="mk">카드수입</span><b class="mv">' + won(stats.card) + '</b></div>'
+  +     '<div class="mrow"><span class="mk">현금수입</span><b class="mv">' + won(stats.cash) + '</b></div>'
+  +     '<div class="mrow"><span class="mk">카콜 현금</span><b class="mv">' + won(stats.kakaoCash) + '</b></div>'
+  +     '<div class="mrow"><span class="mk">통행료</span><b class="mv">' + won(stats.toll) + '</b></div>'
+  +     '<div class="mrow"><span class="mk">근무일수</span><b class="mv">' + stats.workDays + '<span class="u">일</span></b></div>'
+  +     '<div class="mrow"><span class="mk">근무시간</span><b class="mv">' + fmtDur(stats.workMinutes)
+  +       '<span class="note">' + (stats.workDays > 0 ? '일평균 ' + fmtDur(avgMin) : '기록 없음') + '</span></b></div>'
+  +     '<div class="mrow"><span class="mk">평균매출</span><b class="mv hi">' + won(avgSale)
+  +       '<span class="note">영업금액 ÷ 근무일수</span></b></div>'
   +   '</div>'
   + '</section>'
 
+  /* 2) 가운데: START / STOP */
   + '<section class="drive' + (sess ? ' running' : '') + '" id="drive" aria-label="운행 기록">'
   +   '<p class="elapsed-label"><span class="dot"></span><span id="stateLabel">' + (sess ? '운행 중' : (todayMin > 0 ? '오늘 누적' : '대기 중')) + '</span></p>'
   +   '<p class="elapsed num" id="elapsedClock" aria-live="polite">' + clockTxt + '</p>'
@@ -1550,14 +1602,15 @@ views.home = function(){
   +   '</div>'
   + '</section>'
 
-  + '<section aria-label="오늘 운행 코스">'
-  +   '<div class="section-h"><h2>오늘 운행 코스</h2><span class="sec-meta">GPS ' + pts.length + '지점</span></div>'
+  /* 3) 아래: 오늘의 운행 코스 */
+  + '<section aria-label="오늘의 운행 코스">'
+  +   '<div class="section-h"><h2>오늘의 운행 코스</h2><span class="sec-meta">GPS ' + pts.length + '지점</span></div>'
   +   '<div class="card map">'
   +     mapBoxHtml('homeMap', pts)
   +     '<div class="map-stats">'
   +       '<div><p class="k">주행거리</p><p class="v num">' + fmtDec1(km) + '<span class="unit">km</span></p></div>'
   +       '<div><p class="k">영업거리</p><p class="v num">' + fmtDec1(bizKm) + '<span class="unit">km</span></p></div>'
-  +       '<div><p class="k">승차율</p><p class="v num' + (rideRate === null ? '' : ' hi') + '">' + (rideRate === null ? '－' : rideRate + '<span class="unit">%</span>') + '</p></div>'
+  +       '<div><p class="k">실차율</p><p class="v num' + (rideRate === null ? '' : ' hi') + '">' + (rideRate === null ? '－' : rideRate + '<span class="unit">%</span>') + '</p></div>'
   +     '</div>'
   +     '<div class="map-foot">'
   +       (courseUrl
@@ -1566,40 +1619,6 @@ views.home = function(){
   +       '<div class="tiny muted" style="margin-top:8px;line-height:1.5;text-align:center" id="gpsLine"></div>'
   +     '</div>'
   +   '</div>'
-  + '</section>'
-
-  + '<div class="section-h" style="margin-top:6px"><h2>이번 달</h2><a href="#" data-act="nav" data-screen="calendar">전체 보기 ' + icon('chevron') + '</a></div>'
-  + '<section class="sum-card">'
-  +   '<div class="sum-head"><span>' + ymLabel(ym) + '</span><span>근무 ' + stats.workDays + '일' + (pattern ? ' · 부제 ' + pattern : '') + '</span></div>'
-  +   '<div class="big">' + fmtWon(stats.sales) + '</div>'
-  +   '<div class="sum-grid">'
-  +     '<div class="sum-item"><div class="k">카드수입</div><div class="v">' + fmtWon(stats.card) + '</div></div>'
-  +     '<div class="sum-item"><div class="k">현금수입</div><div class="v">' + fmtWon(stats.cash) + '</div></div>'
-  +     '<div class="sum-item"><div class="k">통행료</div><div class="v">' + fmtWon(stats.toll) + '</div></div>'
-  +     '<div class="sum-item"><div class="k">총 운행시간</div><div class="v">' + fmtDur(stats.workMinutes) + '</div></div>'
-  +     '<div class="sum-item"><div class="k">일평균 운행시간</div><div class="v">' + (stats.workDays ? fmtDur(stats.avgMinutes) : '－') + '</div></div>'
-  +     '<div class="sum-item"><div class="k">시간당 평균 매출</div><div class="v">' + (stats.workMinutes > 0 ? fmtNum(stats.hourly)+'원/h' : '－') + '</div></div>'
-  +   '</div>'
-  +   '<div class="sum-foot"><span>지출 <b>' + fmtWon(stats.expenses) + '</b></span><span>충전 <b>' + fmtWon(stats.chargeAmount) + '</b></span><span>순수입 <b>' + fmtWon(stats.net) + '</b></span></div>'
-  + '</section>'
-
-  + '<section class="card">'
-  +   '<div class="card-h"><div class="card-t">주행 · LPG</div><div class="card-sub">' + ymLabel(ym) + '</div></div>'
-  +   '<div class="grid3">'
-  +     '<div class="kpi"><div class="v">' + fmtDec1(stats.km) + '<span class="tiny muted"> km</span></div><div class="l">총 주행거리</div></div>'
-  +     '<div class="kpi"><div class="v">' + fmtDec1(stats.bizKm) + '<span class="tiny muted"> km</span></div><div class="l">영업거리</div></div>'
-  +     '<div class="kpi"><div class="v hi">' + (stats.rideRate===null ? '－' : stats.rideRate + '%') + '</div><div class="l">승차율</div></div>'
-  +   '</div>'
-  +   '<div class="grid3" style="margin-top:8px">'
-  +     '<div class="kpi"><div class="v">' + fmtDec1(stats.chargeLiters) + '<span class="tiny muted"> L</span></div><div class="l">총 충전량</div></div>'
-  +     '<div class="kpi"><div class="v amber">' + fmtWon(stats.chargeAmount) + '</div><div class="l">충전금액</div></div>'
-  +     '<div class="kpi"><div class="v">' + (stats.fuelEco===null ? '－' : stats.fuelEco) + '<span class="tiny muted"> km/L</span></div><div class="l">평균 연비</div></div>'
-  +   '</div>'
-  + '</section>'
-
-  + '<section class="card">'
-  +   '<div class="card-h"><div class="card-t">이번 달 달력</div><a class="small" href="#" data-act="nav" data-screen="calendar" style="color:var(--muted)">전체 보기 ›</a></div>'
-  +   miniCalendarHtml(today)
   + '</section>';
 };
 
@@ -1664,6 +1683,22 @@ views.input = function(){
   +   '<button class="btn btn-sm" data-act="nextDay" aria-label="다음 날">▶</button>'
   + '</section>'
 
+  + '<section class="card ai-card">'
+  +   '<div class="card-h"><div class="card-t">✨ AI 자동 입력</div><div class="card-sub">제미나이</div></div>'
+  +   '<div class="ai-pick">'
+  +     '<label class="btn btn-sm btn-soft photo-btn" for="aiPhotoInput">📷 정산·영수증 사진</label>'
+  +     '<input id="aiPhotoInput" type="file" accept="image/*" style="display:none">'
+  +     '<span class="tiny muted" id="aiPhotoName">선택한 사진 없음</span>'
+  +   '</div>'
+  +   '<textarea id="aiText" placeholder="예: 오늘 카드 24만, 현금 1만5천, 카콜 현금 8천, 통행료 4천, 대성 오류동에서 38리터 충전"></textarea>'
+  +   '<div class="row wrap" style="gap:8px;margin-top:9px">'
+  +     '<button class="btn btn-sm btn-primary" data-act="aiFill">✨ AI로 채우기</button>'
+  +     '<button class="btn btn-sm btn-ghost" data-act="aiPhotoClear">사진 지우기</button>'
+  +   '</div>'
+  +   '<div class="tiny muted" style="margin-top:7px">사진·문장은 그때 제미나이로 보내집니다. 키가 없으면 <b>설정 → AI(제미나이)</b>.</div>'
+  +   '<div id="aiMsg" style="margin-top:9px"></div>'
+  + '</section>'
+
   + '<section class="card">'
   +   '<div class="card-h"><div class="card-t">운행 시간</div>'
   +     '<span class="chip ' + (live ? 'live' : '') + '" id="liveChip">' + (live ? '운행 중 ' + fmtClock(nowTs - (parseDT(state.session.start)||new Date()).getTime()) : '일한 시간') + '</span></div>'
@@ -1695,9 +1730,10 @@ views.input = function(){
   +       '<button class="' + (d.income.mode!=='direct'?'on':'') + '" data-act="incomeMode" data-mode="auto">자동합산</button>'
   +       '<button class="' + (d.income.mode==='direct'?'on':'') + '" data-act="incomeMode" data-mode="direct">직접입력</button>'
   +     '</div></div>'
-  +   '<div class="grid3">'
+  +   '<div class="grid2">'
   +     '<div class="field"><label>카드수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.card" value="' + esc(ival(d.income.card)) + '"></div>'
   +     '<div class="field"><label>현금수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.cash" value="' + esc(ival(d.income.cash)) + '"></div>'
+  +     '<div class="field"><label>카콜 현금 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.kakaoCash" value="' + esc(ival(d.income.kakaoCash)) + '"></div>'
   +     '<div class="field"><label>통행료 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.toll" value="' + esc(ival(d.income.toll)) + '"></div>'
   +   '</div>'
   +   (d.income.mode==='direct' ? '<div class="field" style="margin-top:8px"><label>영업금액 직접 입력 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="카드+현금과 다른 금액" data-day="' + key + '" data-field="income.direct" value="' + esc(ival(d.income.direct)) + '"></div>' : '')
@@ -1902,14 +1938,21 @@ views.stats = function(){
   +     '<div class="kpi"><div class="v">' + totDays + '일</div><div class="l">연간 근무일</div></div>'
   +   '</div>'
   + '</section>'
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">✨ AI 운행·세무 코치</div><div class="card-sub">이번 달 기록 기준</div></div>'
+  +   '<div class="tiny muted" style="line-height:1.6;margin-bottom:10px">이번 달 매출·근무시간·실차율·LPG·통행료 기록을 제미나이가 읽고 수익성과 경비 증빙을 정리합니다. 숫자는 기록에 있는 값만 씁니다.</div>'
+  +   '<button class="btn btn-sm btn-primary" data-act="aiCoach">✨ AI 운행·세무 코치 분석</button>'
+  +   '<div id="aiCoachOut" style="margin-top:10px"></div>'
+  +   '<div class="tiny muted" style="margin-top:8px">세무 내용은 일반 안내입니다 · 최종 확인은 세무사·홈택스</div>'
+  + '</section>'
   + chartCards
   + '<section class="card">'
   +   '<div class="card-h"><div class="card-t">월별 상세</div></div>'
-  +   '<div class="table-wrap"><table class="data"><thead><tr><th>월</th><th>영업금액</th><th>카드</th><th>현금</th><th>근무</th><th>총 운행</th><th>일평균</th><th>시간당</th></tr></thead><tbody>'
+  +   '<div class="table-wrap"><table class="data"><thead><tr><th>월</th><th>영업금액</th><th>카드</th><th>현금</th><th>카콜</th><th>근무</th><th>총 운행</th><th>일평균</th><th>시간당</th></tr></thead><tbody>'
   +   months.map(function(x, i){
-        return '<tr><td>' + (i+1) + '월</td><td class="red">' + (x.sales?fmtNum(x.sales):'-') + '</td><td class="blue">' + (x.card?fmtNum(x.card):'-') + '</td><td>' + (x.cash?fmtNum(x.cash):'-') + '</td><td>' + (x.workDays||'-') + '</td><td>' + (x.workMinutes?fmtDurShort(x.workMinutes):'-') + '</td><td>' + (x.workDays?fmtDurShort(x.avgMinutes):'-') + '</td><td>' + (x.hourly?fmtNum(x.hourly):'-') + '</td></tr>';
+        return '<tr><td>' + (i+1) + '월</td><td class="red">' + (x.sales?fmtNum(x.sales):'-') + '</td><td class="blue">' + (x.card?fmtNum(x.card):'-') + '</td><td>' + (x.cash?fmtNum(x.cash):'-') + '</td><td>' + (x.kakaoCash?fmtNum(x.kakaoCash):'-') + '</td><td>' + (x.workDays||'-') + '</td><td>' + (x.workMinutes?fmtDurShort(x.workMinutes):'-') + '</td><td>' + (x.workDays?fmtDurShort(x.avgMinutes):'-') + '</td><td>' + (x.hourly?fmtNum(x.hourly):'-') + '</td></tr>';
       }).join('')
-  +   '</tbody><tfoot><tr><td>합계</td><td>' + fmtNum(totSales) + '</td><td></td><td></td><td>' + totDays + '</td><td>' + fmtDurShort(totMin) + '</td><td>' + (totDays?fmtDurShort(totMin/totDays):'-') + '</td><td>' + (totMin?fmtNum(totSales/(totMin/60)):'-') + '</td></tr></tfoot></table></div>'
+  +   '</tbody><tfoot><tr><td>합계</td><td>' + fmtNum(totSales) + '</td><td></td><td></td><td></td><td>' + totDays + '</td><td>' + fmtDurShort(totMin) + '</td><td>' + (totDays?fmtDurShort(totMin/totDays):'-') + '</td><td>' + (totMin?fmtNum(totSales/(totMin/60)):'-') + '</td></tr></tfoot></table></div>'
   +   (hasAny ? '' : '<div class="small muted center" style="margin-top:8px">' + y + '년 기록이 아직 없습니다.</div>')
   + '</section>';
   return html;
@@ -1989,6 +2032,20 @@ views.settings = function(){
   +     '</div>'
   +     '<div id="mapKeyMsg" style="margin-top:9px"></div>'
   +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">키는 <b>이 기기 브라우저(localStorage)</b>에만 저장되고 코드에 들어가지 않습니다. 키가 없거나 오프라인이어도 앱의 다른 기능은 모두 그대로 동작하고, <b>구글 지도에서 코스 열기</b> 버튼도 항상 동작합니다.<br>Google Cloud에서 <b>Maps JavaScript API</b>를 사용 설정하고, 키 제한을 쓸 때는 <b>HTTP 리퍼러</b>에 이 페이지 주소를 넣으세요. 파일로 열었다면 리퍼러 제한을 끄거나 웹 주소로 올려야 지도가 보입니다.</div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="settings-block">'
+  +     '<h3>AI (제미나이)</h3>'
+  +     '<div class="field"><label>Gemini API 키</label><input type="password" data-field="settings.geminiKey" value="' + esc(s.geminiKey||'') + '" placeholder="AIza..." autocomplete="off" spellcheck="false"></div>'
+  +     '<div class="field" style="margin-top:8px"><label>모델</label><select data-field="settings.geminiModel">' + GEMINI_MODELS.map(function(m){ return '<option value="' + m + '"' + (geminiModel()===m?' selected':'') + '>' + m + (m===GEMINI_MODELS[0]?' (기본)':'') + '</option>'; }).join('') + '</select></div>'
+  +     '<div class="row wrap" style="gap:8px;margin-top:9px">'
+  +       '<button class="btn btn-sm btn-soft" data-act="saveGemini">저장</button>'
+  +       '<button class="btn btn-sm" data-act="testGemini">연결 테스트</button>'
+  +     '</div>'
+  +     '<div id="geminiMsg" style="margin-top:9px"></div>'
+  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">키는 <b>이 기기 브라우저(localStorage)</b>와 <b>구글 드라이브 앱 전용 공간 동기화</b>에만 저장되고, 소스 코드·공개 페이지에는 들어가지 않습니다. 자료입력의 <b>AI 자동 입력</b>과 통계의 <b>AI 운행·세무 코치</b>가 이 키로 제미나이를 부릅니다. 사진·문장은 그때 제미나이로 전송됩니다.</div>'
   +   '</div>'
   + '</section>'
 
@@ -2606,12 +2663,13 @@ async function syncNow(opts){
     var payload = syncPayload(base);
     var saved = await uploadSync(payload, file && file.id);
     var session = state.session;
-    var localKey = state.settings.gmapsKey, localCid = state.settings.oauthClientId, localOpinet = state.settings.opinetKey;
+    var localKey = state.settings.gmapsKey, localCid = state.settings.oauthClientId, localOpinet = state.settings.opinetKey, localGemini = state.settings.geminiKey;
     var next = normalizeState(payload);
     next.session = session;
     next.settings.gmapsKey = localKey;
     next.settings.oauthClientId = localCid;
     next.settings.opinetKey = localOpinet;
+    if(!next.settings.geminiKey && localGemini) next.settings.geminiKey = localGemini;
     state = next;
     /* 병합 결과에 세션 표시가 없어도 미종료 운행이 있으면 운행 중으로 되살린다. */
     try{ recoverSession(); }catch(e){}
@@ -2825,6 +2883,254 @@ async function testOpinet(){
     toast('오피넷 연결 성공 · LPG ' + oils.length + '곳');
   }catch(err){
     setHtml('opinetMsg', '<div class="warn-box">연결하지 못했습니다 · ' + esc(opinetErrText(err)) + '</div>');
+  }
+}
+
+/* ---------- 제미나이 AI ---------- */
+/* ---------- 제미나이 AI (키는 localStorage·드라이브 앱 폴더에만, 소스에 없음) ---------- */
+var GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/';
+var GEMINI_MODELS = ['gemini-3.1-flash-lite', 'gemini-2.5-flash'];
+var AI_SCHEMA = {type:'OBJECT', properties:{
+  card:{type:'NUMBER'}, cash:{type:'NUMBER'}, kakaoCash:{type:'NUMBER'}, toll:{type:'NUMBER'},
+  kmTotal:{type:'NUMBER'}, kmBusiness:{type:'NUMBER'},
+  chargeAmount:{type:'NUMBER'}, chargeLiters:{type:'NUMBER'}, chargeUnit:{type:'NUMBER'},
+  station:{type:'STRING'}, memo:{type:'STRING'}
+}};
+var AI_SYSTEM = [
+  '너는 서울 개인택시 기사의 운행일지 입력 도우미다.',
+  '사진(정산 화면 캡처, LPG 영수증)이나 사용자가 적은 문장에서 운행 기록을 읽어 JSON 하나로만 답한다.',
+  'card=카드 수입(원), cash=일반 현금 수입(원), kakaoCash=카카오T 호출(카콜) 현금 결제 수입(원), toll=통행료(원),',
+  'kmTotal=총 주행거리(km), kmBusiness=영업거리(km), chargeAmount=LPG 충전금액(원), chargeLiters=충전량(L),',
+  'chargeUnit=충전 단가(원/L), station=충전소 이름, memo=짧은 메모.',
+  '금액은 원 단위로 환산한다(24만 → 240000, 1만5천 → 15000).',
+  '사진이나 문장에 없는 항목은 0으로 두고 추측해서 만들지 않는다.',
+  '카콜(카카오T 호출)을 구분할 수 없으면 kakaoCash는 0으로 둔다.'
+].join(' ');
+var AI_COACH_SYSTEM = [
+  '너는 서울 개인택시 기사를 돕는 운행·세무 코치다.',
+  '주어진 실제 기록만 근거로 삼고, 없는 수치를 만들어내지 않는다.',
+  '한국어로 짧고 또박또박하게, 광고나 과장 없이 답한다.',
+  '세무 부분은 개인사업자(개인택시) 기준의 일반 안내이며 최종 판단은 세무사·홈택스 확인이 필요하다고 밝힌다.'
+].join(' ');
+
+var aiState = {photo:null, photoName:'', busy:false, coachBusy:false};
+
+function geminiModel(){
+  var m = String((state && state.settings && state.settings.geminiModel) || '').trim();
+  return m || GEMINI_MODELS[0];
+}
+function geminiKeyValue(){ return String((state && state.settings && state.settings.geminiKey) || '').trim(); }
+function geminiConfigured(){ return !!geminiKeyValue(); }
+function geminiErrText(err){
+  var m = String(err && err.message ? err.message : err);
+  if(m === 'no_key') return '설정 → AI(제미나이)에서 API 키를 먼저 넣어 주세요';
+  if(/^HTTP 400/.test(m)) return '요청이 거부되었습니다 · 키와 모델 이름을 확인해 주세요';
+  if(/^HTTP 403/.test(m)) return 'API 키가 거부되었습니다 · 키 사용 제한을 확인해 주세요';
+  if(/^HTTP 404/.test(m)) return '이 키로는 쓸 수 없는 모델입니다 · 다른 모델을 골라 주세요';
+  if(/^HTTP 429/.test(m)) return '무료 호출 한도를 넘었습니다 · 잠시 뒤 다시 시도해 주세요';
+  if(/^HTTP 5/.test(m)) return '제미나이 서버가 혼잡합니다 · 잠시 뒤 다시 시도해 주세요';
+  if(/^HTTP /.test(m)) return '제미나이 응답 오류 (' + m.slice(0, 40) + ')';
+  if(m === 'bad_json') return '제미나이가 보낸 답을 읽지 못했습니다 · 다시 시도해 주세요';
+  if(m === 'empty') return '제미나이가 빈 답을 보냈습니다 · 다시 시도해 주세요';
+  if(/Failed to fetch|NetworkError|network/i.test(m)) return '인터넷에 연결하지 못했습니다';
+  return m;
+}
+function geminiCall(parts, opts){
+  var key = geminiKeyValue();
+  if(!key) return Promise.reject(new Error('no_key'));
+  var url = geminiUrl(geminiModel(), key);
+  var body = geminiBody(parts, opts);
+  return fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
+    .then(function(res){
+      if(!res || !res.ok) throw new Error('HTTP ' + ((res && res.status) || 0));
+      return res.json();
+    })
+    .then(function(data){
+      var cand = (data && data.candidates && data.candidates[0]) || null;
+      var partsOut = (cand && cand.content && cand.content.parts) || [];
+      var txt = partsOut.length ? String(partsOut[0].text || '') : '';
+      if(!txt) throw new Error('empty');
+      return txt;
+    });
+}
+function aiSetMsg(id, html){
+  var el = document.getElementById(id);
+  if(el) el.innerHTML = html;
+}
+function aiTextHtml(t){
+  var s = esc(String(t || '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  return s.split(/\n{2,}/).map(function(block){
+    var lines = block.split('\n').filter(function(l){ return String(l).trim() !== ''; });
+    if(!lines.length) return '';
+    var bullet = lines.every(function(l){ return /^\s*[-•*]\s+/.test(l); });
+    if(bullet){
+      return '<ul>' + lines.map(function(l){ return '<li>' + l.replace(/^\s*[-•*]\s+/, '') + '</li>'; }).join('') + '</ul>';
+    }
+    return '<p>' + lines.join('<br>') + '</p>';
+  }).join('');
+}
+/* AI가 읽은 값을 그 날짜 기록에 채운다. 채운 항목 이름 배열을 돌려준다. */
+function applyAiToDay(day, obj){
+  var applied = [];
+  if(!day || !obj) return applied;
+  var labels = {card:'카드수입', cash:'현금수입', kakaoCash:'카콜 현금', toll:'통행료'};
+  ['card', 'cash', 'kakaoCash', 'toll'].forEach(function(k){
+    var n = aiNum(obj[k]);
+    if(n !== null && n >= 0){
+      day.income[k] = Math.round(n);
+      applied.push(labels[k]);
+    }
+  });
+  var km = aiNum(obj.kmTotal), biz = aiNum(obj.kmBusiness);
+  if(km !== null && km > 0){ day.distance.total = round1(km); applied.push('주행거리'); }
+  if(biz !== null && biz > 0){ day.distance.business = round1(biz); applied.push('영업거리'); }
+  var hasCharge = false;
+  ['chargeAmount', 'chargeLiters', 'chargeUnit', 'station'].forEach(function(k){
+    var v = obj[k];
+    if(v !== null && v !== undefined && String(v).trim() !== '' && v !== 0) hasCharge = true;
+  });
+  if(hasCharge){
+    var c = (day.charges && day.charges[0]) || null;
+    if(!c){
+      c = {id:'c' + Date.now(), station:'', fuel: state.settings.fuel || 'LPG', liters:'', unit:'', amount:''};
+      day.charges.push(c);
+    }
+    if(obj.station && String(obj.station).trim()) c.station = String(obj.station).trim();
+    var L = aiNum(obj.chargeLiters), U = aiNum(obj.chargeUnit), A = aiNum(obj.chargeAmount);
+    if(L !== null && L > 0) c.liters = L;
+    if(U !== null && U > 0) c.unit = Math.round(U);
+    if(A !== null && A > 0) c.amount = Math.round(A);
+    if(num(c.amount) > 0 && num(c.liters) > 0 && !(num(c.unit) > 0)){
+      c.unit = Math.round(num(c.amount) / num(c.liters));
+    }
+    if(!(num(c.amount) > 0)) syncChargeAmounts(c, 'liters');
+    if(num(c.unit) > 0 && stationKey(c.station)) rememberChargeStation(c);
+    applied.push('LPG 충전');
+  }
+  if(obj.memo && String(obj.memo).trim() && !String(day.memo || '').trim()){
+    day.memo = String(obj.memo).trim();
+    applied.push('메모');
+  }
+  return applied;
+}
+function handleAiPhoto(input){
+  var f = input.files && input.files[0];
+  if(!f) return;
+  var name = f.name || '사진';
+  setText('aiPhotoName', name);
+  resizeImage(f, 1400, 0.82).then(function(dataUrl){
+    var m = /^data:([^;]+);base64,(.*)$/.exec(String(dataUrl || ''));
+    if(!m){ toast('사진을 읽지 못했습니다'); return; }
+    aiState.photo = {mime: m[1], data: m[2], name: name};
+    aiState.photoName = name;
+    toast('사진을 읽었습니다 · AI로 채우기를 눌러 주세요');
+  }).catch(function(){
+    toast('사진을 읽지 못했습니다 · 다른 사진으로 시도해 주세요');
+  });
+  input.value = '';
+}
+async function aiAutoFill(){
+  if(aiState.busy) return;
+  if(!geminiConfigured()){
+    aiSetMsg('aiMsg', '<div class="warn-box">설정 → AI(제미나이)에서 API 키를 먼저 넣어 주세요.</div>');
+    toast('설정에서 제미나이 API 키를 먼저 넣어 주세요');
+    return;
+  }
+  var area = document.getElementById('aiText');
+  var text = area ? String(area.value || '').trim() : '';
+  if(!text && !aiState.photo){
+    aiSetMsg('aiMsg', '<div class="warn-box">정산 사진을 고르거나, 오늘 내용을 한 줄 적어 주세요.</div>');
+    return;
+  }
+  aiState.busy = true;
+  aiSetMsg('aiMsg', '<div class="hint-box">제미나이가 사진·문장을 읽고 있습니다…</div>');
+  try{
+    var prompt = text ? ('사용자가 적은 내용: ' + text) : '사진에서 운행 기록을 읽어 주세요.';
+    var parts = [{text: prompt}];
+    if(aiState.photo) parts.push({inlineData:{mimeType: aiState.photo.mime, data: aiState.photo.data}});
+    var out = await geminiCall(parts, {system: AI_SYSTEM, schema: AI_SCHEMA, temperature: 0.1});
+    var obj = parseAiJson(out);
+    if(!obj) throw new Error('bad_json');
+    var d = touchDay(ui.date);
+    var applied = applyAiToDay(d, obj);
+    saveNow();
+    render();
+    if(applied.length){
+      aiSetMsg('aiMsg', '<div class="ok-box"><b>' + esc(applied.join(' · ')) + '</b>을(를) 채웠습니다.<br>금액이 맞는지 확인하고 필요하면 고쳐 주세요.</div>');
+      toast('AI가 ' + applied.length + '개 항목을 채웠습니다 · 확인해 주세요');
+      aiState.photo = null;
+      var nm = document.getElementById('aiPhotoName');
+      if(nm) nm.textContent = '선택한 사진 없음';
+    } else {
+      aiSetMsg('aiMsg', '<div class="warn-box">읽어낸 값이 없습니다. 사진이 흐리거나 문장이 짧으면 다시 시도해 주세요.</div>');
+    }
+  }catch(err){
+    aiSetMsg('aiMsg', '<div class="warn-box">' + esc(geminiErrText(err)) + '</div>');
+  }finally{
+    aiState.busy = false;
+  }
+}
+async function testGemini(){
+  if(!geminiConfigured()){
+    aiSetMsg('geminiMsg', '<div class="warn-box">API 키를 먼저 넣고 저장해 주세요.</div>');
+    return;
+  }
+  aiSetMsg('geminiMsg', '<div class="hint-box">제미나이에 시험 요청 중…</div>');
+  try{
+    var out = await geminiCall([{text:'연결 확인입니다. "연결됨"이라고만 답해 주세요.'}], {temperature: 0});
+    aiSetMsg('geminiMsg', '<div class="ok-box">연결 성공 · ' + esc(geminiModel()) + ' · ' + esc(String(out).replace(/\s+/g, ' ').slice(0, 60)) + '</div>');
+    toast('제미나이 연결 성공');
+  }catch(err){
+    aiSetMsg('geminiMsg', '<div class="warn-box">연결하지 못했습니다 · ' + esc(geminiErrText(err)) + '</div>');
+  }
+}
+function aiCoachDataText(){
+  var today = todayKey();
+  var ym = today.slice(0, 7);
+  var st = monthStats(state.days, ym, Date.now());
+  var days = Object.keys(state.days).filter(function(k){
+    return k.slice(0, 7) === ym && dayHasData(state.days[k]);
+  }).length;
+  var lines = [
+    '기간: ' + ym,
+    '영업금액: ' + fmtNum(st.sales) + '원',
+    '카드수입: ' + fmtNum(st.card) + '원',
+    '현금수입: ' + fmtNum(st.cash) + '원',
+    '카콜 현금: ' + fmtNum(st.kakaoCash) + '원',
+    '통행료: ' + fmtNum(st.toll) + '원',
+    'LPG 충전금액: ' + fmtNum(st.chargeAmount) + '원 (충전량 ' + fmtDec1(st.chargeLiters) + 'L)',
+    '지출 합계: ' + fmtNum(st.expenses) + '원',
+    '총 주행거리: ' + fmtDec1(st.km) + 'km, 영업거리: ' + fmtDec1(st.bizKm) + 'km, 실차율: ' + (st.rideRate === null ? '기록 없음' : st.rideRate + '%'),
+    '근무일수: ' + st.workDays + '일, 총 근무시간: ' + fmtDur(st.workMinutes) + ', 일평균 근무: ' + (st.workDays ? fmtDur(st.avgMinutes) : '기록 없음'),
+    '시간당 매출: ' + (st.workMinutes > 0 ? fmtNum(st.hourly) + '원' : '기록 없음'),
+    '하루 평균 매출: ' + (st.workDays > 0 ? fmtNum(Math.round(st.sales / st.workDays)) + '원' : '기록 없음'),
+    '기록이 있는 날: ' + days + '일'
+  ];
+  return lines.join('\n');
+}
+async function aiCoach(){
+  if(aiState.coachBusy) return;
+  if(!geminiConfigured()){
+    setHtml('aiCoachOut', '<div class="warn-box">설정 → AI(제미나이)에서 API 키를 먼저 넣어 주세요.</div>');
+    toast('설정에서 제미나이 API 키를 먼저 넣어 주세요');
+    return;
+  }
+  aiState.coachBusy = true;
+  setHtml('aiCoachOut', '<div class="hint-box">이번 달 기록을 제미나이가 살펴보는 중…</div>');
+  try{
+    var prompt = '아래는 내 실제 운행 기록이다.\n' + aiCoachDataText()
+      + '\n\n다음을 한국어로 정리해 줘.\n'
+      + '1) 수익성: 시간당·하루 평균 매출과 근무시간을 보고 좋은 점과 개선할 점(2~3개, 실행 가능한 것)\n'
+      + '2) 세무·경비: 부가세·종합소득세 준비에서 챙길 경비 증빙(LPG·통행료·정비·소모품 등)과 지금 기록에서 빠졌을 항목\n'
+      + '3) 다음 달에 딱 하나만 바꾼다면 무엇을 할지\n'
+      + '숫자는 위 기록에 있는 값만 쓰고, 없는 값은 만들지 마. 각 항목은 짧게.';
+    var out = await geminiCall([{text: prompt}], {system: AI_COACH_SYSTEM, temperature: 0.4});
+    setHtml('aiCoachOut', '<div class="ai-answer">' + aiTextHtml(out) + '</div>');
+    toast('AI 운행·세무 코치 분석을 받았습니다');
+  }catch(err){
+    setHtml('aiCoachOut', '<div class="warn-box">분석하지 못했습니다 · ' + esc(geminiErrText(err)) + '</div>');
+  }finally{
+    aiState.coachBusy = false;
   }
 }
 
@@ -3076,6 +3382,15 @@ function handleAct(act, el){
       toast('오피넷 설정을 저장했습니다');
       break;
     case 'testOpinet': testOpinet(); break;
+    case 'aiFill': aiAutoFill(); break;
+    case 'aiCoach': aiCoach(); break;
+    case 'aiPhotoClear': aiState.photo = null; setText('aiPhotoName', '선택한 사진 없음'); break;
+    case 'saveGemini':
+      saveNow();
+      aiSetMsg('geminiMsg', '<div class="ok-box">제미나이 키와 모델을 저장했습니다. 이 기기와 구글 드라이브 동기화에 함께 저장됩니다.</div>');
+      toast('제미나이 설정을 저장했습니다');
+      break;
+    case 'testGemini': testGemini(); break;
     case 'signIn': signIn(); break;
     case 'signOut': signOut(); break;
     case 'syncNow': syncNow({interactive:true}); break;
@@ -3102,6 +3417,7 @@ document.addEventListener('change', function(ev){
   var el = ev.target;
   if(!el) return;
   if(el.id === 'photoInput'){ handlePhotoFiles(el); return; }
+  if(el.id === 'aiPhotoInput'){ handleAiPhoto(el); return; }
   if(el.id === 'restoreInput'){ handleRestore(el); return; }
   if(el.id === 'csvMonth'){ ui.csvMonth = el.value; return; }
   if(el.id === 'yearSel'){ ui.year = Number(el.value); render(); return; }
