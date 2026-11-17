@@ -136,7 +136,7 @@ main{padding:6px 16px calc(104px + env(safe-area-inset-bottom));max-width:560px;
 .elapsed{font-size:46px;font-weight:800;letter-spacing:-.04em;line-height:1.12;margin-top:2px;font-variant-numeric:tabular-nums}
 .running .elapsed{color:var(--amber-2)}
 .btn-wrap{position:relative;margin:20px 0 22px;display:grid;place-items:center}
-.ring{position:absolute;width:232px;height:232px;border-radius:50%;border:1px solid rgba(52,211,153,.16)}
+.ring{position:absolute;width:232px;height:232px;border-radius:50%;border:1px solid rgba(52,211,153,.16);pointer-events:none}
 .running .ring{border-color:rgba(245,158,11,.22);animation:breathe 2.6s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.055);opacity:.55}}
 .toggle{width:190px;height:190px;border-radius:50%;border:0;cursor:pointer;
