@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F4C81">
+<meta name="color-scheme" content="light">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>개인택시 운행관리</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230F4C81'/%3E%3Ctext x='32' y='45' font-size='32' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%ED%83%9D%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --navy:#0F4C81;--navy2:#0B3C68;--navy50:#EAF1F8;
+  --red:#D92D20;--blue:#1565C0;--gray-ink:#4B5563;
+  --ink:#111827;--muted:#6B7280;--line:#E5EAF1;--bg:#F3F5F9;--card:#fff;
+  --green:#16A34A;--amber:#B54708;
+  --r:16px;--shadow:0 1px 2px rgba(16,24,40,.06),0 6px 16px rgba(16,24,40,.05);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;padding-bottom:env(safe-area-inset-bottom)}
+button{font-family:inherit}
+a{color:var(--navy);text-decoration:none}
+h1,h2,h3,p{margin:0}
+
+.app-header{position:sticky;top:0;z-index:30;background:linear-gradient(135deg,#12538C,#0A3963);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 11px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 2px 12px rgba(10,57,99,.28)}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand .logo{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.brand h1{font-size:16px;font-weight:800;letter-spacing:-.2px;white-space:nowrap}
+.brand .sub{font-size:11px;opacity:.82;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plate-chip{font-size:11px;font-weight:800;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);padding:5px 9px;border-radius:999px;white-space:nowrap;flex:0 0 auto}
+
+main{padding:12px 12px calc(92px + env(safe-area-inset-bottom));max-width:980px;margin:0 auto}
+.screen-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:2px 2px 10px}
+.screen-title h2{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.screen-title .date-line{font-size:14px;font-weight:700;color:var(--navy)}
+.screen-title .date-line span{color:var(--muted);font-weight:600}
+
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+.card.tight{padding:12px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.card-t{font-size:14px;font-weight:800;color:#25303F;display:flex;align-items:center;gap:7px}
+.card-t::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--navy);display:inline-block}
+.card-sub{font-size:12px;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.tiny{font-size:11px}
+.mono{font-variant-numeric:tabular-nums}
+.right{text-align:right}
+.center{text-align:center}
+.nowrap{white-space:nowrap}
+.spacer{flex:1}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row{display:flex;align-items:center;gap:8px}
+.between{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wrap{flex-wrap:wrap}
+
+.btn{min-height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#25303F;font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;cursor:pointer;line-height:1.2}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn-green{background:var(--green);border-color:var(--green);color:#fff}
+.btn-red{background:var(--red);border-color:var(--red);color:#fff}
+.btn-soft{background:var(--navy50);border-color:#D5E3F1;color:var(--navy)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--navy)}
+.btn-danger-ghost{background:#FFF4F3;border-color:#FBD5D1;color:#B42318}
+.btn-sm{min-height:34px;font-size:12.5px;padding:0 10px;border-radius:9px}
+.btn-block{width:100%}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.45;cursor:default;transform:none}
+
+.big-btn{width:100%;min-height:66px;border-radius:16px;font-size:21px;font-weight:800;letter-spacing:1px;border:0;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
+.big-start{background:linear-gradient(135deg,#22A85C,#15803D);box-shadow:0 8px 18px rgba(22,163,74,.26)}
+.big-stop{background:linear-gradient(135deg,#E34A3F,#B42318);box-shadow:0 8px 18px rgba(220,38,38,.26)}
+.big-btn:active{transform:translateY(1px)}
+
+.clock{font-size:44px;font-weight:800;letter-spacing:1px;text-align:center;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.15;margin:2px 0 2px}
+.clock.idle{color:#C9D4E1}
+.run-sub{text-align:center;font-size:13px;color:var(--muted);font-weight:600;margin-bottom:12px;min-height:18px}
+.run-state{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:800;border-radius:999px;padding:4px 9px;background:#F1F5F9;color:#64748B}
+.run-state.live{background:#E7F7EE;color:#15803D}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.dot.pulse{animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.kpi{background:#F7F9FC;border-radius:12px;padding:9px 8px;text-align:center}
+.kpi .v{font-size:15px;font-weight:800;color:#1F2937;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.kpi .v.money{font-size:12.5px;letter-spacing:-.5px;white-space:nowrap}
+.kpi .v.time{font-size:12.5px;letter-spacing:-.4px;white-space:nowrap}
+.kpi .l{font-size:10.5px;color:var(--muted);font-weight:700;margin-top:2px}
+
+.sum-card{background:linear-gradient(150deg,#14609F 0%,#0C4272 60%,#0A3559 100%);color:#fff;border-radius:var(--r);padding:16px;box-shadow:0 10px 24px rgba(10,57,99,.24);margin-bottom:12px}
+.sum-card .sum-head{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:700;opacity:.9}
+.sum-card .big{font-size:27px;font-weight:800;letter-spacing:-.6px;margin:4px 0 10px;font-variant-numeric:tabular-nums}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
+.sum-item{background:rgba(255,255,255,.10);border-radius:10px;padding:8px 10px}
+.sum-item .k{font-size:11px;opacity:.82;font-weight:700}
+.sum-item .v{font-size:14.5px;font-weight:800;margin-top:1px;font-variant-numeric:tabular-nums}
+.sum-hi{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16)}
+.sum-hi .k{font-size:11px;opacity:.82;font-weight:700}
+.sum-hi .v{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.sum-foot{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.16);font-size:11.5px;opacity:.9;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field>label{font-size:11.5px;color:var(--muted);font-weight:700}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-height:42px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:2px solid #BBD3EA;outline-offset:0;border-color:var(--navy)}
+input.num,select.num{text-align:right;font-variant-numeric:tabular-nums}
+input[type=datetime-local],input[type=month],input[type=date]{font-size:14px;padding:8px 8px}
+.field .unit{position:relative}
+.field .unit input{padding-right:34px}
+.field .unit span{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--muted);font-weight:700}
+
+.seg{display:flex;background:#EFF3F8;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;min-height:34px;font-size:12.5px;font-weight:800;color:#64748B;cursor:pointer}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+
+.hint-box{background:#F5F8FC;border:1px solid #E1EAF4;border-radius:12px;padding:10px 12px;font-size:12px;color:#43536A;line-height:1.55}
+.hint-box b{color:var(--navy)}
+.warn-box{background:#FFF8EB;border:1px solid #F7E0B8;border-radius:12px;padding:10px 12px;font-size:12px;color:#8A5410;line-height:1.55}
+.ok-box{background:#EFFAF3;border:1px solid #C9EBD6;border-radius:12px;padding:10px 12px;font-size:12px;color:#17663A;line-height:1.55}
+
+.run-row{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#FBFCFE}
+.run-row .rr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.run-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;border-radius:999px;padding:3px 8px;background:#EEF3F9;color:#40597A}
+.chip.live{background:#E7F7EE;color:#15803D}
+.chip.red{background:#FEECEA;color:#B42318}
+
+.list-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;background:#FBFCFE;position:relative}
+.list-row .full{grid-column:1 / -1}
+.list-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.list-head b{font-size:12px;color:#41506B}
+.del-x{border:0;background:#F1F4F8;color:#64748B;width:28px;height:28px;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;line-height:1}
+.del-x:active{background:#E3E9F0}
+
+.total-line{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#F7F9FC;border-radius:10px;padding:9px 11px;font-size:12.5px;font-weight:700;color:#41506B;margin-top:2px}
+.total-line b{font-size:14.5px;color:var(--navy)}
+
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--muted);font-weight:700;margin-top:8px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0}
+
+.off-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:12px;padding:12px 13px;border:1px dashed #D6DEE9;background:#FBFCFE}
+.off-toggle.on{background:#FFF4F3;border-color:#F6C7C2}
+.off-toggle .t{font-size:13.5px;font-weight:800}
+.off-toggle .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+.cal-wrap{margin-top:2px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-dow div{text-align:center;font-size:11px;font-weight:800;color:var(--muted)}
+.cal-dow div:first-child{color:#C2413A}
+.cal-dow div:last-child{color:var(--blue)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cell{min-height:72px;border-radius:9px;background:#F8FAFD;border:1px solid #EEF2F7;padding:3px 2px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;position:relative;overflow:hidden}
+.cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cell .d{font-size:11px;font-weight:800;color:#374151;line-height:1.1}
+.cell.sun .d{color:#C2413A}
+.cell.sat .d{color:var(--blue)}
+.cell .hr{font-size:9px;font-weight:800;background:var(--navy);color:#fff;border-radius:5px;padding:0 3px;line-height:13px;letter-spacing:-.2px;white-space:nowrap}
+.cell .amt{font-size:9px;line-height:1.12;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.cell .amt.sales{color:var(--red);font-weight:800}
+.cell .amt.card{color:var(--blue);font-weight:700}
+.cell .amt.cash{color:#4B5563;font-weight:700}
+.cell.pat{background:#EDF1F6}
+.cell.off{background:#FFF3F1;border-color:#F8DCD7}
+.cell.today{outline:2px solid var(--navy);outline-offset:-2px}
+.cell .offtag{font-size:8px;font-weight:800;color:#B42318;background:#FEE4E2;border-radius:4px;padding:0 3px;line-height:12px}
+.cell.mini{min-height:44px}
+
+.chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:2px -4px 0;padding-bottom:2px}
+.chart-scroll svg{display:block;width:100%;min-width:600px;height:auto}
+.chart-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;font-weight:700;color:#54617A;margin:6px 2px 0}
+.chart-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.data{border-collapse:collapse;width:100%;font-size:12px;min-width:560px;font-variant-numeric:tabular-nums}
+table.data th,table.data td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data thead th{color:var(--muted);font-weight:800;background:#F7F9FC;position:sticky;top:0}
+table.data tfoot td{font-weight:800;background:#F7F9FC}
+table.data td.red{color:var(--red);font-weight:700}
+table.data td.blue{color:var(--blue)}
+
+.map-wrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#EFF3F8}
+.map-box{height:200px;width:100%}
+.map-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:12px;color:#54617A;background:#F3F6FA;line-height:1.5}
+.map-msg.hide{display:none}
+.map-msg.err{background:#FFF8EB;color:#8A5410}
+.map-hint{background:#F5F8FC;border:1px dashed #D9E4F0;border-radius:12px;padding:12px;font-size:12px;color:#54617A;line-height:1.55}
+.gpin{width:26px;height:26px;border-radius:50% 50% 50% 4px;transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.gpin i{transform:rotate(-45deg);font-style:normal;font-size:11px;font-weight:800;color:#fff;font-family:-apple-system,sans-serif}
+
+.photos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.photo{position:relative;aspect-ratio:1/1;border-radius:9px;overflow:hidden;background:#EDF1F6}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .x{position:absolute;top:3px;right:3px;border:0;background:rgba(17,24,39,.62);color:#fff;width:22px;height:22px;border-radius:50%;font-size:13px;font-weight:800;line-height:1;cursor:pointer}
+.photo-btn{display:inline-flex;align-items:center;gap:6px}
+
+.search-result{display:flex;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}
+.search-result:last-child{border-bottom:0}
+.search-result .dt{font-size:11.5px;font-weight:800;color:var(--navy);white-space:nowrap}
+.search-result .tx{font-size:12px;color:#43536A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.settings-block{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.settings-block:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.settings-block h3{font-size:13px;font-weight:800;color:#25303F;margin-bottom:8px}
+.week-btns{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.week-btns button{min-height:40px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:800;color:#54617A;cursor:pointer}
+.week-btns button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.week-btns button.sun.on{background:#C2413A;border-color:#C2413A}
+.week-btns button.sat.on{background:var(--blue);border-color:var(--blue)}
+
+.stor-meter{height:8px;border-radius:99px;background:#E9EEF5;overflow:hidden;margin:8px 0 4px}
+.stor-meter i{display:block;height:100%;background:linear-gradient(90deg,#1E6BB0,#0F4C81);width:0}
+
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.98);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 12px rgba(16,24,40,.05)}
+.tab{background:none;border:0;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:#8A94A6;font-weight:800;min-height:58px;cursor:pointer}
+.tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tab.active{color:var(--navy)}
+
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(17,24,39,.94);color:#fff;font-size:13px;font-weight:700;padding:10px 16px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;max-width:calc(100vw - 40px);text-align:center;line-height:1.4}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.modal{position:fixed;inset:0;background:rgba(9,14,22,.9);display:none;align-items:center;justify-content:center;z-index:70;padding:18px}
+.modal.show{display:flex}
+.modal img{max-width:100%;max-height:86vh;border-radius:10px}
+.modal .x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;background:rgba(255,255,255,.16);border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;font-weight:700;cursor:pointer}
+
+@media (min-width:600px){
+  main{padding:16px 16px 96px}
+  .grid2{grid-template-columns:1fr 1fr}
+  .sum-grid{grid-template-columns:repeat(3,1fr)}
+  .home-2col{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  .home-2col .card{margin-bottom:0}
+  .home-2col .col{display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+  .cell{min-height:88px}
+  .cell .d{font-size:12px}
+  .cell .hr{font-size:10px;line-height:15px}
+  .cell .amt{font-size:10.5px}
+  .map-box{height:260px}
+}
+@media (max-width:430px){
+  .run-fields{grid-template-columns:1fr}
+}
+@media (max-width:360px){
+  .clock{font-size:38px}
+  .sum-card .big{font-size:24px}
+  .kpi .v{font-size:13.5px}
+  .cell{min-height:60px}
+}
+@media print{.tabbar,.app-header{display:none}}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17V9.5l1.6-3.2A2 2 0 0 1 9.4 5h5.2a2 2 0 0 1 1.8 1.3L18 9.5V17"/><path d="M4 17h16"/><circle cx="8" cy="18.5" r="1.4"/><circle cx="16" cy="18.5" r="1.4"/><path d="M6 11h12"/></svg>
+    </div>
+    <div style="min-width:0">
+      <h1>개인택시 운행관리</h1>
+      <div class="sub" id="hdrSub">내 기록만 · 광고 없음</div>
+    </div>
+  </div>
+  <div class="plate-chip" id="hdrPlate">서울 00자 0000</div>
+</header>
+
+<main id="app" aria-live="polite"></main>
+<noscript><div style="padding:24px;font-family:sans-serif;font-size:15px;line-height:1.6">이 앱은 자바스크립트가 필요합니다. Chrome 같은 브라우저에서 열어 주세요.</div></noscript>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tab" data-act="nav" data-screen="home"><svg viewBox="0 0 24 24"><path d="M3 10.6 12 3l9 7.6"/><path d="M5 9.6V21h14V9.6"/><path d="M9.5 21v-6h5v6"/></svg><span>홈</span></button>
+  <button class="tab" data-act="nav" data-screen="input"><svg viewBox="0 0 24 24"><path d="M4 20h4L18.6 9.4a2.7 2.7 0 0 0-3.8-3.8L4 16v4Z"/><path d="M13.5 7.5l3 3"/></svg><span>입력</span></button>
+  <button class="tab" data-act="nav" data-screen="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>달력</span></button>
+  <button class="tab" data-act="nav" data-screen="stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/><path d="M3 20h18"/></svg><span>통계</span></button>
+  <button class="tab" data-act="nav" data-screen="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>설정</span></button>
+</nav>
+
+<div class="toast" id="toast" role="status"></div>
+<div class="modal" id="modal" role="dialog" aria-label="사진 보기"><button class="x" data-act="closePhoto" aria-label="닫기">✕</button><img id="modalImg" alt="첨부 사진"></div>
+
+<script>
+"use strict";
+/* ===== CORE START ===== */
+var WEEKDAYS = ['일','월','화','수','목','금','토'];
+
+function pad2(n){ n = Number(n)||0; return (n<10?'0':'')+n; }
+function num(v){
+  if(v===null||v===undefined||v==='') return 0;
+  if(typeof v==='number') return isFinite(v)?v:0;
+  var n = Number(String(v).replace(/[,\s]/g,''));
+  return isFinite(n)?n:0;
+}
+function round1(n){ return Math.round((Number(n)||0)*10)/10; }
+function dateKey(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function keyDate(key){ var p=String(key).split('-'); return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); }
+function parseDT(s){
+  if(!s) return null;
+  var m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{1,2}))?/.exec(String(s));
+  if(!m) return null;
+  var d = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), Number(m[4]||0), Number(m[5]||0));
+  return isNaN(d.getTime()) ? null : d;
+}
+function dtInput(d){ return dateKey(d)+'T'+pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+function hm(dt){ var d=parseDT(dt); return d ? pad2(d.getHours())+':'+pad2(d.getMinutes()) : ''; }
+function minutesBetween(a,b){ return Math.round((b.getTime()-a.getTime())/60000); }
+function toTs(v){
+  if(v===undefined||v===null||v==='') return Date.now();
+  if(v instanceof Date) return v.getTime();
+  var n = Number(v); return isFinite(n)?n:Date.now();
+}
+function fmtNum(n){
+  var v = Math.round(num(n));
+  var neg = v < 0; var s = String(Math.abs(v));
+  s = s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (neg?'-':'')+s;
+}
+function fmtWon(n){ return fmtNum(n)+'원'; }
+function fmtDec1(n){
+  var v = Math.round(num(n)*10)/10;
+  var s = Math.abs(v).toFixed(1);
+  if(s.slice(-2) === '.0') s = s.slice(0, -2);
+  var parts = s.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (v<0?'-':'') + parts.join('.');
+}
+function fmtMan(v){
+  var n = Math.round(num(v));
+  if(!n) return '';
+  var m = n/10000;
+  var s = String(Math.round(m*10)/10);
+  return s.replace(/\.0$/,'');
+}
+function fmtDur(min){
+  var m = Math.round(Math.max(0, num(min)));
+  var h = Math.floor(m/60), r = m%60;
+  if(h<=0 && r===0) return '0분';
+  if(h<=0) return r+'분';
+  return r>0 ? h+'시간 '+r+'분' : h+'시간';
+}
+function fmtDurShort(min){
+  var m = Math.round(Math.max(0, num(min)));
+  var h = Math.floor(m/60), r = m%60;
+  if(h>0) return h+'h'+(r>0?pad2(r)+'m':'');
+  return r+'m';
+}
+function fmtClock(ms){
+  var s = Math.floor(Math.max(0, Number(ms)||0)/1000);
+  var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), x = s%60;
+  return pad2(h)+':'+pad2(m)+':'+pad2(x);
+}
+function dateLabelKR(key){
+  var d = keyDate(key);
+  return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+}
+function weekdayKR(key){ return WEEKDAYS[keyDate(key).getDay()]; }
+function ymLabel(ym){ var p=String(ym).split('-'); return p[0]+'년 '+Number(p[1])+'월'; }
+function monthShift(ym, delta){
+  var p = String(ym).split('-'); var d = new Date(Number(p[0]), Number(p[1])-1+delta, 1);
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1);
+}
+function esc(s){
+  return String(s===null||s===undefined?'':s).replace(/[&<>"']/g, function(c){
+    return c==='&'?'&amp;':c==='<'?'&lt;':c==='>'?'&gt;':c==='"'?'&quot;':'&#39;';
+  });
+}
+function setPath(obj, path, val){
+  var parts = String(path).split('.');
+  var o = obj;
+  for(var i=0;i<parts.length-1;i++){
+    var k = parts[i], nk = parts[i+1];
+    if(o[k]===undefined || o[k]===null || typeof o[k]!=='object'){ o[k] = /^\d+$/.test(nk) ? [] : {}; }
+    o = o[k];
+  }
+  o[parts[parts.length-1]] = val;
+  return obj;
+}
+
+function blankDay(){
+  return {
+    runs: [],
+    income: {card:'', cash:'', toll:'', direct:'', mode:'auto'},
+    distance: {total:'', business:''},
+    expenses: [],
+    charges: [],
+    memo: '',
+    photos: [],
+    off: false,
+    breakMinutes: '',
+    gps: {points: []},
+    u: 0
+  };
+}
+function normalizeDay(d){
+  var b = blankDay();
+  if(!d || typeof d!=='object') return b;
+  var out = {
+    runs: [], income: {}, distance: {}, expenses: [], charges: [],
+    memo: typeof d.memo==='string'?d.memo:'',
+    photos: Array.isArray(d.photos)?d.photos.filter(function(p){return p && p.data;}):[],
+    off: !!d.off,
+    breakMinutes: d.breakMinutes===undefined?'':d.breakMinutes,
+    gps: {points: Array.isArray(d.gps&&d.gps.points) ? d.gps.points.filter(function(p){return p && isFinite(p.lat) && isFinite(p.lng);}) : []},
+    u: num(d.u)
+  };
+  if(Array.isArray(d.runs)){
+    out.runs = d.runs.filter(function(r){return r && typeof r==='object';}).map(function(r){
+      return {s: r.s||'', e: r.e||''};
+    });
+  }
+  var inc = d.income||{};
+  out.income = {
+    card: inc.card===undefined?'':inc.card,
+    cash: inc.cash===undefined?'':inc.cash,
+    toll: inc.toll===undefined?'':inc.toll,
+    direct: inc.direct===undefined?'':inc.direct,
+    mode: inc.mode==='direct'?'direct':'auto'
+  };
+  var ds = d.distance||{};
+  out.distance = {total: ds.total===undefined?'':ds.total, business: ds.business===undefined?'':ds.business};
+  if(Array.isArray(d.expenses)){
+    out.expenses = d.expenses.filter(function(e){return e && typeof e==='object';}).map(function(e, i){
+      return {id: e.id||('e'+i), cat: e.cat||'기타', pay: e.pay||'카드', amount: e.amount===undefined?'':e.amount, memo: e.memo||''};
+    });
+  }
+  if(Array.isArray(d.charges)){
+    out.charges = d.charges.filter(function(c){return c && typeof c==='object';}).map(function(c, i){
+      return {id: c.id||('c'+i), station: c.station||'', fuel: c.fuel||'LPG', liters: c.liters===undefined?'':c.liters, unit: c.unit===undefined?'':c.unit, amount: c.amount===undefined?'':c.amount};
+    });
+  }
+  return out;
+}
+
+function runsOf(day){ return (day && Array.isArray(day.runs)) ? day.runs : []; }
+function runMinutes(run, nowTs){
+  if(!run || !run.s) return 0;
+  var s = parseDT(run.s); if(!s) return 0;
+  var e = run.e ? parseDT(run.e) : new Date(toTs(nowTs));
+  if(!e) return 0;
+  var m = minutesBetween(s, e);
+  if(!(m>0)) return 0;
+  if(!run.e && m > 24*60) return 0;
+  return Math.min(m, 24*60);
+}
+function dayRawMinutes(day, nowTs){
+  var t=0; runsOf(day).forEach(function(r){ t += runMinutes(r, nowTs); }); return t;
+}
+function dayWorkMinutes(day, nowTs){
+  var br = Math.max(0, Math.round(num(day && day.breakMinutes)));
+  return Math.max(0, dayRawMinutes(day, nowTs) - br);
+}
+function daySpan(day){
+  var first=null, last=null;
+  runsOf(day).forEach(function(r){
+    var s = parseDT(r.s), e = parseDT(r.e);
+    if(s && (!first || s<first)) first=s;
+    if(e && (!last || e>last)) last=e;
+  });
+  return {start:first, end:last};
+}
+function incomeOf(day){
+  var inc = (day && day.income) || {};
+  var card = num(inc.card), cash = num(inc.cash), toll = num(inc.toll);
+  var auto = card + cash;
+  var directOn = inc.mode === 'direct' && inc.direct !== '' && inc.direct !== null && inc.direct !== undefined;
+  var sales = directOn ? num(inc.direct) : auto;
+  return {card:card, cash:cash, toll:toll, sales:sales, auto:auto, direct:!!directOn};
+}
+function expenseTotal(day){
+  var s=0; ((day&&day.expenses)||[]).forEach(function(e){ s += num(e.amount); }); return Math.round(s);
+}
+function chargeAmount(c){
+  if(!c) return 0;
+  if(c.amount!=='' && c.amount!==null && c.amount!==undefined && isFinite(Number(c.amount))) return Math.round(num(c.amount));
+  return Math.round(num(c.liters)*num(c.unit));
+}
+function chargeTotals(day){
+  var L=0, A=0;
+  ((day&&day.charges)||[]).forEach(function(c){ L += num(c.liters); A += chargeAmount(c); });
+  return {liters: round1(L), amount: Math.round(A)};
+}
+function dayHasData(d){
+  if(!d) return false;
+  var inc = d.income||{}, ds = d.distance||{};
+  return !!((d.runs&&d.runs.length)||num(inc.card)||num(inc.cash)||num(inc.direct)||num(inc.toll)||num(ds.total)||num(ds.business)||
+    (d.expenses&&d.expenses.length)||(d.charges&&d.charges.length)||(d.memo&&String(d.memo).trim())||
+    (d.photos&&d.photos.length)||d.off||(d.gps&&d.gps.points&&d.gps.points.length));
+}
+function workDayOf(d, nowTs){
+  if(!d) return false;
+  var inc = incomeOf(d);
+  return !d.off && (dayWorkMinutes(d, nowTs)>0 || inc.sales>0);
+}
+function monthStats(days, ym, nowTs){
+  var out = {ym:ym, sales:0, card:0, cash:0, toll:0, expenses:0, chargeLiters:0, chargeAmount:0,
+    km:0, bizKm:0, workMinutes:0, workDays:0, rideRate:null, fuelEco:null, avgMinutes:0, hourly:0, net:0, gpsPoints:0};
+  var keys = Object.keys(days||{}).filter(function(k){ return k.slice(0,7)===ym; });
+  keys.forEach(function(k){
+    var d = days[k]; if(!d) return;
+    var inc = incomeOf(d);
+    out.sales += inc.sales; out.card += inc.card; out.cash += inc.cash; out.toll += inc.toll;
+    out.expenses += expenseTotal(d);
+    var c = chargeTotals(d);
+    out.chargeLiters += c.liters; out.chargeAmount += c.amount;
+    out.km += num(d.distance && d.distance.total);
+    out.bizKm += num(d.distance && d.distance.business);
+    out.workMinutes += dayWorkMinutes(d, nowTs);
+    if(workDayOf(d, nowTs)) out.workDays++;
+    if(d.gps && d.gps.points) out.gpsPoints += d.gps.points.length;
+  });
+  out.chargeLiters = round1(out.chargeLiters);
+  out.rideRate = out.km>0 ? round1(out.bizKm/out.km*100) : null;
+  out.fuelEco = out.chargeLiters>0 ? round1(out.km/out.chargeLiters) : null;
+  out.avgMinutes = out.workDays>0 ? out.workMinutes/out.workDays : 0;
+  out.hourly = out.workMinutes>0 ? out.sales/(out.workMinutes/60) : 0;
+  out.net = out.sales - out.expenses - out.chargeAmount;
+  return out;
+}
+function calendarCells(year, month){
+  var first = new Date(year, month-1, 1);
+  var startDow = first.getDay();
+  var daysInMonth = new Date(year, month, 0).getDate();
+  var cells = [];
+  for(var i=0;i<startDow;i++) cells.push(null);
+  for(var d=1; d<=daysInMonth; d++){
+    cells.push({y:year, m:month, d:d, key:year+'-'+pad2(month)+'-'+pad2(d), dow:new Date(year, month-1, d).getDay()});
+  }
+  while(cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+function offWeekdayFromPlate(plate){
+  var digits = String(plate||'').replace(/[^0-9]/g,'');
+  if(!digits) return null;
+  var last = Number(digits.slice(-1));
+  var map = {1:1,6:1,2:2,7:2,3:3,8:3,4:4,9:4,5:5,0:5};
+  return map[last]===undefined ? null : map[last];
+}
+function isPatternOff(key, offWeekdays){
+  if(!Array.isArray(offWeekdays) || !offWeekdays.length) return false;
+  return offWeekdays.indexOf(keyDate(key).getDay()) !== -1;
+}
+function haversineM(a, b){
+  if(!a||!b) return 0;
+  var R=6371000, toRad=Math.PI/180;
+  var dLat=(b.lat-a.lat)*toRad, dLng=(b.lng-a.lng)*toRad;
+  var la1=a.lat*toRad, la2=b.lat*toRad;
+  var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+function gpsDistanceKm(points){
+  if(!points || points.length<2) return 0;
+  var d=0; for(var i=1;i<points.length;i++) d += haversineM(points[i-1], points[i]);
+  return round1(d/1000);
+}
+function shouldRecordPoint(prev, p){
+  if(!p || !isFinite(p.lat) || !isFinite(p.lng)) return false;
+  if(!prev) return true;
+  if((p.t||0) - (prev.t||0) >= 3*60*1000) return true;
+  return haversineM(prev, p) >= 80;
+}
+function sampleEvenly(arr, max){
+  if(!arr) return [];
+  if(arr.length <= max) return arr.slice();
+  if(max <= 1) return [arr[0]];
+  var out=[], step=(arr.length-1)/(max-1);
+  for(var i=0;i<max;i++) out.push(arr[Math.round(i*step)]);
+  return out;
+}
+function buildMapsDirUrl(points){
+  var pts = (points||[]).filter(function(p){ return p && isFinite(p.lat) && isFinite(p.lng); });
+  if(!pts.length) return '';
+  function ll(p){ return Number(p.lat).toFixed(6)+','+Number(p.lng).toFixed(6); }
+  if(pts.length===1) return 'https://www.google.com/maps/search/?api=1&query='+ll(pts[0]);
+  var origin = pts[0], dest = pts[pts.length-1];
+  var inner = pts.slice(1, pts.length-1);
+  var way = sampleEvenly(inner, 9);
+  var url = 'https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+ll(origin)+'&destination='+ll(dest);
+  if(way.length) url += '&waypoints='+way.map(ll).join('%7C');
+  return url;
+}
+function isHttpsOrigin(proto, host){
+  var p = proto || '';
+  return p === 'https:' || (host === 'localhost' || host === '127.0.0.1');
+}
+
+function niceMax(v){
+  var x = Math.max(0, Number(v)||0);
+  if(!(x>0)) return 1;
+  var exp = Math.floor(Math.log(x)/Math.LN10);
+  var base = Math.pow(10, exp);
+  var f = x/base, m;
+  if(f<=1) m=1; else if(f<=2) m=2; else if(f<=2.5) m=2.5; else if(f<=5) m=5; else m=10;
+  return m*base;
+}
+function fmtAxis(v, kind){
+  if(kind==='won') return (Math.round((v/10000)*10)/10)+'만';
+  if(kind==='hour') return (Math.round(v*10)/10)+'h';
+  if(kind==='man') return (Math.round(v*10)/10)+'만';
+  return fmtNum(v);
+}
+function chartFrame(opts){
+  var W = 720, H = opts.height || 300;
+  var padL = opts.padL===undefined?54:opts.padL, padR = opts.padR===undefined?14:opts.padR;
+  var padT = 22, padB = 36;
+  return {W:W,H:H,padL:padL,padR:padR,padT:padT,padB:padB,plotW:W-padL-padR,plotH:H-padT-padB};
+}
+function groupedBarChart(labels, series, opts){
+  opts = opts || {};
+  var f = chartFrame(opts);
+  var unit = opts.unit || 'won';
+  var maxV = 0;
+  series.forEach(function(s){ (s.values||[]).forEach(function(v){ if((Number(v)||0)>maxV) maxV=Number(v)||0; }); });
+  var top = niceMax(maxV);
+  var n = Math.max(1, labels.length);
+  var gw = f.plotW/n;
+  var k = Math.max(1, series.length);
+  var bw = Math.max(3, Math.min(18, (gw*0.74)/k));
+  var groupW = bw*k;
+  var s = '<svg viewBox="0 0 '+f.W+' '+f.H+'" role="img" aria-label="'+esc(opts.title||'차트')+'">';
+  for(var i=0;i<=4;i++){
+    var y = f.padT + f.plotH - (f.plotH*i/4);
+    var val = top*i/4;
+    s += '<line x1="'+f.padL+'" y1="'+y.toFixed(1)+'" x2="'+(f.W-f.padR)+'" y2="'+y.toFixed(1)+'" stroke="'+(i===0?'#C7D2DE':'#EDF1F6')+'" stroke-width="1"/>';
+    s += '<text x="'+(f.padL-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#8A94A6">'+fmtAxis(val, unit)+'</text>';
+  }
+  labels.forEach(function(lab, i){
+    var gx = f.padL + gw*i + (gw-groupW)/2;
+    series.forEach(function(se, j){
+      var v = Math.max(0, Number(se.values[i])||0);
+      var h = top>0 ? f.plotH*v/top : 0;
+      var x = gx + bw*j;
+      var yy = f.padT + f.plotH - h;
+      s += '<rect x="'+x.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="2" fill="'+se.color+'"><title>'+esc(lab+' '+se.name+' '+(se.fmt?se.fmt(v):fmtNum(v)))+'</title></rect>';
+    });
+    s += '<text x="'+(f.padL+gw*i+gw/2).toFixed(1)+'" y="'+(f.H-f.padB+18)+'" text-anchor="middle" font-size="12" fill="#5A6577">'+esc(lab)+'</text>';
+  });
+  s += '</svg>';
+  return s;
+}
+function comboTimeChart(labels, totalHours, avgHours, hourly, opts){
+  opts = opts || {};
+  var f = chartFrame({height:opts.height||300, padL:46, padR:56});
+  var leftMax = niceMax(Math.max.apply(null, totalHours.concat(avgHours).concat([1])));
+  var rightMax = niceMax(Math.max.apply(null, hourly.concat([1])));
+  var n = Math.max(1, labels.length);
+  var gw = f.plotW/n;
+  var bw = Math.max(6, Math.min(26, gw*0.42));
+  var s = '<svg viewBox="0 0 '+f.W+' '+f.H+'" role="img" aria-label="'+esc(opts.title||'차트')+'">';
+  for(var i=0;i<=4;i++){
+    var y = f.padT + f.plotH - (f.plotH*i/4);
+    var lv = leftMax*i/4, rv = rightMax*i/4;
+    s += '<line x1="'+f.padL+'" y1="'+y.toFixed(1)+'" x2="'+(f.W-f.padR)+'" y2="'+y.toFixed(1)+'" stroke="'+(i===0?'#C7D2DE':'#EDF1F6')+'" stroke-width="1"/>';
+    s += '<text x="'+(f.padL-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" fill="#8A94A6">'+fmtAxis(lv,'hour')+'</text>';
+    s += '<text x="'+(f.W-f.padR+7)+'" y="'+(y+4).toFixed(1)+'" text-anchor="start" font-size="11" fill="#B08A4A">'+(fmtAxis(rv,'man'))+'</text>';
+  }
+  labels.forEach(function(lab,i){
+    var v = Math.max(0, Number(totalHours[i])||0);
+    var h = leftMax>0 ? f.plotH*v/leftMax : 0;
+    var x = f.padL + gw*i + (gw-bw)/2;
+    var yy = f.padT + f.plotH - h;
+    s += '<rect x="'+x.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0,h).toFixed(1)+'" rx="2" fill="#2E6FA8"><title>'+esc(lab+' 총 운행 '+(Math.round(v*10)/10)+'시간')+'</title></rect>';
+    s += '<text x="'+(f.padL+gw*i+gw/2).toFixed(1)+'" y="'+(f.H-f.padB+18)+'" text-anchor="middle" font-size="12" fill="#5A6577">'+esc(lab)+'</text>';
+  });
+  function drawLine(vals, max, color, name){
+    var pts=[];
+    vals.forEach(function(v,i){
+      var x = f.padL + gw*i + gw/2;
+      var yy = f.padT + f.plotH - (max>0 ? f.plotH*Math.max(0,Number(v)||0)/max : 0);
+      pts.push([x,yy]);
+    });
+    s += '<polyline points="'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+    pts.forEach(function(p,i){
+      var label = name+' '+((Math.round((Number(vals[i])||0)*10)/10));
+      s += '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3" fill="#fff" stroke="'+color+'" stroke-width="2"><title>'+esc(labels[i]+' '+label)+'</title></circle>';
+    });
+  }
+  drawLine(avgHours, leftMax, '#C2413A', '일평균');
+  drawLine(hourly, rightMax, '#C08A2E', '시간당 매출');
+  s += '</svg>';
+  return s;
+}
+function csvEscape(v){
+  var s = (v===null||v===undefined) ? '' : String(v);
+  if(/[",\n\r]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function monthCsv(days, ym, nowTs){
+  var head = ['날짜','요일','휴무','운행시작','운행종료','총운행(분)','총운행시간','영업금액','카드수입','현금수입','통행료','총주행(km)','영업주행(km)','승차율(%)','충전량(L)','충전금액','지출합계','순수입','메모','GPS지점'];
+  var rows = [head];
+  var keys = Object.keys(days||{}).filter(function(k){ return k.slice(0,7)===ym; }).sort();
+  var tot = {min:0,sales:0,card:0,cash:0,toll:0,km:0,biz:0,L:0,A:0,ex:0,net:0,gps:0};
+  keys.forEach(function(k){
+    var d = days[k] || {};
+    var inc = incomeOf(d);
+    var w = dayWorkMinutes(d, nowTs);
+    var ch = chargeTotals(d);
+    var ex = expenseTotal(d);
+    var km = num(d.distance && d.distance.total), biz = num(d.distance && d.distance.business);
+    var runs = runsOf(d).filter(function(r){ return r && r.s; });
+    var starts = runs.map(function(r){ return hm(r.s); }).filter(Boolean);
+    var ends = runs.map(function(r){ return r.e?hm(r.e):''; }).filter(Boolean);
+    var gps = (d.gps && d.gps.points) ? d.gps.points.length : 0;
+    rows.push([k, WEEKDAYS[keyDate(k).getDay()], d.off?'휴무':'', starts[0]||'', ends[ends.length-1]||'', w, fmtDur(w),
+      inc.sales, inc.card, inc.cash, inc.toll, km, biz, km>0?round1(biz/km*100):'', ch.liters, ch.amount, ex, inc.sales-ex-ch.amount, d.memo||'', gps]);
+    tot.min+=w; tot.sales+=inc.sales; tot.card+=inc.card; tot.cash+=inc.cash; tot.toll+=inc.toll;
+    tot.km+=km; tot.biz+=biz; tot.L+=ch.liters; tot.A+=ch.amount; tot.ex+=ex; tot.net+=inc.sales-ex-ch.amount; tot.gps+=gps;
+  });
+  rows.push(['합계','','','','', tot.min, fmtDur(tot.min), tot.sales, tot.card, tot.cash, tot.toll,
+    round1(tot.km), round1(tot.biz), tot.km>0?round1(tot.biz/tot.km*100):'', round1(tot.L), tot.A, tot.ex, tot.net, '', tot.gps]);
+  return '\ufeff' + rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
+}
+function mergeStates(local, remote){
+  var l = local || {}, r = remote || {};
+  var ls = l.settings || {}, rs = r.settings || {};
+  var lu = num(l.settingsUpdated), ru = num(r.settingsUpdated);
+  var out = {
+    version: 1,
+    settings: (ru>lu) ? rs : ls,
+    settingsUpdated: Math.max(lu, ru),
+    days: {},
+    deleted: {},
+    meta: {created: Math.min(num(l.meta&&l.meta.created)||Date.now(), num(r.meta&&r.meta.created)||Date.now())},
+    syncedAt: Date.now()
+  };
+  var keys = {};
+  Object.keys(l.days||{}).forEach(function(k){ keys[k]=1; });
+  Object.keys(r.days||{}).forEach(function(k){ keys[k]=1; });
+  Object.keys(keys).forEach(function(k){
+    var a = (l.days||{})[k], b = (r.days||{})[k];
+    var pick = null;
+    if(a && b) pick = (num(b.u) > num(a.u)) ? b : a;
+    else pick = a || b;
+    var del = Math.max(num((l.deleted||{})[k]), num((r.deleted||{})[k]));
+    if(del && del >= num(pick && pick.u)) pick = null;
+    if(pick) out.days[k] = pick;
+    if(del) out.deleted[k] = del;
+  });
+  return out;
+}
+/* ===== CORE END ===== */
+
+/* ===== APP ===== */
+var STORE_KEY = 'th-taxi-app-v1';
+var SYNC_META_KEY = 'th-taxi-sync-meta-v1';
+var EXP_CATS = ['충전비','식비','정비/소모품','세차','기타'];
+var PAY_KINDS = ['카드','현금'];
+var FUEL_KINDS = ['LPG','휘발유','경유','전기','기타'];
+
+var state = null;
+var ui = {screen:'home', date:'', calMonth:'', year:0, csvMonth:'', photoId:null, memoQuery:'', keyTest:''};
+var syncMeta = {email:'', lastSyncAt:0, fileId:''};
+var gpsState = {status:'off', lastAt:0, watch:null};
+var toastTimer = null;
+var saveTimer = null;
+var mapRegistry = new Map();
+var storageOK = true;
+function checkStorage(){
+  try{
+    localStorage.setItem('__th_probe','1');
+    localStorage.removeItem('__th_probe');
+    storageOK = true;
+  }catch(e){ storageOK = false; }
+}
+
+function defaultState(){
+  return {
+    version: 1,
+    settings: {vehicle:'K5 LPI', plate:'서울 00자 0000', fuel:'LPG', offWeekdays:[], offMemo:'', gmapsKey:'', oauthClientId:''},
+    settingsUpdated: 0,
+    days: {},
+    deleted: {},
+    meta: {created: Date.now()},
+    session: null
+  };
+}
+function normalizeState(raw){
+  var s = defaultState();
+  if(!raw || typeof raw !== 'object') return s;
+  var st = raw.settings || {};
+  s.settings = {
+    vehicle: (typeof st.vehicle==='string' && st.vehicle) ? st.vehicle : 'K5 LPI',
+    plate: (typeof st.plate==='string' && st.plate) ? st.plate : '서울 00자 0000',
+    fuel: (typeof st.fuel==='string' && st.fuel) ? st.fuel : 'LPG',
+    offWeekdays: Array.isArray(st.offWeekdays) ? st.offWeekdays.map(Number).filter(function(x){return x>=0 && x<=6;}) : [],
+    offMemo: typeof st.offMemo==='string' ? st.offMemo : '',
+    gmapsKey: typeof st.gmapsKey==='string' ? st.gmapsKey : '',
+    oauthClientId: typeof st.oauthClientId==='string' ? st.oauthClientId : ''
+  };
+  s.settingsUpdated = num(raw.settingsUpdated);
+  var days = raw.days || {};
+  Object.keys(days).forEach(function(k){
+    if(/^\d{4}-\d{2}-\d{2}$/.test(k)) s.days[k] = normalizeDay(days[k]);
+  });
+  var dels = raw.deleted || {};
+  Object.keys(dels).forEach(function(k){
+    if(/^\d{4}-\d{2}-\d{2}$/.test(k)) s.deleted[k] = num(dels[k]);
+  });
+  s.meta = {created: num(raw.meta && raw.meta.created) || Date.now()};
+  if(raw.session && raw.session.start && parseDT(raw.session.start)){
+    s.session = {start:String(raw.session.start), dayKey:String(raw.session.dayKey||'')};
+  }
+  return s;
+}
+function loadAll(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    state = normalizeState(raw ? JSON.parse(raw) : null);
+  }catch(e){ state = defaultState(); }
+  try{
+    var m = localStorage.getItem(SYNC_META_KEY);
+    if(m){ var p = JSON.parse(m); if(p && typeof p==='object'){ syncMeta.email = p.email||''; syncMeta.lastSyncAt = num(p.lastSyncAt); syncMeta.fileId = p.fileId||''; } }
+  }catch(e){}
+}
+function saveSyncMeta(){
+  try{ localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta)); }catch(e){}
+}
+function saveLocal(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    return true;
+  }catch(e){
+    toast('저장 공간이 부족합니다. 설정에서 백업한 뒤 사진을 정리해 주세요.');
+    return false;
+  }
+}
+function saveSoon(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){ saveLocal(); scheduleAutoSync(); }, 350);
+}
+function saveNow(){
+  clearTimeout(saveTimer);
+  var ok = saveLocal();
+  scheduleAutoSync();
+  return ok;
+}
+function ensureDay(key){
+  if(!state.days[key]) state.days[key] = blankDay();
+  return state.days[key];
+}
+function touchDay(key){
+  var d = ensureDay(key);
+  d.u = Date.now();
+  return d;
+}
+function touchSettings(){ state.settingsUpdated = Date.now(); }
+function todayKey(){ return dateKey(new Date()); }
+
+function initUi(){
+  var now = new Date();
+  ui.date = dateKey(now);
+  ui.calMonth = ui.date.slice(0,7);
+  ui.year = now.getFullYear();
+  ui.csvMonth = ui.date.slice(0,7);
+}
+function toast(msg){
+  var el = document.getElementById('toast');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2800);
+}
+function setText(id, text){
+  var el = document.getElementById(id);
+  if(el && el.textContent !== String(text)) el.textContent = text;
+}
+function setHtml(id, html){
+  var el = document.getElementById(id);
+  if(el) el.innerHTML = html;
+}
+function ival(v){ return (v===undefined || v===null) ? '' : String(v); }
+
+var views = {};
+function render(){
+  mapRegistry.clear();
+  var app = document.getElementById('app');
+  try{
+    app.innerHTML = (views[ui.screen] || views.home)();
+  }catch(err){
+    app.innerHTML = '<section class="card"><b>화면을 표시하지 못했습니다.</b><div class="small muted" style="margin-top:6px">'+esc(String(err && err.message ? err.message : err))+'</div></section>';
+  }
+  var plate = document.getElementById('hdrPlate');
+  if(plate) plate.textContent = state.settings.plate || '';
+  var sub = document.getElementById('hdrSub');
+  if(sub) sub.textContent = (state.settings.vehicle || 'K5 LPI') + ' · 광고 없음';
+  updateTabs();
+  afterRender();
+}
+function updateTabs(){
+  var tabs = document.querySelectorAll('#tabbar .tab');
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].classList.toggle('active', tabs[i].getAttribute('data-screen') === ui.screen);
+  }
+}
+function go(screen){
+  ui.screen = screen;
+  render();
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function afterRender(){
+  if(ui.screen === 'home'){
+    var td = state.days[todayKey()];
+    mountMap('homeMap', (td && td.gps && td.gps.points) || []);
+  } else if(ui.screen === 'input'){
+    mountMap('inputMap', coursePoints());
+    if(ui.memoQuery) runMemoSearch(ui.memoQuery, true);
+  }
+  updateGpsLine();
+}
+function coursePoints(){
+  var d = state.days[ui.date];
+  return (d && d.gps && d.gps.points) || [];
+}
+
+/* ---------- 홈 ---------- */
+views.home = function(){
+  var now = new Date(), ts = now.getTime();
+  var today = dateKey(now), ym = today.slice(0,7);
+  var stats = monthStats(state.days, ym, ts);
+  var day = state.days[today];
+  var inc = incomeOf(day);
+  var todayMin = dayWorkMinutes(day, ts);
+  var sess = state.session;
+  var startAt = sess ? parseDT(sess.start) : null;
+  var elapsed = startAt ? Math.max(0, ts - startAt.getTime()) : 0;
+  var stale = !!(sess && elapsed > 20*3600*1000);
+  var pts = (day && day.gps && day.gps.points) || [];
+  var courseUrl = buildMapsDirUrl(pts);
+  var pattern = (state.settings.offWeekdays || []).map(function(d){ return WEEKDAYS[d]; }).join('·');
+  var todayHourly = todayMin > 0 ? fmtNum(inc.sales/(todayMin/60))+'원' : '－';
+
+  var staleBox = stale ? ('<div class="warn-box" style="margin-bottom:12px">'
+    + '<b>START가 ' + fmtDur(elapsed/60000) + '째 켜져 있습니다.</b><br>'
+    + '잠깐 누른 채 잊으셨다면 지금 STOP을 누르거나, 입력 화면에서 종료 시각을 직접 고쳐 주세요.'
+    + '<div class="row" style="margin-top:8px;gap:6px"><button class="btn btn-sm btn-soft" data-act="goInputToday">입력에서 고치기</button>'
+    + '<button class="btn btn-sm btn-red" data-act="stop">지금 STOP</button></div></div>') : '';
+
+  return ''
+  + '<div class="screen-title"><div class="date-line">' + dateLabelKR(today) + ' <span>(' + weekdayKR(today) + ')</span></div>'
+  + '<div class="small muted">' + (day && day.off ? '휴무' : (todayMin > 0 ? '영업일' : '기록 전')) + '</div></div>'
+  + staleBox
+  + (storageOK ? '' : '<div class="warn-box" style="margin-bottom:12px"><b>이 브라우저에서는 자동 저장이 막혀 있습니다.</b><br>기록이 사라질 수 있으니 https:// 주소로 올려 열거나, 설정에서 JSON 백업을 자주 받아 두세요.</div>')
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">운행 기록</div>'
+  +     '<span class="run-state ' + (sess ? 'live' : '') + '">' + (sess ? '<i class="dot pulse"></i>운행 중' : '대기 중') + '</span></div>'
+  +   '<div class="clock ' + (sess ? '' : 'idle') + '" id="elapsedClock">' + (sess ? fmtClock(elapsed) : '00:00:00') + '</div>'
+  +   '<div class="run-sub" id="runSub">' + (sess
+        ? (hm(sess.start) + ' 시작 · ' + fmtDur(elapsed/60000) + ' 경과')
+        : ('오늘 누적 ' + fmtDur(todayMin) + ' · 영업금액 ' + fmtWon(inc.sales))) + '</div>'
+  +   (sess
+        ? '<button class="big-btn big-stop" data-act="stop">■ STOP</button>'
+        : '<button class="big-btn big-start" data-act="start">▶ START</button>')
+  +   '<div class="kpi-grid">'
+  +     '<div class="kpi"><div class="v">' + fmtDur(todayMin) + '</div><div class="l">오늘 일한 시간</div></div>'
+  +     '<div class="kpi"><div class="v">' + fmtWon(inc.sales) + '</div><div class="l">오늘 영업금액</div></div>'
+  +     '<div class="kpi"><div class="v">' + todayHourly + '</div><div class="l">시간당 매출</div></div>'
+  +   '</div>'
+  +   '<div class="tiny muted" style="margin-top:9px;text-align:center" id="gpsLine"></div>'
+  + '</section>'
+  + '<section class="sum-card">'
+  +   '<div class="sum-head"><span>' + ymLabel(ym) + '</span><span>근무 ' + stats.workDays + '일' + (pattern ? ' · 부제: ' + pattern : '') + '</span></div>'
+  +   '<div class="big">' + fmtWon(stats.sales) + '</div>'
+  +   '<div class="sum-grid">'
+  +     '<div class="sum-item"><div class="k">카드수입</div><div class="v">' + fmtWon(stats.card) + '</div></div>'
+  +     '<div class="sum-item"><div class="k">현금수입</div><div class="v">' + fmtWon(stats.cash) + '</div></div>'
+  +     '<div class="sum-item"><div class="k">통행료</div><div class="v">' + fmtWon(stats.toll) + '</div></div>'
+  +     '<div class="sum-item"><div class="k">총 운행시간</div><div class="v">' + fmtDur(stats.workMinutes) + '</div></div>'
+  +     '<div class="sum-item"><div class="k">일평균 운행시간</div><div class="v">' + (stats.workDays ? fmtDur(stats.avgMinutes) : '－') + '</div></div>'
+  +     '<div class="sum-item"><div class="k">시간당 평균 매출</div><div class="v">' + (stats.workMinutes > 0 ? fmtNum(stats.hourly)+'원/h' : '－') + '</div></div>'
+  +   '</div>'
+  +   '<div class="sum-foot"><span>지출 ' + fmtWon(stats.expenses) + '</span><span>충전 ' + fmtWon(stats.chargeAmount) + '</span><span>순수입 ' + fmtWon(stats.net) + '</span></div>'
+  + '</section>'
+  + '<div class="home-2col">'
+  +   '<div class="col">'
+  +     '<section class="card">'
+  +       '<div class="card-h"><div class="card-t">주행</div><div class="card-sub">' + ymLabel(ym) + '</div></div>'
+  +       '<div class="grid3">'
+  +         '<div class="kpi"><div class="v">' + fmtDec1(stats.km) + '<span class="tiny muted"> km</span></div><div class="l">총 주행거리</div></div>'
+  +         '<div class="kpi"><div class="v">' + fmtDec1(stats.bizKm) + '<span class="tiny muted"> km</span></div><div class="l">영업거리</div></div>'
+  +         '<div class="kpi"><div class="v">' + (stats.rideRate===null ? '－' : stats.rideRate + '%') + '</div><div class="l">승차율</div></div>'
+  +       '</div>'
+  +     '</section>'
+  +     '<section class="card">'
+  +       '<div class="card-h"><div class="card-t">LPG 충전</div><div class="card-sub">' + ymLabel(ym) + '</div></div>'
+  +       '<div class="grid3">'
+  +         '<div class="kpi"><div class="v">' + fmtDec1(stats.chargeLiters) + '<span class="tiny muted"> L</span></div><div class="l">총 충전량</div></div>'
+  +         '<div class="kpi"><div class="v">' + fmtWon(stats.chargeAmount) + '</div><div class="l">충전금액</div></div>'
+  +         '<div class="kpi"><div class="v">' + (stats.fuelEco===null ? '－' : stats.fuelEco) + '<span class="tiny muted"> km/L</span></div><div class="l">평균 연비</div></div>'
+  +       '</div>'
+  +     '</section>'
+  +   '</div>'
+  +   '<div class="col">'
+  +     '<section class="card">'
+  +       '<div class="card-h"><div class="card-t">오늘 코스</div><div class="card-sub">GPS ' + pts.length + '지점</div></div>'
+  +       mapBoxHtml('homeMap', pts)
+  +       '<div style="margin-top:10px">' + (courseUrl
+          ? '<a class="btn btn-primary btn-block" href="' + esc(courseUrl) + '" target="_blank" rel="noopener">구글 지도에서 오늘 코스 보기</a>'
+          : '<button class="btn btn-block" disabled>구글 지도에서 오늘 코스 보기</button>') + '</div>'
+  +       '<div class="tiny muted" style="margin-top:7px;line-height:1.5">' + (pts.length
+          ? '출발·도착·경유지로 구글 지도를 엽니다. (경유지 최대 9곳)'
+          : 'START를 누르고 위치를 허용하면 이동한 좌표가 쌓입니다.') + '</div>'
+  +     '</section>'
+  +     '<section class="card">'
+  +       '<div class="card-h"><div class="card-t">이번 달 달력</div><a class="small" href="#" data-act="nav" data-screen="calendar">전체 보기 ›</a></div>'
+  +       miniCalendarHtml(today)
+  +     '</section>'
+  +   '</div>'
+  + '</div>';
+};
+
+function miniCalendarHtml(today){
+  var ym = today.slice(0,7);
+  var p = ym.split('-');
+  var y = Number(p[0]), mo = Number(p[1]);
+  var cells = calendarCells(y, mo);
+  var html = '<div class="cal-dow">' + WEEKDAYS.map(function(w){ return '<div>'+w+'</div>'; }).join('') + '</div>';
+  html += '<div class="cal-grid">';
+  cells.forEach(function(c){
+    if(!c){ html += '<div class="cell empty mini"></div>'; return; }
+    var d = state.days[c.key];
+    var off = d && d.off;
+    var pat = isPatternOff(c.key, state.settings.offWeekdays);
+    var mins = d ? dayWorkMinutes(d, Date.now()) : 0;
+    var cls = 'cell mini' + (c.dow===0?' sun':'') + (c.dow===6?' sat':'') + (off?' off':'') + (pat&&!off?' pat':'') + (c.key===today?' today':'');
+    html += '<div class="' + cls + '" data-act="openDay" data-key="' + c.key + '" title="' + esc(c.key + (off?' 휴무':(mins?' '+fmtDur(mins):''))) + '">'
+      + '<div class="d">' + c.d + '</div>'
+      + (mins>0 ? '<div class="hr">' + fmtDurShort(mins) + '</div>' : '')
+      + (off ? '<div class="offtag">휴</div>' : '')
+      + '</div>';
+  });
+  html += '</div>';
+  html += '<div class="legend"><span><i style="background:#FFF3F1;border:1px solid #F8DCD7"></i>휴무</span><span><i style="background:#EDF1F6"></i>부제</span><span><i style="background:#0F4C81"></i>일한 시간</span></div>';
+  return html;
+}
+
+/* ---------- 입력 ---------- */
+views.input = function(){
+  var key = ui.date;
+  var stored = state.days[key];
+  var d = stored || blankDay();
+  var nowTs = Date.now();
+  var inc = incomeOf(d);
+  var work = dayWorkMinutes(stored || {}, nowTs);
+  var runs = (d.runs && d.runs.length) ? d.runs : [{s:'', e:''}];
+  var exp = expenseTotal(d);
+  var ch = chargeTotals(d);
+  var dist = d.distance || {};
+  var km = num(dist.total), biz = num(dist.business);
+  var rate = km > 0 ? round1(biz/km*100) : null;
+  var pts = (d.gps && d.gps.points) || [];
+  var courseUrl = buildMapsDirUrl(pts);
+  var gpsKm = gpsDistanceKm(pts);
+  var live = !!(state.session && state.session.dayKey === key);
+  var warn = '';
+  runs.forEach(function(r){
+    var s = parseDT(r.s), e = parseDT(r.e);
+    if(s && e && e.getTime() <= s.getTime()) warn = '종료 시각이 시작보다 빠릅니다. 날짜를 확인해 주세요.';
+  });
+  var pattern = (state.settings.offWeekdays || []).map(function(x){ return WEEKDAYS[x]; }).join('·');
+
+  return ''
+  + '<section class="card tight" style="display:flex;align-items:center;gap:10px">'
+  +   '<button class="btn btn-sm" data-act="prevDay" aria-label="이전 날">◀</button>'
+  +   '<div style="flex:1;text-align:center;min-width:0">'
+  +     '<div style="font-size:15.5px;font-weight:800">' + dateLabelKR(key) + ' <span class="muted" style="font-weight:700">(' + weekdayKR(key) + ')</span></div>'
+  +     '<button class="btn btn-ghost btn-sm" data-act="today" style="min-height:26px;font-size:11.5px">오늘로</button>'
+  +   '</div>'
+  +   '<button class="btn btn-sm" data-act="nextDay" aria-label="다음 날">▶</button>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">운행 시간</div>'
+  +     '<span class="chip ' + (live ? 'live' : '') + '" id="liveChip">' + (live ? '운행 중 ' + fmtClock(nowTs - (parseDT(state.session.start)||new Date()).getTime()) : '일한 시간') + '</span></div>'
+  +   runs.map(function(r, i){
+        return '<div class="run-row">'
+        + '<div class="rr-top"><b class="small">' + (i===0 ? '운행' : '추가 운행 ' + (i+1)) + '</b>'
+        + (i>0 ? '<button class="del-x" data-act="delRun" data-idx="' + i + '" aria-label="삭제">✕</button>' : '') + '</div>'
+        + '<div class="run-fields">'
+        +   '<div class="field"><label>운행시작</label><input type="datetime-local" data-day="' + key + '" data-field="runs.' + i + '.s" value="' + esc(r.s) + '"></div>'
+        +   '<div class="field"><label>운행종료</label><input type="datetime-local" data-day="' + key + '" data-field="runs.' + i + '.e" value="' + esc(r.e) + '"></div>'
+        + '</div>'
+        + '<div class="tiny muted" style="margin-top:5px">' + (r.s && r.e ? '이 운행 ' + fmtDur(runMinutes(r, nowTs)) : (r.s && !r.e ? (key === todayKey() ? '진행 중 (STOP 전까지 계속 계산)' : '종료 시각이 비어 있습니다') : '')) + '</div>'
+        + '</div>';
+      }).join('')
+  +   '<div class="row wrap" style="gap:8px;margin-top:6px">'
+  +     '<button class="btn btn-sm btn-soft" data-act="addRun">+ 운행 추가</button>'
+  +     (live ? '<button class="btn btn-sm btn-red" data-act="stop">STOP</button>' : '')
+  +     '<div class="spacer"></div>'
+  +     '<div class="field" style="width:132px"><label>휴식(분) 차감</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="breakMinutes" value="' + esc(ival(d.breakMinutes)) + '"></div>'
+  +   '</div>'
+  +   '<div class="total-line" style="margin-top:10px"><span>총 일한 시간</span><b id="workTotal">' + fmtDur(work) + '</b></div>'
+  +   '<div class="total-line" style="margin-top:6px"><span>시간당 매출</span><b id="hourlyRev">' + (work>0 ? fmtNum(inc.sales/(work/60))+'원' : '－') + '</b></div>'
+  +   '<div class="tiny" id="runWarn" style="margin-top:7px;color:#B42318;' + (warn?'':'display:none') + '">' + esc(warn) + '</div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">수입</div>'
+  +     '<div class="seg" style="width:168px">'
+  +       '<button class="' + (d.income.mode!=='direct'?'on':'') + '" data-act="incomeMode" data-mode="auto">자동합산</button>'
+  +       '<button class="' + (d.income.mode==='direct'?'on':'') + '" data-act="incomeMode" data-mode="direct">직접입력</button>'
+  +     '</div></div>'
+  +   '<div class="grid3">'
+  +     '<div class="field"><label>카드수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.card" value="' + esc(ival(d.income.card)) + '"></div>'
+  +     '<div class="field"><label>현금수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.cash" value="' + esc(ival(d.income.cash)) + '"></div>'
+  +     '<div class="field"><label>통행료 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.toll" value="' + esc(ival(d.income.toll)) + '"></div>'
+  +   '</div>'
+  +   (d.income.mode==='direct' ? '<div class="field" style="margin-top:8px"><label>영업금액 직접 입력 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="카드+현금과 다른 금액" data-day="' + key + '" data-field="income.direct" value="' + esc(ival(d.income.direct)) + '"></div>' : '')
+  +   '<div class="total-line" style="margin-top:10px"><span>영업금액 <span class="tiny muted">' + (d.income.mode==='direct'?'직접 입력':'카드+현금 자동') + '</span></span><b id="salesTotal">' + fmtWon(inc.sales) + '</b></div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">주행거리</div><div class="card-sub">승차율 ' + (rate===null?'－':rate+'%') + '</div></div>'
+  +   '<div class="grid2">'
+  +     '<div class="field"><label>총 주행거리 (km)</label><input class="num" type="number" inputmode="decimal" min="0" step="0.1" placeholder="0" data-day="' + key + '" data-field="distance.total" value="' + esc(ival(dist.total)) + '"></div>'
+  +     '<div class="field"><label>영업거리 (km)</label><input class="num" type="number" inputmode="decimal" min="0" step="0.1" placeholder="0" data-day="' + key + '" data-field="distance.business" value="' + esc(ival(dist.business)) + '"></div>'
+  +   '</div>'
+  +   '<div class="total-line" style="margin-top:10px"><span>승차율 <span class="tiny muted">영업거리÷총 주행</span></span><b id="rideRate">' + (rate===null?'－':rate+'%') + '</b></div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">지출</div><div class="card-sub" id="expTotal">' + fmtWon(exp) + '</div></div>'
+  +   (d.expenses.length ? d.expenses.map(function(e, i){
+        return '<div class="list-row">'
+        + '<div class="list-head full"><b>지출 ' + (i+1) + '</b><button class="del-x" data-act="delExp" data-idx="' + i + '" aria-label="삭제">✕</button></div>'
+        + '<div class="field"><label>구분</label><select data-day="' + key + '" data-field="expenses.' + i + '.cat">' + EXP_CATS.map(function(c){ return '<option' + (e.cat===c?' selected':'') + '>' + c + '</option>'; }).join('') + '</select></div>'
+        + '<div class="field"><label>결제수단</label><select data-day="' + key + '" data-field="expenses.' + i + '.pay">' + PAY_KINDS.map(function(c){ return '<option' + (e.pay===c?' selected':'') + '>' + c + '</option>'; }).join('') + '</select></div>'
+        + '<div class="field"><label>금액 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="expenses.' + i + '.amount" value="' + esc(ival(e.amount)) + '"></div>'
+        + '<div class="field"><label>메모</label><input type="text" placeholder="예: 김밥, 워셔액" data-day="' + key + '" data-field="expenses.' + i + '.memo" value="' + esc(e.memo||'') + '"></div>'
+        + '</div>';
+      }).join('') : '<div class="small muted" style="margin-bottom:8px">지출이 없습니다.</div>')
+  +   '<button class="btn btn-sm btn-soft" data-act="addExp">+ 지출 추가</button>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">충전</div><div class="card-sub" id="chargeTotal">' + fmtWon(ch.amount) + ' · ' + fmtNum(ch.liters) + 'L</div></div>'
+  +   (d.charges.length ? d.charges.map(function(c, i){
+        return '<div class="list-row">'
+        + '<div class="list-head full"><b>충전 ' + (i+1) + '</b><button class="del-x" data-act="delCharge" data-idx="' + i + '" aria-label="삭제">✕</button></div>'
+        + '<div class="field full"><label>충전소</label><input type="text" placeholder="예: SK가스 오류충전소" data-day="' + key + '" data-field="charges.' + i + '.station" value="' + esc(c.station||'') + '"></div>'
+        + '<div class="field"><label>유종</label><select data-day="' + key + '" data-field="charges.' + i + '.fuel">' + FUEL_KINDS.map(function(f){ return '<option' + ((c.fuel||state.settings.fuel)===f?' selected':'') + '>' + f + '</option>'; }).join('') + '</select></div>'
+        + '<div class="field"><label>충전량 (L)</label><input class="num" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" data-day="' + key + '" data-field="charges.' + i + '.liters" value="' + esc(ival(c.liters)) + '"></div>'
+        + '<div class="field"><label>단가 (원/L)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="charges.' + i + '.unit" value="' + esc(ival(c.unit)) + '"></div>'
+        + '<div class="field"><label>충전금액 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="자동" data-day="' + key + '" data-field="charges.' + i + '.amount" value="' + esc(ival(c.amount)) + '"></div>'
+        + '<div class="tiny muted full">금액을 고치면 단가가, 단가·충전량을 고치면 금액이 자동으로 맞춰집니다.</div>'
+        + '</div>';
+      }).join('') : '<div class="small muted" style="margin-bottom:8px">충전 기록이 없습니다.</div>')
+  +   '<button class="btn btn-sm btn-soft" data-act="addCharge">+ 충전 추가</button>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">코스 &amp; 메모</div><div class="card-sub" id="courseCount">GPS ' + pts.length + '지점</div></div>'
+  +   '<div class="small muted" style="margin-bottom:8px" id="courseSpan">' + courseSpanText(pts) + '</div>'
+  +   mapBoxHtml('inputMap', pts)
+  +   '<div class="row wrap" style="gap:8px;margin-top:10px">'
+  +     (courseUrl ? '<a class="btn btn-sm btn-primary" id="courseLink" href="' + esc(courseUrl) + '" target="_blank" rel="noopener">구글 지도에서 코스 열기</a>' : '<button class="btn btn-sm" disabled>구글 지도에서 코스 열기</button>')
+  +     (pts.length ? '<button class="btn btn-sm" data-act="clearGps" style="color:#B42318">GPS 기록 지우기</button>' : '')
+  +   '</div>'
+  +   (gpsKm > 0 ? '<div class="hint-box" style="margin-top:10px"><b>GPS 이동거리 약 ' + fmtNum(gpsKm) + ' km</b> <span class="tiny">(참고값 · 화면이 꺼지면 일부 빠짐)</span><br><button class="btn btn-sm btn-soft" style="margin-top:7px" data-act="applyGpsKm" data-km="' + gpsKm + '">총 주행거리에 넣기</button></div>' : '')
+  +   '<div class="field" style="margin-top:12px"><label>메모</label><textarea placeholder="오늘 특이사항, 손님, 사고, 정비 예정…" data-day="' + key + '" data-field="memo">' + esc(d.memo||'') + '</textarea></div>'
+  +   '<div class="row wrap" style="gap:8px;margin-top:10px">'
+  +     '<label class="btn btn-sm btn-soft photo-btn" for="photoInput">📷 사진 첨부</label>'
+  +     '<input id="photoInput" type="file" accept="image/*" multiple style="display:none">'
+  +     '<span class="tiny muted">사진은 줄여서 이 기기에만 저장됩니다 (' + d.photos.length + '장)</span>'
+  +   '</div>'
+  +   (d.photos.length ? '<div class="photos">' + d.photos.map(function(p){
+        return '<div class="photo"><img src="' + esc(p.data) + '" alt="첨부 사진" data-act="openPhoto" data-pid="' + esc(p.id) + '"><button class="x" data-act="delPhoto" data-pid="' + esc(p.id) + '" aria-label="사진 삭제">✕</button></div>';
+      }).join('') + '</div>' : '')
+  +   '<div class="settings-block" style="margin-top:14px">'
+  +     '<h3>메모 검색</h3>'
+  +     '<input type="search" id="memoSearch" placeholder="메모 내용으로 지난 기록 찾기" value="' + esc(ui.memoQuery) + '">'
+  +     '<div id="memoResults" style="margin-top:6px"></div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<div class="off-toggle ' + (d.off?'on':'') + '" style="margin-bottom:6px">'
+  +   '<div><div class="t">' + (d.off ? '휴무로 표시된 날' : '운행한 날') + '</div>'
+  +   '<div class="s">' + (pattern ? '부제 패턴: ' + pattern + '요일' : '휴무 패턴은 설정에서 정할 수 있어요') + '</div></div>'
+  +   '<button class="btn btn-sm ' + (d.off?'btn-red':'btn-soft') + '" data-act="toggleOff">' + (d.off?'휴무 해제':'휴무로 표시') + '</button>'
+  + '</div>';
+};
+
+function courseSpanText(pts){
+  if(!pts || !pts.length) return 'GPS 기록이 없습니다. 홈에서 START를 누르면 이동 경로가 쌓입니다.';
+  var a = new Date(pts[0].t), b = new Date(pts[pts.length-1].t);
+  return '시작 ' + pad2(a.getHours()) + ':' + pad2(a.getMinutes()) + ' · 마지막 ' + pad2(b.getHours()) + ':' + pad2(b.getMinutes()) + ' · ' + pts.length + '지점';
+}
+
+/* ---------- 영업달력 ---------- */
+views.calendar = function(){
+  var ym = ui.calMonth;
+  var p = ym.split('-');
+  var y = Number(p[0]), mo = Number(p[1]);
+  var stats = monthStats(state.days, ym, Date.now());
+  var cells = calendarCells(y, mo);
+  var today = todayKey();
+  var pattern = (state.settings.offWeekdays || []).map(function(d){ return WEEKDAYS[d]; }).join('·');
+
+  var html = ''
+  + '<section class="card tight" style="display:flex;align-items:center;gap:10px">'
+  +   '<button class="btn btn-sm" data-act="prevMonth" aria-label="이전 달">◀</button>'
+  +   '<div style="flex:1;text-align:center;font-size:16px;font-weight:800">' + ymLabel(ym) + '</div>'
+  +   '<button class="btn btn-sm" data-act="nextMonth" aria-label="다음 달">▶</button>'
+  + '</section>'
+  + '<section class="card tight">'
+  +   '<div class="grid2" style="gap:8px">'
+  +     '<div class="kpi"><div class="v money" style="color:#D92D20">' + fmtWon(stats.sales) + '</div><div class="l">영업금액</div></div>'
+  +     '<div class="kpi"><div class="v money" style="color:#1565C0">' + fmtWon(stats.card) + '</div><div class="l">카드수입</div></div>'
+  +     '<div class="kpi"><div class="v money" style="color:#4B5563">' + fmtWon(stats.cash) + '</div><div class="l">현금수입</div></div>'
+  +     '<div class="kpi"><div class="v money">' + fmtWon(stats.expenses) + '</div><div class="l">지출금액</div></div>'
+  +     '<div class="kpi"><div class="v time">' + fmtDur(stats.workMinutes) + '</div><div class="l">총 운행시간</div></div>'
+  +     '<div class="kpi"><div class="v time">' + (stats.workDays ? fmtDur(stats.avgMinutes) : '－') + '</div><div class="l">일평균 운행시간</div></div>'
+  +   '</div>'
+  +   '<div class="sum-foot" style="color:#6B7280;border-top:1px solid #E5EAF1;margin-top:10px;padding-top:9px;display:flex;justify-content:space-between;font-size:11.5px;font-weight:700"><span>근무 ' + stats.workDays + '일</span><span>충전 ' + fmtWon(stats.chargeAmount) + '</span><span>부제: ' + (pattern || '없음') + '</span></div>'
+  + '</section>'
+  + '<section class="card tight">'
+  +   '<div class="cal-wrap">'
+  +     '<div class="cal-dow">' + WEEKDAYS.map(function(w){ return '<div>' + w + '</div>'; }).join('') + '</div>'
+  +     '<div class="cal-grid">' + cells.map(function(c){ return calCellHtml(c, today); }).join('') + '</div>'
+  +   '</div>'
+  +   '<div class="legend"><span><i style="background:#D92D20"></i>영업금액</span><span><i style="background:#1565C0"></i>카드</span><span><i style="background:#4B5563"></i>현금</span><span><i style="background:#0F4C81"></i>일한 시간</span><span>금액 단위: 만원</span></div>'
+  + '</section>'
+  + '<div class="tiny muted center" style="padding:0 8px 6px">날짜를 누르면 그 날의 입력 화면으로 갑니다.</div>';
+  return html;
+};
+
+function calCellHtml(c, today){
+  if(!c) return '<div class="cell empty"></div>';
+  var d = state.days[c.key];
+  var inc = incomeOf(d);
+  var mins = d ? dayWorkMinutes(d, Date.now()) : 0;
+  var off = !!(d && d.off);
+  var pat = isPatternOff(c.key, state.settings.offWeekdays);
+  var cls = 'cell' + (c.dow===0?' sun':'') + (c.dow===6?' sat':'') + (off?' off':'') + (pat&&!off?' pat':'') + (c.key===today?' today':'');
+  var html = '<div class="' + cls + '" data-act="openDay" data-key="' + c.key + '" title="' + esc(c.key + ' · ' + (off ? '휴무' : fmtDur(mins)) + ' · ' + fmtWon(inc.sales)) + '">';
+  html += '<div class="d">' + c.d + '</div>';
+  if(mins > 0) html += '<div class="hr">' + fmtDurShort(mins) + '</div>';
+  if(off) html += '<div class="offtag">휴무</div>';
+  if(inc.sales > 0) html += '<div class="amt sales">' + fmtMan(inc.sales) + '</div>';
+  if(inc.card > 0) html += '<div class="amt card">' + fmtMan(inc.card) + '</div>';
+  if(inc.cash > 0) html += '<div class="amt cash">' + fmtMan(inc.cash) + '</div>';
+  html += '</div>';
+  return html;
+}
+
+/* ---------- 통계 ---------- */
+views.stats = function(){
+  var years = dataYears();
+  var y = ui.year;
+  if(years.indexOf(String(y)) === -1) years.unshift(String(y));
+  var months = [];
+  for(var m=1;m<=12;m++){ months.push(monthStats(state.days, y + '-' + pad2(m), Date.now())); }
+  var labels = months.map(function(_, i){ return (i+1) + '월'; });
+  var totSales = 0, totMin = 0, totDays = 0;
+  months.forEach(function(x){ totSales += x.sales; totMin += x.workMinutes; totDays += x.workDays; });
+  var totalHours = months.map(function(x){ return round1(x.workMinutes/60); });
+  var avgHours = months.map(function(x){ return round1(x.avgMinutes/60); });
+  var hourly = months.map(function(x){ return Math.round(x.hourly); });
+  var hasAny = months.some(function(x){ return x.sales>0 || x.workMinutes>0; });
+
+  var salesChart = groupedBarChart(labels, [
+    {name:'영업금액', color:'#0F4C81', values: months.map(function(x){ return x.sales; }), fmt: fmtWon},
+    {name:'카드수입', color:'#4C8FD1', values: months.map(function(x){ return x.card; }), fmt: fmtWon},
+    {name:'현금수입', color:'#94A3B8', values: months.map(function(x){ return x.cash; }), fmt: fmtWon}
+  ], {unit:'won', height:300, title:y + '년 월별 수입'});
+
+  var timeChart = comboTimeChart(labels, totalHours, avgHours, hourly, {height:300, title:y + '년 월별 운행시간'});
+
+  var chartCards = hasAny
+    ? ('<section class="card">'
+      +   '<div class="card-h"><div class="card-t">월별 수입</div><div class="card-sub">단위 만원</div></div>'
+      +   '<div class="chart-scroll">' + salesChart + '</div>'
+      +   '<div class="chart-legend"><span><i style="background:#0F4C81"></i>영업금액</span><span><i style="background:#4C8FD1"></i>카드수입</span><span><i style="background:#94A3B8"></i>현금수입</span></div>'
+      + '</section>'
+      + '<section class="card">'
+      +   '<div class="card-h"><div class="card-t">월별 운행시간 · 시간당 매출</div><div class="card-sub">막대 h · 꺾은선</div></div>'
+      +   '<div class="chart-scroll">' + timeChart + '</div>'
+      +   '<div class="chart-legend"><span><i style="background:#2E6FA8"></i>총 운행시간(h)</span><span><i style="background:#C2413A"></i>일평균 운행시간(h)</span><span><i style="background:#C08A2E"></i>시간당 매출(오른쪽 축, 만원)</span></div>'
+      + '</section>')
+    : ('<section class="card"><div class="card-h"><div class="card-t">월별 추이</div></div>'
+      + '<div class="small muted center" style="padding:20px 6px;line-height:1.8">' + y + '년 기록이 아직 없습니다.<br>입력 화면에서 기록하거나 설정에서 샘플 데이터를 넣어 보세요.</div></section>');
+
+  var html = ''
+  + '<div class="screen-title"><h2>통계</h2><div class="row" style="gap:6px">'
+  +   '<button class="btn btn-sm" data-act="prevYear">◀</button>'
+  +   '<select id="yearSel" style="width:auto;min-height:34px;padding:4px 8px;font-weight:800">' + years.map(function(v){ return '<option value="' + v + '"' + (Number(v)===y?' selected':'') + '>' + v + '년</option>'; }).join('') + '</select>'
+  +   '<button class="btn btn-sm" data-act="nextYear">▶</button>'
+  + '</div></div>'
+  + '<section class="card tight">'
+  +   '<div class="grid3">'
+  +     '<div class="kpi"><div class="v money" style="color:#D92D20">' + fmtWon(totSales) + '</div><div class="l">연간 영업금액</div></div>'
+  +     '<div class="kpi"><div class="v time">' + fmtDur(totMin) + '</div><div class="l">연간 운행시간</div></div>'
+  +     '<div class="kpi"><div class="v">' + totDays + '일</div><div class="l">연간 근무일</div></div>'
+  +   '</div>'
+  + '</section>'
+  + chartCards
+  + '<section class="card">'
+  +   '<div class="card-h"><div class="card-t">월별 상세</div></div>'
+  +   '<div class="table-wrap"><table class="data"><thead><tr><th>월</th><th>영업금액</th><th>카드</th><th>현금</th><th>근무</th><th>총 운행</th><th>일평균</th><th>시간당</th></tr></thead><tbody>'
+  +   months.map(function(x, i){
+        return '<tr><td>' + (i+1) + '월</td><td class="red">' + (x.sales?fmtNum(x.sales):'-') + '</td><td class="blue">' + (x.card?fmtNum(x.card):'-') + '</td><td>' + (x.cash?fmtNum(x.cash):'-') + '</td><td>' + (x.workDays||'-') + '</td><td>' + (x.workMinutes?fmtDurShort(x.workMinutes):'-') + '</td><td>' + (x.workDays?fmtDurShort(x.avgMinutes):'-') + '</td><td>' + (x.hourly?fmtNum(x.hourly):'-') + '</td></tr>';
+      }).join('')
+  +   '</tbody><tfoot><tr><td>합계</td><td>' + fmtNum(totSales) + '</td><td></td><td></td><td>' + totDays + '</td><td>' + fmtDurShort(totMin) + '</td><td>' + (totDays?fmtDurShort(totMin/totDays):'-') + '</td><td>' + (totMin?fmtNum(totSales/(totMin/60)):'-') + '</td></tr></tfoot></table></div>'
+  +   (hasAny ? '' : '<div class="small muted center" style="margin-top:8px">' + y + '년 기록이 아직 없습니다.</div>')
+  + '</section>';
+  return html;
+};
+
+function dataYears(){
+  var set = {};
+  Object.keys(state.days).forEach(function(k){ set[k.slice(0,4)] = 1; });
+  set[String(new Date().getFullYear())] = 1;
+  set[String(ui.year)] = 1;
+  return Object.keys(set).sort().reverse();
+}
+
+/* ---------- 설정 ---------- */
+views.settings = function(){
+  var s = state.settings;
+  var size = storageSizeMb();
+  var pct = Math.min(100, Math.round(size/5*100));
+  var httpsOK = isHttpsOrigin(location.protocol, location.hostname);
+  var signed = !!syncMeta.email;
+  var signedMsg = esc(syncStatusText());
+  var pattern = (s.offWeekdays || []).map(function(d){ return WEEKDAYS[d]; }).join('·');
+  var plateAuto = offWeekdayFromPlate(s.plate);
+
+  return ''
+  + '<div class="screen-title"><h2>설정</h2><div class="small muted">기기 저장 · 서버 없음</div></div>'
+  + '<section class="card">'
+  +   '<div class="settings-block">'
+  +     '<h3>차량 정보</h3>'
+  +     '<div class="grid2">'
+  +       '<div class="field"><label>차량종류</label><input type="text" data-field="settings.vehicle" value="' + esc(s.vehicle) + '"></div>'
+  +       '<div class="field"><label>차량번호</label><input type="text" data-field="settings.plate" value="' + esc(s.plate) + '"></div>'
+  +       '<div class="field"><label>기본 유종</label><select data-field="settings.fuel">' + FUEL_KINDS.map(function(f){ return '<option' + (s.fuel===f?' selected':'') + '>' + f + '</option>'; }).join('') + '</select></div>'
+  +     '</div>'
+  +   '</div>'
+  +   '<div class="settings-block">'
+  +     '<h3>휴무 패턴 (부제)</h3>'
+  +     '<div class="week-btns">' + WEEKDAYS.map(function(w, i){
+          var cls = (i===0?'sun ':'') + (i===6?'sat ':'');
+          var on = (s.offWeekdays||[]).indexOf(i) !== -1;
+          return '<button class="' + cls + (on?'on':'') + '" data-act="weekToggle" data-dow="' + i + '">' + w + '</button>';
+        }).join('') + '</div>'
+  +     '<div class="tiny muted" style="margin-top:7px">' + (pattern ? '지정된 휴무: ' + pattern + '요일' : '지정된 휴무 없음') + '</div>'
+  +     (plateAuto !== null ? '<button class="btn btn-sm btn-soft" data-act="autoPattern" style="margin-top:8px">차량번호 끝자리로 자동 설정 (' + WEEKDAYS[plateAuto] + '요일)</button>' : '')
+  +     '<div class="field" style="margin-top:10px"><label>휴무 메모</label><textarea data-field="settings.offMemo" placeholder="예: 매주 월요일 부제, 공휴일은 쉼" style="min-height:60px">' + esc(s.offMemo||'') + '</textarea></div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="settings-block">'
+  +     '<h3>Google 지도 (코스 표시)</h3>'
+  +     '<div class="field"><label>Google Maps API 키</label><input type="password" data-field="settings.gmapsKey" value="' + esc(s.gmapsKey||'') + '" placeholder="AIza..." autocomplete="off" spellcheck="false"></div>'
+  +     '<div class="row wrap" style="gap:8px;margin-top:8px">'
+  +       '<button class="btn btn-sm btn-soft" data-act="saveMapsKey">저장</button>'
+  +       '<button class="btn btn-sm" data-act="testMapKey">지도 연결 테스트</button>'
+  +     '</div>'
+  +     '<div id="mapKeyMsg" style="margin-top:9px"></div>'
+  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">키는 <b>이 기기 브라우저(localStorage)</b>에만 저장되고 코드에 들어가지 않습니다. 키가 없거나 오프라인이어도 앱의 다른 기능은 모두 그대로 동작하고, <b>구글 지도에서 코스 열기</b> 버튼도 항상 동작합니다.<br>Google Cloud에서 <b>Maps JavaScript API</b>를 사용 설정하고, 키 제한을 쓸 때는 <b>HTTP 리퍼러</b>에 이 페이지 주소를 넣으세요. 파일로 열었다면 리퍼러 제한을 끄거나 웹 주소로 올려야 지도가 보입니다.</div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="settings-block">'
+  +     '<h3>구글 계정 동기화 (여러 기기)</h3>'
+  +     '<div class="hint-box" id="syncStatus" style="margin-bottom:9px">' + signedMsg + '</div>'
+  +     '<div class="field"><label>Google OAuth 클라이언트 ID</label><input type="text" data-field="settings.oauthClientId" value="' + esc(s.oauthClientId||'') + '" placeholder="000000000000-xxxxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false"></div>'
+  +     '<div class="row wrap" style="gap:8px;margin-top:9px">'
+  +       '<button class="btn btn-sm btn-primary" data-act="signIn"' + (httpsOK?'':' disabled') + '>구글 로그인</button>'
+  +       '<button class="btn btn-sm btn-soft" data-act="syncNow"' + ((httpsOK && signed)?'':' disabled') + '>지금 동기화</button>'
+  +       '<button class="btn btn-sm" data-act="signOut"' + (signed?'':' disabled') + '>로그아웃</button>'
+  +     '</div>'
+  +     (httpsOK ? '' : '<div class="warn-box" style="margin-top:10px"><b>지금은 파일로 열린 화면(file://)입니다.</b><br>구글 로그인은 <b>https:// 웹 주소(GitHub Pages 등)</b>에 올렸을 때 동작합니다. 그전에도 모든 기록은 이 기기에 저장되고, JSON 백업으로 옮길 수 있어요.</div>')
+  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">로그인하면 기록이 드라이브의 앱 전용 공간(<b>appDataFolder</b>)에 <b>tapp_personal_taxi_sync.json</b> 파일 하나로 저장되고, 저장·수정·START/STOP 때마다 자동으로 맞춰집니다. 같은 날짜를 두 기기에서 동시에 고치면 <b>나중에 고친 기록</b>이 남습니다. 운행 중 표시는 기기별로만 유지됩니다. <b>지도 API 키·OAuth 클라이언트 ID는 이 기기에만 저장되고 동기화되지 않습니다.</b><br>준비물: Google Cloud 콘솔 → <b>OAuth 클라이언트 ID(웹 애플리케이션)</b> 만들고 승인된 JavaScript 원본에 이 페이지 주소 추가 → 같은 프로젝트에서 <b>Google Drive API</b> 사용 설정. OAuth 동의 화면이 ‘테스트’ 상태라면 본인 구글 계정을 테스트 사용자로 추가해야 로그인됩니다.</div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="settings-block">'
+  +     '<h3>백업 · 복원 · 내보내기</h3>'
+  +     '<div class="row wrap" style="gap:8px">'
+  +       '<button class="btn btn-sm btn-primary" data-act="backup">JSON 백업 다운로드</button>'
+  +       '<label class="btn btn-sm btn-soft" for="restoreInput" style="margin:0">JSON 복원</label>'
+  +       '<input id="restoreInput" type="file" accept=".json,application/json" style="display:none">'
+  +     '</div>'
+  +     '<div class="row wrap" style="gap:8px;margin-top:10px;align-items:flex-end">'
+  +       '<div class="field" style="width:150px"><label>CSV로 내보낼 달</label><input type="month" id="csvMonth" value="' + esc(ui.csvMonth) + '"></div>'
+  +       '<button class="btn btn-sm btn-soft" data-act="exportCsv">CSV 내보내기</button>'
+  +     '</div>'
+  +     '<div class="tiny muted" style="margin-top:7px">엑셀에서 바로 열리도록 UTF-8(BOM) CSV로 저장합니다.</div>'
+  +   '</div>'
+  +   '<div class="settings-block">'
+  +     '<h3>저장 공간</h3>'
+  +     '<div class="stor-meter"><i style="width:' + pct + '%"></i></div>'
+  +     '<div class="tiny muted">약 ' + size.toFixed(2) + ' MB 사용 중 (브라우저 한도 약 5 MB)</div>'
+  +     (storageOK ? '' : '<div class="warn-box" style="margin-top:8px">이 브라우저에서는 자동 저장이 막혀 있습니다. https:// 주소로 올려 열거나 JSON 백업을 이용해 주세요.</div>')
+  +   '</div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="settings-block">'
+  +     '<h3>테스트 · 초기화</h3>'
+  +     '<div class="row wrap" style="gap:8px">'
+  +       '<button class="btn btn-sm" data-act="sample">샘플 데이터 넣기</button>'
+  +       '<button class="btn btn-sm btn-danger-ghost" data-act="reset">전체 초기화</button>'
+  +     '</div>'
+  +     '<div class="tiny muted" style="margin-top:7px;line-height:1.6">샘플은 빈 날짜에만 들어갑니다. 초기화는 운행 기록만 지우고 차량 정보·API 키·구글 로그인은 유지하며, 지우기 전에 백업 파일을 자동으로 내려받습니다.</div>'
+  +   '</div>'
+  + '</section>'
+
+  + '<section class="card">'
+  +   '<div class="settings-block">'
+  +     '<h3>GPS 기록 안내</h3>'
+  +     '<div class="hint-box">휴대폰 화면이 꺼지거나 카카오T·내비 같은 다른 앱으로 넘어가면 브라우저 특성상 위치 기록이 멈출 수 있습니다. 그럴 때는 구글 지도 앱의 <b>타임라인</b>을 함께 켜 두면 이동 기록이 남습니다. 이 앱은 화면이 켜져 있는 동안 모인 좌표를 날짜별 코스로 저장하고, <b>구글 지도에서 코스 열기</b>로 경로를 보여줍니다. START/STOP 시간 기록은 GPS와 관계없이 항상 저장됩니다.</div>'
+  +     '<div class="tiny muted" style="margin-top:10px;line-height:1.6">개인택시 운행관리 · 1인용 · 광고/결제/실적순위 없음<br>데이터는 이 기기의 브라우저 저장소에 있습니다. 폰을 바꾸면 JSON 백업으로 옮기세요.</div>'
+  +   '</div>'
+  + '</section>';
+};
+
+function storageSizeMb(){
+  try{
+    var s = localStorage.getItem(STORE_KEY) || '';
+    return s.length * 2 / 1024 / 1024;
+  }catch(e){ return 0; }
+}
+function fmtShortTime(ts){
+  var d = new Date(ts);
+  return pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+
+/* ---------- 시작 / 종료 ---------- */
+function doStart(){
+  if(state.session){ toast('이미 운행 중입니다.'); return; }
+  var now = new Date();
+  var key = dateKey(now);
+  var d = touchDay(key);
+  if(d.off) d.off = false;
+  d.runs.push({s: dtInput(now), e: ''});
+  state.session = {start: dtInput(now), dayKey: key};
+  saveNow();
+  startGeo();
+  ui.screen = 'home';
+  render();
+  toast('운행 시작 · ' + hm(dtInput(now)));
+}
+function doStop(){
+  if(!state.session){ toast('운행 중이 아닙니다.'); return; }
+  var now = new Date();
+  var startAt = parseDT(state.session.start);
+  var elapsedMin = startAt ? minutesBetween(startAt, now) : 0;
+  if(elapsedMin > 20*60){
+    if(!confirm('START를 누른 지 ' + Math.round(elapsedMin/60) + '시간 지났습니다.\n지금 종료하면 이 운행은 최대 24시간으로 계산됩니다.\n\n지금 종료할까요? (취소하면 입력 화면에서 시각을 직접 고칠 수 있습니다)')){
+      ui.date = state.session.dayKey || dateKey(now);
+      ui.screen = 'input';
+      render();
+      return;
+    }
+  }
+  var key = state.session.dayKey || dateKey(now);
+  var d = touchDay(key);
+  var run = null;
+  for(var i=d.runs.length-1;i>=0;i--){ if(d.runs[i].s && !d.runs[i].e){ run = d.runs[i]; break; } }
+  if(!run){ d.runs.push({s: state.session.start, e: ''}); run = d.runs[d.runs.length-1]; }
+  var rs = parseDT(run.s);
+  var endDate = new Date(now.getTime());
+  if(!rs || endDate.getTime() - rs.getTime() < 60000){
+    endDate = new Date((rs ? rs.getTime() : now.getTime()) + 60000);
+  }
+  run.e = dtInput(endDate);
+  d.u = Date.now();
+  state.session = null;
+  stopGeo();
+  saveNow();
+  render();
+  toast('운행 종료 · ' + fmtDur(dayWorkMinutes(d, Date.now())));
+}
+
+/* ---------- GPS ---------- */
+function startGeo(){
+  if(!('geolocation' in navigator)){ gpsState.status = 'unsupported'; return; }
+  if(gpsState.watch !== null) return;
+  gpsState.status = 'wait';
+  try{
+    gpsState.watch = navigator.geolocation.watchPosition(onGeo, onGeoErr, {enableHighAccuracy:true, maximumAge:15000, timeout:30000});
+  }catch(e){ gpsState.status = 'error'; }
+}
+function stopGeo(){
+  if(gpsState.watch !== null && navigator.geolocation){
+    try{ navigator.geolocation.clearWatch(gpsState.watch); }catch(e){}
+  }
+  gpsState.watch = null;
+}
+function onGeo(pos){
+  gpsState.status = 'on';
+  gpsState.lastAt = Date.now();
+  if(!state.session) return;
+  var key = state.session.dayKey || todayKey();
+  var d = state.days[key];
+  if(!d) return;
+  if(!d.gps) d.gps = {points: []};
+  var pts = d.gps.points;
+  var p = {lat: +Number(pos.coords.latitude).toFixed(6), lng: +Number(pos.coords.longitude).toFixed(6), t: Date.now(), acc: Math.round(pos.coords.accuracy || 0)};
+  var prev = pts.length ? pts[pts.length-1] : null;
+  if(shouldRecordPoint(prev, p)){
+    pts.push(p);
+    if(pts.length > 3000) pts.splice(0, pts.length - 3000);
+    d.u = Date.now();
+    saveSoon();
+    if(ui.screen === 'input' && ui.date === key) refreshCourse();
+    if(ui.screen === 'home') refreshHomeCourse();
+  }
+  updateGpsLine();
+}
+function onGeoErr(err){
+  gpsState.status = (err && err.code === 1) ? 'denied' : 'error';
+  updateGpsLine();
+}
+function updateGpsLine(){
+  var el = document.getElementById('gpsLine');
+  if(!el) return;
+  var txt;
+  if(!('geolocation' in navigator)) txt = '이 브라우저는 위치 기능을 지원하지 않습니다 (운행 기록은 정상 저장)';
+  else if(gpsState.status === 'denied') txt = '위치 권한이 꺼져 있어 코스가 기록되지 않습니다 (운행 기록은 정상 저장)';
+  else if(gpsState.status === 'error') txt = '위치를 받지 못했습니다 · 실내에서는 정확도가 떨어질 수 있어요';
+  else if(state.session){
+    var pts = (state.days[state.session.dayKey || todayKey()] || {}).gps;
+    var n = pts && pts.points ? pts.points.length : 0;
+    txt = gpsState.status === 'on' ? ('GPS ' + n + '지점 기록 중') : 'GPS 위치 확인 중…';
+  } else {
+    var td = state.days[todayKey()];
+    var n2 = td && td.gps && td.gps.points ? td.gps.points.length : 0;
+    txt = n2 ? ('오늘 GPS ' + n2 + '지점 · 설정에서 지도를 켜면 코스가 보입니다') : 'START를 누르면 위치 기록이 시작됩니다';
+  }
+  el.textContent = txt;
+}
+function refreshCourse(){
+  var pts = coursePoints();
+  setText('courseCount', 'GPS ' + pts.length + '지점');
+  setText('courseSpan', courseSpanText(pts));
+  var link = document.getElementById('courseLink');
+  if(link) link.setAttribute('href', buildMapsDirUrl(pts) || '#');
+  updateMap('inputMap', pts);
+}
+function refreshHomeCourse(){
+  var td = state.days[todayKey()];
+  updateMap('homeMap', (td && td.gps && td.gps.points) || []);
+}
+
+/* ---------- 구글 지도 ---------- */
+var gmPromise = null, gmFailed = false;
+window.gm_authFailure = function(){
+  gmFailed = true;
+  gmPromise = null;
+  var msgs = document.querySelectorAll('.map-msg');
+  for(var i=0;i<msgs.length;i++){
+    msgs[i].style.display = '';
+    msgs[i].classList.add('err');
+    msgs[i].innerHTML = '지도를 표시하지 못했습니다.<br>API 키의 사용 제한·결제 설정을 확인해 주세요.<br>아래 버튼으로 구글 지도에서 코스를 열 수 있습니다.';
+  }
+};
+function loadGmaps(key){
+  if(window.google && window.google.maps && window.google.maps.Map) return Promise.resolve();
+  if(gmFailed) return Promise.reject(new Error('auth'));
+  if(gmPromise) return gmPromise;
+  gmPromise = new Promise(function(resolve, reject){
+    var cb = '__gmaps' + Math.floor(Math.random()*1e9);
+    window[cb] = function(){ try{ delete window[cb]; }catch(e){} resolve(); };
+    var s = document.createElement('script');
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&language=ko&region=KR&callback=' + cb;
+    s.async = true; s.defer = true;
+    s.onerror = function(){ gmPromise = null; reject(new Error('network')); };
+    document.head.appendChild(s);
+    setTimeout(function(){
+      if(!(window.google && window.google.maps && window.google.maps.Map)){ gmPromise = null; reject(new Error('timeout')); }
+    }, 12000);
+  });
+  return gmPromise;
+}
+function mapBoxHtml(id, pts){
+  var key = (state.settings.gmapsKey || '').trim();
+  if(!key) return '<div class="map-hint">설정에서 <b>Google Maps API 키</b>를 넣으면 여기에 오늘 코스가 지도로 표시됩니다. 키가 없어도 아래 버튼으로 구글 지도에서 볼 수 있어요.</div>';
+  if(!pts || !pts.length) return '<div class="map-hint">GPS 기록이 아직 없습니다. START를 누르고 위치를 허용해 주세요.</div>';
+  return '<div class="map-wrap"><div class="map-box" id="' + id + '"></div><div class="map-msg" id="' + id + 'Msg">지도를 불러오는 중…</div></div>';
+}
+function mountMap(id, pts){
+  var box = document.getElementById(id);
+  if(!box) return;
+  var msg = document.getElementById(id + 'Msg');
+  var key = (state.settings.gmapsKey || '').trim();
+  if(!key || !pts || !pts.length) return;
+  if(!navigator.onLine){
+    if(msg){ msg.style.display = ''; msg.classList.add('err'); msg.textContent = '오프라인입니다. 아래 버튼으로 구글 지도에서 코스를 열 수 있어요.'; }
+    return;
+  }
+  loadGmaps(key).then(function(){
+    if(gmFailed) throw new Error('auth');
+    drawRoute(id, pts);
+  }).catch(function(err){
+    if(!msg) return;
+    msg.style.display = '';
+    msg.classList.add('err');
+    msg.innerHTML = (err && err.message === 'auth')
+      ? '지도를 표시하지 못했습니다.<br>API 키의 사용 제한(HTTP 리퍼러)·결제 설정을 확인해 주세요.<br>아래 버튼으로 코스를 열 수 있습니다.'
+      : '지도를 불러오지 못했습니다.<br>네트워크를 확인하거나 아래 버튼으로 코스를 열어 주세요.';
+  });
+}
+function drawRoute(id, pts){
+  var box = document.getElementById(id);
+  var msg = document.getElementById(id + 'Msg');
+  if(!box || !window.google || !google.maps) return;
+  var path = pts.map(function(p){ return {lat:Number(p.lat), lng:Number(p.lng)}; });
+  if(!path.length) return;
+  try{
+    var map = new google.maps.Map(box, {
+      center: path[0], zoom: 14, mapTypeControl: false, streetViewControl: false,
+      fullscreenControl: false, clickableIcons: false, gestureHandling: 'cooperative'
+    });
+    var line = new google.maps.Polyline({path: path, strokeColor: '#0F4C81', strokeOpacity: 0.9, strokeWeight: 5, map: map});
+    var markers = [];
+    try{ markers.push(new google.maps.Marker({map: map, position: path[0], title: '출발', label: '출'})); }catch(e){}
+    if(path.length > 1){
+      try{ markers.push(new google.maps.Marker({map: map, position: path[path.length-1], title: '도착', label: '도'})); }catch(e){}
+      var b = new google.maps.LatLngBounds();
+      path.forEach(function(p){ b.extend(p); });
+      map.fitBounds(b, {top: 28, right: 28, bottom: 28, left: 28});
+    }
+    mapRegistry.set(id, {map: map, line: line, markers: markers});
+    if(msg){ msg.classList.add('hide'); msg.style.display = 'none'; }
+  }catch(e){
+    if(msg){ msg.style.display = ''; msg.classList.add('err'); msg.textContent = '지도를 그리지 못했습니다. 아래 버튼을 이용해 주세요.'; }
+  }
+}
+function updateMap(id, pts){
+  var rec = mapRegistry.get(id);
+  if(!rec){ mountMap(id, pts); return; }
+  if(!pts || !pts.length) return;
+  var path = pts.map(function(p){ return {lat:Number(p.lat), lng:Number(p.lng)}; });
+  try{
+    rec.line.setPath(path);
+    if(rec.markers && rec.markers[1]) rec.markers[1].setPosition(path[path.length-1]);
+  }catch(e){}
+}
+async function testMapKey(){
+  var key = (state.settings.gmapsKey || '').trim();
+  if(!key){ setHtml('mapKeyMsg', '<div class="warn-box">키를 입력하고 저장해 주세요.</div>'); return; }
+  if(!navigator.onLine){ setHtml('mapKeyMsg', '<div class="warn-box">오프라인입니다. 연결 후 테스트해 주세요.</div>'); return; }
+  setHtml('mapKeyMsg', '<div class="hint-box">지도를 불러오는 중…</div>');
+  gmFailed = false; gmPromise = null;
+  try{
+    await loadGmaps(key);
+    if(gmFailed) throw new Error('auth');
+    setHtml('mapKeyMsg', '<div class="ok-box">지도 API를 불러왔습니다. 홈의 코스 영역에 실제 경로가 표시됩니다.</div>');
+  }catch(e){
+    setHtml('mapKeyMsg', '<div class="warn-box">지도를 불러오지 못했습니다. Google Cloud에서 <b>Maps JavaScript API</b> 사용 설정·결제·키 제한(HTTP 리퍼러)을 확인해 주세요.</div>');
+  }
+}
+
+/* ---------- 사진 ---------- */
+function resizeImage(file, maxSide, quality){
+  return new Promise(function(resolve, reject){
+    var reader = new FileReader();
+    reader.onerror = function(){ reject(new Error('read')); };
+    reader.onload = function(){
+      var img = new Image();
+      img.onerror = function(){ reject(new Error('image')); };
+      img.onload = function(){
+        try{
+          var scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          var w = Math.max(1, Math.round(img.width*scale)), h = Math.max(1, Math.round(img.height*scale));
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          var ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(c.toDataURL('image/jpeg', quality));
+        }catch(e){ reject(e); }
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function handlePhotoFiles(input){
+  var files = Array.prototype.slice.call(input.files || []);
+  if(!files.length) return;
+  var key = ui.date;
+  var day = touchDay(key);
+  var pending = files.length, failed = 0;
+  files.forEach(function(file){
+    resizeImage(file, 1100, 0.68).then(function(dataUrl){
+      day.photos.push({id: 'p' + Date.now() + Math.random().toString(36).slice(2,6), name: file.name || '', data: dataUrl});
+      day.u = Date.now();
+    }).catch(function(){ failed++; }).then(function(){
+      pending--;
+      if(pending === 0){
+        saveNow(); render();
+        toast(failed ? ('사진 ' + failed + '장은 넣지 못했습니다') : '사진을 추가했습니다');
+      }
+    });
+  });
+  input.value = '';
+}
+function openPhoto(pid){
+  var d = state.days[ui.date];
+  if(!d) return;
+  var p = (d.photos || []).filter(function(x){ return x.id === pid; })[0];
+  if(!p) return;
+  document.getElementById('modalImg').src = p.data;
+  document.getElementById('modal').classList.add('show');
+}
+function closePhoto(){
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('modalImg').src = '';
+}
+
+/* ---------- 메모 검색 ---------- */
+function runMemoSearch(q){
+  var box = document.getElementById('memoResults');
+  ui.memoQuery = q || '';
+  if(!box) return;
+  var query = String(q || '').trim().toLowerCase();
+  if(!query){ box.innerHTML = ''; return; }
+  var hits = [];
+  Object.keys(state.days).sort().reverse().forEach(function(k){
+    var d = state.days[k] || {};
+    var memo = String(d.memo || '');
+    if(memo.toLowerCase().indexOf(query) !== -1) hits.push({k: k, memo: memo});
+  });
+  if(!hits.length){ box.innerHTML = '<div class="small muted" style="padding:6px 2px">메모에서 찾지 못했습니다.</div>'; return; }
+  box.innerHTML = hits.slice(0, 40).map(function(h){
+    var idx = h.memo.toLowerCase().indexOf(query);
+    var start = Math.max(0, idx - 18);
+    var snip = h.memo.slice(start, start + 80).replace(/\s+/g, ' ');
+    return '<div class="search-result" data-act="openDay" data-key="' + h.k + '"><div class="dt">' + h.k.slice(5) + ' ' + weekdayKR(h.k) + '</div><div class="tx">' + esc(snip) + '</div></div>';
+  }).join('');
+}
+
+/* ---------- 백업 · 초기화 ---------- */
+function downloadText(name, text, mime){
+  try{
+    var blob = new Blob([text], {type: mime || 'application/json;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ try{ URL.revokeObjectURL(url); a.remove(); }catch(e){} }, 2000);
+  }catch(e){ toast('파일을 만들지 못했습니다.'); }
+}
+function backupNow(){
+  var copy = {app:'개인택시 운행관리', version:1, exportedAt:new Date().toISOString(), settings:state.settings, settingsUpdated:state.settingsUpdated, days:state.days, deleted:state.deleted, meta:state.meta};
+  downloadText('개인택시-운행관리-백업-' + todayKey() + '.json', JSON.stringify(copy, null, 1));
+  toast('백업 파일을 내려받았습니다');
+}
+function handleRestore(input){
+  var f = input.files && input.files[0];
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var raw = JSON.parse(String(reader.result));
+      if(!raw || typeof raw !== 'object' || !raw.days || typeof raw.days !== 'object') throw new Error('bad format');
+      var n = Object.keys(raw.days).length;
+      if(!confirm('백업 파일에 ' + n + '일치 기록이 있습니다.\n이 기기의 기록을 백업 파일 내용으로 바꿉니다. (지금 기록은 먼저 파일로 내려받습니다)')){ input.value = ''; return; }
+      backupNow();
+      var session = state.session;
+      var next = normalizeState(raw);
+      next.session = session;
+      state = next;
+      saveNow(); render();
+      toast('복원 완료 · ' + n + '일치');
+    }catch(e){
+      alert('백업 파일을 읽지 못했습니다. 이 앱에서 내려받은 JSON 파일인지 확인해 주세요.');
+    }
+    input.value = '';
+  };
+  reader.readAsText(f);
+}
+function addSampleData(){
+  var now = new Date();
+  var y = now.getFullYear(), mo = now.getMonth()+1;
+  var last = now.getDate();
+  var seed = 20261117;
+  function rnd(){ seed = (seed*1103515245 + 12345) % 2147483648; return seed/2147483648; }
+  var added = 0;
+  for(var dd=1; dd<=last; dd++){
+    var key = y + '-' + pad2(mo) + '-' + pad2(dd);
+    var existing = state.days[key];
+    if(existing && dayHasData(existing)) continue;
+    var dow = new Date(y, mo-1, dd).getDay();
+    var d = ensureDay(key);
+    d.off = false;
+    d.u = Date.now();
+    if(dow === 0 || isPatternOff(key, state.settings.offWeekdays)){ d.off = true; d.runs = []; added++; continue; }
+    var startH = 7 + Math.floor(rnd()*3), startM = Math.floor(rnd()*4)*15;
+    var workH = 8 + Math.floor(rnd()*4), workM = Math.floor(rnd()*4)*15;
+    var st = new Date(y, mo-1, dd, startH, startM, 0);
+    var en = new Date(st.getTime() + (workH*60 + workM)*60000);
+    d.runs = [{s: dtInput(st), e: dtInput(en)}];
+    var card = 120000 + Math.floor(rnd()*26)*10000;
+    var cash = 20000 + Math.floor(rnd()*8)*5000;
+    d.income = {card: card, cash: cash, toll: Math.floor(rnd()*3)*1000, direct:'', mode:'auto'};
+    var total = 160 + Math.floor(rnd()*140);
+    d.distance = {total: total, business: Math.round(total*(0.55 + rnd()*0.15))};
+    var L = Math.round((28 + rnd()*18)*10)/10;
+    var unit = 1050 + Math.floor(rnd()*80);
+    d.charges = [{id:'c'+dd, station:'SK가스', fuel:'LPG', liters:L, unit:unit, amount: Math.round(L*unit)}];
+    d.expenses = [{id:'e'+dd, cat:'식비', pay:'현금', amount: 6000 + Math.floor(rnd()*5)*1000, memo:'점심'}];
+    if(rnd() < 0.3) d.expenses.push({id:'e'+dd+'b', cat:'세차', pay:'카드', amount: 15000, memo:'자가세차'});
+    d.memo = rnd() < 0.35 ? '샘플 기록' : '';
+    added++;
+  }
+  saveNow(); render();
+  toast('샘플 ' + added + '일치를 넣었습니다 · 설정에서 초기화할 수 있어요');
+}
+function resetAll(){
+  var n = Object.keys(state.days).length;
+  if(!confirm('운행 기록 ' + n + '일치를 모두 지웁니다.\n차량 정보·API 키·구글 로그인 설정은 그대로 둡니다.\n\n지금 데이터를 먼저 백업 파일로 내려받습니다. 계속할까요?')) return;
+  backupNow();
+  var ts = Date.now();
+  Object.keys(state.days).forEach(function(k){ state.deleted[k] = ts; });
+  state.days = {};
+  state.settings.offWeekdays = [];
+  state.settings.offMemo = '';
+  state.settingsUpdated = ts;
+  saveNow(); render();
+  toast('운행 기록을 모두 지웠습니다');
+}
+
+/* ---------- 구글 동기화 ---------- */
+var GIS_SRC = 'https://accounts.google.com/gsi/client';
+var DRIVE_SCOPE = 'openid email https://www.googleapis.com/auth/drive.appdata';
+var SYNC_FILE = 'tapp_personal_taxi_sync.json';
+var gisPromise = null, tokenClient = null, accessToken = null, tokenExp = 0;
+var syncing = false, autoSyncTimer = null, lastSyncMsg = '';
+
+function errText(err){
+  var m = String(err && err.message ? err.message : err);
+  if(m === 'no_client') return 'OAuth 클라이언트 ID를 먼저 입력해 주세요';
+  if(m === 'gis' || m === 'gis_load' || m === 'gis_timeout') return '구글 로그인 스크립트를 불러오지 못했습니다 (네트워크 확인)';
+  if(m === 'popup_closed' || m === 'access_denied' || m === 'user_cancel') return '로그인 창을 닫았습니다';
+  if(m === 'interaction_required' || m === 'login_required') return '다시 로그인해 주세요';
+  if(m === 'auth') return '구글 인증에 실패했습니다';
+  if(/^HTTP 401/.test(m)) return '로그인이 만료되었습니다. 다시 로그인해 주세요';
+  if(/^HTTP 403/.test(m)) return '드라이브 접근이 거부되었습니다 (Drive API 사용 설정 확인)';
+  if(/^HTTP 404/.test(m)) return '동기화 파일을 찾지 못했습니다';
+  if(/^HTTP /.test(m)) return '구글 서버 오류 (' + m.slice(0, 60) + ')';
+  if(/Failed to fetch|NetworkError|network/i.test(m)) return '네트워크에 연결하지 못했습니다';
+  return m;
+}
+function setSyncMsg(msg){
+  lastSyncMsg = msg || '';
+  var el = document.getElementById('syncStatus');
+  if(el){
+    if(msg){ el.textContent = msg; el.className = 'warn-box'; }
+    else { el.textContent = syncStatusText(); el.className = 'hint-box'; }
+  }
+}
+function syncStatusText(){
+  if(!syncMeta.email) return '로그인 전 · 모든 기록은 이 기기에만 저장됩니다.';
+  var base = syncMeta.email + ' · 마지막 동기화 ' + (syncMeta.lastSyncAt ? fmtShortTime(syncMeta.lastSyncAt) : '아직');
+  if(!accessToken || Date.now() > tokenExp) base += ' · 앱을 새로 열었으면 [지금 동기화]를 한 번 눌러 주세요';
+  return base;
+}
+function loadGis(){
+  if(window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+  if(gisPromise) return gisPromise;
+  gisPromise = new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = GIS_SRC; s.async = true; s.defer = true;
+    s.onload = function(){ resolve(); };
+    s.onerror = function(){ gisPromise = null; reject(new Error('gis_load')); };
+    document.head.appendChild(s);
+    setTimeout(function(){
+      if(!(window.google && google.accounts && google.accounts.oauth2)){ gisPromise = null; reject(new Error('gis_timeout')); }
+    }, 12000);
+  });
+  return gisPromise;
+}
+function requestToken(interactive){
+  return new Promise(function(resolve, reject){
+    var cid = (state.settings.oauthClientId || '').trim();
+    if(!cid) return reject(new Error('no_client'));
+    if(!window.google || !google.accounts || !google.accounts.oauth2) return reject(new Error('gis'));
+    try{
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: cid,
+        scope: DRIVE_SCOPE,
+        callback: function(resp){
+          if(!resp || resp.error){ reject(new Error(resp && resp.error ? resp.error : 'auth')); return; }
+          accessToken = resp.access_token;
+          tokenExp = Date.now() + (Number(resp.expires_in) || 3600)*1000 - 60000;
+          resolve(resp);
+        }
+      });
+      tokenClient.requestAccessToken(interactive ? {prompt:'select_account'} : {});
+    }catch(e){ reject(e); }
+  });
+}
+async function ensureToken(interactive){
+  if(accessToken && Date.now() < tokenExp) return accessToken;
+  await loadGis();
+  await requestToken(!!interactive);
+  return accessToken;
+}
+async function authFetch(url, opts){
+  var tok = await ensureToken(false);
+  var o = opts || {};
+  o.headers = Object.assign({}, o.headers || {}, {Authorization: 'Bearer ' + tok});
+  var res = await fetch(url, o);
+  if(res.status === 401){
+    accessToken = null;
+    tok = await ensureToken(false);
+    o.headers.Authorization = 'Bearer ' + tok;
+    res = await fetch(url, o);
+  }
+  if(!res.ok){
+    var txt = '';
+    try{ txt = await res.text(); }catch(e){}
+    throw new Error('HTTP ' + res.status + ' ' + txt.slice(0, 160));
+  }
+  return res;
+}
+async function findSyncFile(){
+  var q = encodeURIComponent("name = '" + SYNC_FILE + "' and trashed = false");
+  var url = 'https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&orderBy=modifiedTime%20desc&fields=files(id,name,modifiedTime,size)&q=' + q;
+  var res = await authFetch(url);
+  var data = await res.json();
+  var files = (data && data.files) || [];
+  return files.length ? files[0] : null;
+}
+async function downloadSyncFile(id){
+  var res = await authFetch('https://www.googleapis.com/drive/v3/files/' + encodeURIComponent(id) + '?alt=media');
+  return await res.json();
+}
+async function uploadSync(payload, fileId){
+  var boundary = '----thtaxi' + Date.now();
+  var meta = JSON.stringify({name: SYNC_FILE, mimeType: 'application/json'});
+  var body = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta
+    + '\r\n--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(payload)
+    + '\r\n--' + boundary + '--';
+  var url = 'https://www.googleapis.com/upload/drive/v3/files' + (fileId ? ('/' + encodeURIComponent(fileId)) : '') + '?uploadType=multipart&fields=id,modifiedTime';
+  var res = await authFetch(url, {method: fileId ? 'PATCH' : 'POST', headers: {'Content-Type': 'multipart/related; boundary=' + boundary}, body: body});
+  return await res.json();
+}
+function syncPayload(st){
+  var settings = {};
+  Object.keys(st.settings || {}).forEach(function(k){
+    if(k !== 'gmapsKey' && k !== 'oauthClientId') settings[k] = st.settings[k];
+  });
+  return {version:1, appVersion:'1.0', settings:settings, settingsUpdated: st.settingsUpdated, days: st.days, deleted: st.deleted, meta: st.meta};
+}
+async function syncNow(opts){
+  opts = opts || {};
+  if(!isHttpsOrigin(location.protocol, location.hostname)){
+    if(!opts.silent) toast('구글 동기화는 https:// 주소에서 동작합니다');
+    return;
+  }
+  if(!syncMeta.email && !opts.interactive) return;
+  if(!navigator.onLine){ setSyncMsg('오프라인 · 연결되면 다시 맞춰집니다'); return; }
+  if(syncing) return;
+  syncing = true;
+  var msgBefore = lastSyncMsg;
+  setSyncMsg('구글 드라이브와 동기화 중…');
+  try{
+    await ensureToken(!!opts.interactive);
+    var file = await findSyncFile();
+    var remote = null;
+    if(file && file.id){
+      try{ remote = await downloadSyncFile(file.id); }catch(e){ remote = null; }
+    }
+    var base = remote ? mergeStates(state, remote) : normalizeState(state);
+    var payload = syncPayload(base);
+    var saved = await uploadSync(payload, file && file.id);
+    var session = state.session;
+    var localKey = state.settings.gmapsKey, localCid = state.settings.oauthClientId;
+    var next = normalizeState(payload);
+    next.session = session;
+    next.settings.gmapsKey = localKey;
+    next.settings.oauthClientId = localCid;
+    state = next;
+    syncMeta.fileId = (saved && saved.id) || (file && file.id) || '';
+    syncMeta.lastSyncAt = Date.now();
+    saveSyncMeta();
+    saveLocal();
+    if(opts.render !== false) render();
+    else {
+      var ae = document.activeElement;
+      var typing = ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName);
+      if(!typing) render();
+    }
+    setSyncMsg('');
+    if(!opts.silent) toast('구글 드라이브와 동기화했습니다');
+  }catch(err){
+    setSyncMsg('동기화하지 못했습니다 · ' + errText(err));
+    if(!opts.silent) toast('동기화하지 못했습니다 · ' + errText(err));
+    else lastSyncMsg = msgBefore;
+  }finally{
+    syncing = false;
+  }
+}
+function scheduleAutoSync(delay){
+  if(!syncMeta.email) return;
+  if(!isHttpsOrigin(location.protocol, location.hostname)) return;
+  if(!accessToken || Date.now() > tokenExp) return;
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(function(){ syncNow({silent:true, render:false}); }, delay || 4000);
+}
+function autoReconnect(){
+  if(!syncMeta.email) return;
+  if(!isHttpsOrigin(location.protocol, location.hostname)) return;
+  if(!navigator.onLine) return;
+  if(accessToken && Date.now() < tokenExp) return;
+  ensureToken(false).then(function(){
+    scheduleAutoSync(1200);
+  }).catch(function(){});
+}
+async function signIn(){
+  if(!isHttpsOrigin(location.protocol, location.hostname)){ toast('구글 로그인은 https:// 웹 주소에서만 됩니다'); return; }
+  var cid = (state.settings.oauthClientId || '').trim();
+  if(!cid){
+    toast('Google OAuth 클라이언트 ID를 먼저 입력해 주세요');
+    var el = document.querySelector('[data-field="settings.oauthClientId"]');
+    if(el) el.focus();
+    return;
+  }
+  try{
+    setSyncMsg('구글 로그인 창을 여는 중…');
+    await loadGis();
+    await ensureToken(true);
+    var email = '';
+    try{
+      var res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {headers: {Authorization: 'Bearer ' + accessToken}});
+      if(res.ok){ var info = await res.json(); email = info.email || ''; }
+    }catch(e){}
+    syncMeta.email = email || 'Google 계정';
+    saveSyncMeta();
+    render();
+    await syncNow({interactive:true});
+  }catch(err){
+    setSyncMsg('로그인하지 못했습니다 · ' + errText(err));
+    toast('로그인하지 못했습니다 · ' + errText(err));
+  }
+}
+function signOut(){
+  try{
+    if(window.google && google.accounts && google.accounts.oauth2 && accessToken){
+      google.accounts.oauth2.revoke(accessToken, function(){});
+    }
+  }catch(e){}
+  accessToken = null; tokenExp = 0;
+  syncMeta.email = ''; syncMeta.lastSyncAt = 0; syncMeta.fileId = '';
+  saveSyncMeta();
+  render();
+  toast('구글 동기화에서 로그아웃했습니다. 기록은 이 기기에 그대로 있습니다.');
+}
+
+/* ---------- 이벤트 ---------- */
+function onField(el){
+  var key = el.getAttribute('data-day');
+  var path = el.getAttribute('data-field');
+  if(!path) return;
+  var val;
+  if(el.type === 'number'){
+    val = (el.value === '') ? '' : Number(el.value);
+    if(el.value !== '' && !isFinite(val)) val = '';
+  } else {
+    val = el.value;
+  }
+  if(!key){
+    setPath(state, path, val);
+    touchSettings();
+    saveSoon();
+    if(path === 'settings.plate'){ var p = document.getElementById('hdrPlate'); if(p) p.textContent = val; }
+    if(path === 'settings.vehicle'){ var sb = document.getElementById('hdrSub'); if(sb) sb.textContent = val + ' · 광고 없음'; }
+    if(path === 'settings.oauthClientId' || path === 'settings.gmapsKey'){ /* 저장만 */ }
+    return;
+  }
+  var day = ensureDay(key);
+  day.u = Date.now();
+  var cm = /^charges\.(\d+)\.(liters|unit|amount)$/.exec(path);
+  setPath(day, path, val);
+  if(cm){
+    var idx = Number(cm[1]);
+    var c = day.charges[idx];
+    if(c){
+      if(cm[2] === 'amount'){
+        var amt = num(c.amount);
+        if(num(c.liters) > 0) c.unit = Math.round(amt / num(c.liters));
+      } else {
+        c.amount = Math.round(num(c.liters) * num(c.unit)) || '';
+      }
+      var other = cm[2] === 'amount' ? 'unit' : 'amount';
+      var inp = document.querySelector('input[data-field="charges.' + idx + '.' + other + '"]');
+      if(inp) inp.value = (c[other] === '' || c[other] === undefined) ? '' : c[other];
+    }
+  }
+  saveSoon();
+  updateDayComputeds(key);
+}
+function updateDayComputeds(key){
+  var d = state.days[key];
+  if(!d) return;
+  var now = Date.now();
+  var work = dayWorkMinutes(d, now);
+  var inc = incomeOf(d);
+  setText('workTotal', fmtDur(work));
+  setText('hourlyRev', work > 0 ? (fmtNum(inc.sales/(work/60)) + '원') : '－');
+  setText('salesTotal', fmtWon(inc.sales));
+  var ch = chargeTotals(d);
+  setText('expTotal', fmtWon(expenseTotal(d)));
+  setText('chargeTotal', fmtWon(ch.amount) + ' · ' + fmtNum(ch.liters) + 'L');
+  var km = num(d.distance && d.distance.total), biz = num(d.distance && d.distance.business);
+  setText('rideRate', km > 0 ? (round1(biz/km*100) + '%') : '－');
+  var warnEl = document.getElementById('runWarn');
+  var warn = '';
+  (d.runs || []).forEach(function(r){
+    var s = parseDT(r.s), e = parseDT(r.e);
+    if(s && e && e.getTime() <= s.getTime()) warn = '종료 시각이 시작보다 빠릅니다. 날짜를 확인해 주세요.';
+  });
+  if(warnEl){ warnEl.textContent = warn; warnEl.style.display = warn ? '' : 'none'; }
+}
+function shiftDate(delta){
+  var d = keyDate(ui.date);
+  d.setDate(d.getDate() + delta);
+  ui.date = dateKey(d);
+  render();
+}
+function handleAct(act, el){
+  var key, d, idx;
+  switch(act){
+    case 'nav': go(el.getAttribute('data-screen')); break;
+    case 'start': doStart(); break;
+    case 'stop': doStop(); break;
+    case 'goInputToday': ui.screen = 'input'; ui.date = state.session ? state.session.dayKey : todayKey(); render(); break;
+    case 'prevDay': shiftDate(-1); break;
+    case 'nextDay': shiftDate(1); break;
+    case 'today': ui.date = todayKey(); render(); break;
+    case 'openDay': ui.date = el.getAttribute('data-key'); ui.screen = 'input'; render(); try{ window.scrollTo(0,0); }catch(e){} break;
+    case 'addRun': d = touchDay(ui.date); d.runs.push({s:'', e:''}); saveSoon(); render(); break;
+    case 'delRun':
+      idx = Number(el.getAttribute('data-idx'));
+      d = state.days[ui.date];
+      if(d && idx > 0 && d.runs.length > idx){ d.runs.splice(idx, 1); d.u = Date.now(); saveNow(); render(); }
+      break;
+    case 'incomeMode': d = touchDay(ui.date); d.income.mode = el.getAttribute('data-mode'); saveSoon(); render(); break;
+    case 'addExp': d = touchDay(ui.date); d.expenses.push({id:'e'+Date.now(), cat:'식비', pay:'카드', amount:'', memo:''}); saveSoon(); render(); break;
+    case 'delExp':
+      idx = Number(el.getAttribute('data-idx'));
+      d = state.days[ui.date];
+      if(d && d.expenses.length > idx){ d.expenses.splice(idx, 1); d.u = Date.now(); saveNow(); render(); }
+      break;
+    case 'addCharge': d = touchDay(ui.date); d.charges.push({id:'c'+Date.now(), station:'', fuel: state.settings.fuel, liters:'', unit:'', amount:''}); saveSoon(); render(); break;
+    case 'delCharge':
+      idx = Number(el.getAttribute('data-idx'));
+      d = state.days[ui.date];
+      if(d && d.charges.length > idx){ d.charges.splice(idx, 1); d.u = Date.now(); saveNow(); render(); }
+      break;
+    case 'toggleOff': d = touchDay(ui.date); d.off = !d.off; saveNow(); render(); break;
+    case 'applyGpsKm':
+      d = touchDay(ui.date);
+      d.distance.total = el.getAttribute('data-km');
+      saveNow(); render();
+      toast('총 주행거리에 GPS 거리를 넣었습니다');
+      break;
+    case 'clearGps':
+      if(confirm('이 날짜의 GPS 좌표를 지웁니다. 계속할까요?')){
+        d = touchDay(ui.date);
+        d.gps = {points: []};
+        saveNow(); render();
+      }
+      break;
+    case 'openPhoto': openPhoto(el.getAttribute('data-pid')); break;
+    case 'delPhoto':
+      d = state.days[ui.date];
+      if(d){
+        d.photos = (d.photos||[]).filter(function(x){ return x.id !== el.getAttribute('data-pid'); });
+        d.u = Date.now(); saveNow(); render();
+      }
+      break;
+    case 'closePhoto': closePhoto(); break;
+    case 'prevMonth': ui.calMonth = monthShift(ui.calMonth, -1); render(); break;
+    case 'nextMonth': ui.calMonth = monthShift(ui.calMonth, 1); render(); break;
+    case 'prevYear': ui.year -= 1; render(); break;
+    case 'nextYear': ui.year += 1; render(); break;
+    case 'weekToggle':
+      var dow = Number(el.getAttribute('data-dow'));
+      var list = (state.settings.offWeekdays || []).slice();
+      var at = list.indexOf(dow);
+      if(at === -1) list.push(dow); else list.splice(at, 1);
+      state.settings.offWeekdays = list.sort();
+      touchSettings(); saveNow(); render();
+      break;
+    case 'autoPattern':
+      var wd = offWeekdayFromPlate(state.settings.plate);
+      if(wd !== null){
+        state.settings.offWeekdays = [wd];
+        touchSettings(); saveNow(); render();
+        toast('차량번호 끝자리 기준으로 ' + WEEKDAYS[wd] + '요일 부제로 설정했습니다');
+      }
+      break;
+    case 'backup': backupNow(); break;
+    case 'exportCsv':
+      if(!ui.csvMonth){ toast('내보낼 달을 선택해 주세요'); break; }
+      downloadText('개인택시-운행-' + ui.csvMonth + '.csv', monthCsv(state.days, ui.csvMonth, Date.now()), 'text/csv;charset=utf-8');
+      toast(ui.csvMonth + ' CSV를 내보냈습니다');
+      break;
+    case 'sample': addSampleData(); break;
+    case 'reset': resetAll(); break;
+    case 'saveMapsKey':
+      saveNow();
+      setHtml('mapKeyMsg', '<div class="ok-box">키를 이 기기에 저장했습니다. 홈·입력 화면에서 코스 지도를 확인해 보세요.</div>');
+      toast('Google Maps API 키를 저장했습니다');
+      break;
+    case 'testMapKey': testMapKey(); break;
+    case 'signIn': signIn(); break;
+    case 'signOut': signOut(); break;
+    case 'syncNow': syncNow({interactive:true}); break;
+    default: break;
+  }
+}
+document.addEventListener('click', function(ev){
+  var t = ev.target;
+  var el = (t && t.closest) ? t.closest('[data-act]') : null;
+  if(!el) return;
+  var tag = el.tagName;
+  if(tag === 'A' || tag === 'BUTTON' || tag === 'IMG') ev.preventDefault();
+  closePhotoIfDocumentClick(ev, el);
+  try{ handleAct(el.getAttribute('data-act'), el); }
+  catch(err){ toast('처리하지 못했습니다 · ' + String(err && err.message ? err.message : err)); }
+});
+document.addEventListener('input', function(ev){
+  var el = ev.target;
+  if(!el) return;
+  if(el.id === 'memoSearch'){ runMemoSearch(el.value); return; }
+  if(el.getAttribute && el.getAttribute('data-field')) onField(el);
+});
+document.addEventListener('change', function(ev){
+  var el = ev.target;
+  if(!el) return;
+  if(el.id === 'photoInput'){ handlePhotoFiles(el); return; }
+  if(el.id === 'restoreInput'){ handleRestore(el); return; }
+  if(el.id === 'csvMonth'){ ui.csvMonth = el.value; return; }
+  if(el.id === 'yearSel'){ ui.year = Number(el.value); render(); return; }
+  if(el.getAttribute && el.getAttribute('data-field')) onField(el);
+});
+document.getElementById('modal').addEventListener('click', function(ev){
+  if(ev.target && ev.target.id === 'modal') closePhoto();
+});
+function closePhotoIfDocumentClick(ev, el){
+  var modal = document.getElementById('modal');
+  if(modal && modal.classList.contains('show') && !el.closest('#modal')) closePhoto();
+}
+
+/* ---------- 시계 ---------- */
+function tick(){
+  if(!state || !state.session) return;
+  var st = parseDT(state.session.start);
+  if(!st) return;
+  var ms = Date.now() - st.getTime();
+  setText('elapsedClock', fmtClock(ms));
+  var sub = document.getElementById('runSub');
+  if(sub) sub.textContent = hm(state.session.start) + ' 시작 · ' + fmtDur(ms/60000) + ' 경과';
+  var chip = document.getElementById('liveChip');
+  if(chip) chip.textContent = '운행 중 ' + fmtClock(ms);
+}
+
+/* ---------- 시작 ---------- */
+function boot(){
+  checkStorage();
+  loadAll();
+  initUi();
+  ui.date = todayKey();
+  if(state.session) startGeo();
+  render();
+  setInterval(tick, 1000);
+  if(syncMeta.email) setTimeout(autoReconnect, 1500);
+  document.addEventListener('click', function firstTouch(){
+    document.removeEventListener('click', firstTouch);
+    if(syncMeta.email && (!accessToken || Date.now() > tokenExp)) autoReconnect();
+  });
+  window.addEventListener('pagehide', function(){
+    clearTimeout(saveTimer);
+    saveLocal();
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible'){
+      if(state.session && gpsState.watch === null) startGeo();
+      if(ui.screen === 'home') refreshHomeCourse();
+      updateGpsLine();
+    }
+  });
+  window.addEventListener('online', function(){ if(syncMeta.email) scheduleAutoSync(); });
+  window.addEventListener('offline', function(){ /* 로컬 저장은 계속 */ });
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+</script>
+</body>
+</html>
