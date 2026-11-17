@@ -1758,7 +1758,7 @@ views.input = function(){
   +     '<div class="field"><label>통행료 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.toll" value="' + esc(ival(d.income.toll)) + '"></div>'
   +   '</div>'
   +   (d.income.mode==='direct' ? '<div class="field" style="margin-top:8px"><label>영업금액 직접 입력 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="카드+현금과 다른 금액" data-day="' + key + '" data-field="income.direct" value="' + esc(ival(d.income.direct)) + '"></div>' : '')
-  +   '<div class="total-line" style="margin-top:10px"><span>영업금액 <span class="tiny muted">' + (d.income.mode==='direct'?'직접 입력':'카드+현금 자동') + '</span></span><b id="salesTotal">' + fmtWon(inc.sales) + '</b></div>'
+  +   '<div class="total-line" style="margin-top:10px"><span>영업금액 <span class="tiny muted">' + (d.income.mode==='direct'?'직접 입력':'카드+현금+카콜 자동') + '</span></span><b id="salesTotal">' + fmtWon(inc.sales) + '</b></div>'
   + '</section>'
 
   + '<section class="card">'
