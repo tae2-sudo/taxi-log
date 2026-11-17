@@ -119,6 +119,8 @@ a{color:var(--blue);text-decoration:none}
 #mapwrap{display:none}
 #map{height:calc(100vh - 250px);min-height:320px;border-radius:14px;border:1px solid var(--line);overflow:hidden}
 .leaflet-container{background:#0a0f16;font:inherit}
+/* 야간 눈부심 줄이기 — 타일을 어둡게 */
+.leaflet-tile-pane{filter:brightness(.55) contrast(1.08) saturate(.75)}
 .leaflet-popup-content-wrapper{background:#16222e;color:var(--txt);border-radius:12px}
 .leaflet-popup-tip{background:#16222e}
 .leaflet-popup-content{margin:10px 12px;font-size:13px;line-height:1.5}
@@ -521,9 +523,13 @@ function drawMap(list){
     if(!S.map){
       S.map = L.map('map', {zoomControl:true, preferCanvas:true, attributionControl:true})
         .setView([S.pos ? S.pos.lat : SEOUL_CITY_HALL.lat, S.pos ? S.pos.lng : SEOUL_CITY_HALL.lng], S.pos ? 14 : 11);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19, subdomains: 'abcd',
-        attribution: '&copy; OpenStreetMap &copy; CARTO'
+      /* Esri 다크 그레이 캔버스 — 키 없이 쓸 수 있는 야간용 타일 */
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18, maxNativeZoom: 16,
+        attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+      }).addTo(S.map);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 18, maxNativeZoom: 16
       }).addTo(S.map);
       S.layer = L.layerGroup().addTo(S.map);
     }
