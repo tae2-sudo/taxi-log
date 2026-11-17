@@ -92,6 +92,7 @@ a{color:var(--blue);text-decoration:none}
 .card .dst{margin-left:auto;text-align:right;flex:0 0 auto}
 .card .dst b{display:block;font-size:21px;font-weight:800;color:var(--amber);line-height:1.1;letter-spacing:-.5px}
 .card .dst span{font-size:11px;color:var(--dim)}
+.card .dst b.town{font-size:15px;color:var(--muted);font-weight:700}
 .card .ad{margin-top:6px;font-size:13px;color:var(--muted);word-break:break-all}
 .badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
 .b{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;
@@ -422,7 +423,7 @@ function cardHtml(r, idx){
   var flags = r[8], id = rowId(r), fav = !!S.fav[id];
   var isGas = !!(flags & F_GAS);
   var dist = (S.pos && r._d != null) ? '<b>' + fmtDist(r._d) + '</b><span>현재 위치에서</span>'
-                                     : '<b>' + esc(r[5] || r[4] || '') + '</b><span>동네</span>';
+                                     : '<b class="town">' + esc(r[5] || r[4] || '') + '</b><span>' + esc(r[4] || '') + '</span>';
   var html = ''
   + '<article class="card ' + (isGas ? 'gas' : 'toilet') + '">'
   +   '<div class="r1">'
@@ -459,7 +460,8 @@ function render(){
   else st.push('📍 <b>서울시청</b> 기준 <span style="color:var(--dim)">(위치 미확인)</span>');
   st.push('🕐 <b>' + nowHHMM() + '</b>');
   st.push(S.only24 ? '<b>' + list.length.toLocaleString() + '</b>곳 24시간' : '<b>' + list.length.toLocaleString() + '</b>곳');
-  if(list.length > shown) st.push('· 가까운 ' + shown + '곳 표시');
+  if(S.pos && list.length && list[0]._d != null) st.push('· 가장 가까운 <b>' + fmtDist(list[0]._d) + '</b>');
+  else if(list.length > shown) st.push('· 가까운 ' + shown + '곳 표시');
   $('status').innerHTML = st.join(' ');
 
   /* 배너 */
@@ -470,7 +472,18 @@ function render(){
   /* 리스트 */
   var box = $('list');
   if(!list.length){
-    box.innerHTML = '<div class="empty">조건에 맞는 곳이 없어요.<br>검색어를 지우거나 <b>24시간 상시만</b>을 꺼 보세요.</div>';
+    var alt = 0;
+    if(S.only24){
+      var keep = S.only24; S.only24 = false; alt = filtered().length; S.only24 = keep;
+    }
+    box.innerHTML = '<div class="empty">조건에 맞는 24시간 상시 화장실이 없어요.'
+      + (alt ? '<br>' + (S.q ? '‘' + esc(S.q) + '’ ' : '') + '운영시간이 확인된 곳은 <b>' + alt + '곳</b> 있습니다.'
+             + '<br><button class="more" id="btnAll24" style="max-width:330px;margin:14px auto 0">24시간 상시만 끄고 ' + alt + '곳 보기</button>' : '')
+      + (S.q ? '<br>검색어를 지워 보세요.' : '') + '</div>';
+    var b24 = $('btnAll24');
+    if(b24) b24.onclick = function(){
+      S.only24 = false; $('tog24').setAttribute('aria-pressed','false'); S.limit = 40; render();
+    };
   }else{
     var h = '';
     for(var i=0;i<shown;i++) h += cardHtml(list[i], i);
