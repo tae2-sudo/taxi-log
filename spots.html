@@ -37,7 +37,7 @@ a{color:var(--emerald-2);text-decoration:none}
 
 /* ===== sticky top ===== */
 .sticky{position:sticky;top:0;z-index:40;background:rgba(9,14,26,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line-soft)}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(9px + env(safe-area-inset-top)) 14px 8px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(9px + env(safe-area-inset-top)) 14px 8px;max-width:600px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:9px;min-width:0}
 .brand .logo{width:34px;height:34px;border-radius:12px;background:linear-gradient(140deg,#1E3A5F,#131C31);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto}
 .brand h1{font-size:15.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
@@ -45,7 +45,7 @@ a{color:var(--emerald-2);text-decoration:none}
 .icon-btn{width:38px;height:38px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer}
 .icon-btn:active{transform:scale(.96)}
 
-.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 12px 9px;scrollbar-width:none}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 12px 9px;scrollbar-width:none;max-width:600px;margin:0 auto}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:0 0 auto;border:1px solid var(--line);background:var(--surface3);color:var(--muted);font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;line-height:1.2}
 .tab[aria-selected="true"]{background:var(--emerald);border-color:var(--emerald);color:#032018;box-shadow:0 4px 14px rgba(16,185,129,.28)}
@@ -343,7 +343,7 @@ var SPOTS = [
  {id:"guro",n:"구로디지털단지",gu:"구로구",lat:37.4841,ln:126.9025,v:"short",wx:.85,
   pt:"2호선 구로디지털단지역 1·2번 출구 앞 시흥대로변",tg:"출근 직장인 · IT 오피스",tag:["오피스","역세권"],
   d:{dawn:38,am:85,day:62,pm:78,night:55,late:45,deep:30},
-  why:"IT·벤처 오피스 밀집지. 평일 7~9시 출근 콜이 가장 촘촘하고 오류동에서 2~3km라 공차 이동이 짧습니다.",
+  why:"IT·벤처 오피스 밀집지. 평일 7~9시 출근 콜이 가장 촘촘하고 오류동에서 5km 안쪽이라 공차 이동이 짧습니다.",
   tip:"역 1번 출구 버스정류장~시흥대로변. 출근시간엔 정류장 앞 경쟁이 세니 한 블록 위 대로변도 노려보세요."},
  {id:"gasan",n:"가산디지털단지",gu:"금천구",lat:37.4807,ln:126.8841,v:"short",wx:.8,
   pt:"1·7호선 가산디지털단지역 1번 출구 · 마리오아울렛 앞",tg:"오피스 · 아울렛 쇼핑",tag:["오피스","쇼핑"],
@@ -805,8 +805,8 @@ function tierOf(sc){
 function reasonText(r, slotKey){
   var sp = r.sp;
   var parts = [];
-  parts.push(dirName(S.base.lat, S.base.ln, sp.lat, sp.ln) + " " + fmtKm(r.km) + "km · 약 " + r.eta + "분");
-  parts.push(sp.tg + " 수요 " + r.dem);
+  parts.push(dirName(S.base.lat, S.base.ln, sp.lat, sp.ln) + "쪽 " + fmtKm(r.km) + "km · 약 " + r.eta + "분");
+  parts.push(sp.tg.split("·").slice(0,2).join("·").trim() + " 수요 " + r.dem);
   if(r.wb.note) parts.push("<em>" + esc(r.wb.note) + "</em>");
   else if(r.wf.note) parts.push("<em>" + esc(r.wf.note) + "</em>");
   if(r.ev) parts.push("<em>행사 종료 대기</em>");
@@ -1058,7 +1058,7 @@ function renderList(){
       +   '<div class="rscore s-' + t.c + '" style="color:' + (t.c === "hi" ? "#34D399" : (t.c === "mid" ? "#F5B342" : "#94A3B8")) + '">' + r.score + '</div></div>'
       + '<div class="rpoint">' + esc(sp.pt) + '</div>'
       + '<div class="rwhy">' + esc(sp.why) + '</div>'
-      + '<div class="badge-row"><span class="badge sky">' + dirName(S.base.lat,S.base.ln,sp.lat,sp.ln) + ' ' + fmtKm(r.km) + 'km · 약 ' + r.eta + '분</span>'
+      + '<div class="badge-row"><span class="badge sky">' + dirName(S.base.lat,S.base.ln,sp.lat,sp.ln) + '쪽 ' + fmtKm(r.km) + 'km · 약 ' + r.eta + '분</span>'
       +   '<span class="badge">' + SLOTS[cfg.slotKey].short + ' 수요 ' + r.dem + '</span>'
       +   '<span class="badge">' + esc(sp.tg) + '</span>'
       +   (r.ev ? '<span class="badge am">🚩 행사</span>' : '')
@@ -1090,7 +1090,7 @@ function ruleBrief(){
   var t1 = all[0], t2 = all[1], t3 = all[2];
   var ns = nextSlot(k), nt = computeAll(ns)[0];
   var lines = [];
-  lines.push("지금은 " + SLOTS[k].label + ". " + t1.sp.n + " — " + t1.sp.tg + " 수요가 가장 큽니다. 여기서 " + fmtKm(t1.km) + "km, 약 " + t1.eta + "분.");
+  lines.push("지금 " + SLOTS[k].short + "시간대. " + t1.sp.n + " — " + t1.sp.tg + " 수요가 가장 큽니다. 여기서 " + fmtKm(t1.km) + "km, 약 " + t1.eta + "분.");
   lines.push("2순위 " + t2.sp.n + "(" + fmtKm(t2.km) + "km), 3순위 " + t3.sp.n + "(" + fmtKm(t3.km) + "km). 이동 부담이 적은 쪽부터 붙으세요.");
   var wl = weatherSentence();
   lines.push((wl ? wl + " " : "") + "다음 " + SLOTS[ns].label + "에는 " + nt.sp.n + " 쪽이 좋습니다.");
