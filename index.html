@@ -103,7 +103,7 @@ main{padding:6px 16px calc(104px + env(safe-area-inset-bottom));max-width:560px;
 .home-head .hello{font-size:23px;font-weight:800;letter-spacing:-.035em;margin-top:3px;line-height:1.2}
 .home-head .hello em{font-style:normal;color:var(--emerald-2)}
 .veh-badge{width:46px;height:46px;border-radius:16px;background:var(--surface2);border:1px solid var(--line);
-  display:grid;place-items:center;color:var(--muted);flex:0 0 auto;position:relative}
+  display:grid;place-items:center;color:#9FB0C7;flex:0 0 auto;position:relative}
 .veh-badge svg{width:22px;height:22px}
 .veh-badge .live-dot{position:absolute;top:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--amber);
   border:2px solid var(--bg);box-shadow:0 0 0 3px rgba(245,158,11,.18)}
@@ -344,6 +344,8 @@ table.data td.blue{color:var(--sky)}
 
 @media (min-width:560px){
   main{max-width:600px;padding-left:20px;padding-right:20px}
+  .app-header{padding-left:calc((100vw - 600px)/2 + 20px);padding-right:calc((100vw - 600px)/2 + 20px)}
+  .tabbar{padding-left:calc((100vw - 600px)/2);padding-right:calc((100vw - 600px)/2)}
   .cell{min-height:84px}
   .cell .d{font-size:12px}
   .cell .hr{font-size:9.5px;line-height:15px}
@@ -1528,7 +1530,7 @@ views.home = function(){
   + '</section>'
 
   + '<section class="drive' + (sess ? ' running' : '') + '" id="drive" aria-label="운행 기록">'
-  +   '<p class="elapsed-label"><span class="dot"></span><span id="stateLabel">' + (sess ? '운행 중' : '대기 중') + '</span></p>'
+  +   '<p class="elapsed-label"><span class="dot"></span><span id="stateLabel">' + (sess ? '운행 중' : (todayMin > 0 ? '오늘 누적' : '대기 중')) + '</span></p>'
   +   '<p class="elapsed num" id="elapsedClock" aria-live="polite">' + clockTxt + '</p>'
   +   '<p class="run-sub" id="runSub">' + esc(subTxt) + '</p>'
   +   '<div class="btn-wrap">'
