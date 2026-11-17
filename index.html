@@ -137,6 +137,11 @@ input[type=datetime-local],input[type=month],input[type=date]{font-size:14px;pad
 .list-head b{font-size:12px;color:#41506B}
 .del-x{border:0;background:#F1F4F8;color:#64748B;width:28px;height:28px;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;line-height:1}
 .del-x:active{background:#E3E9F0}
+.station-pick{display:flex;flex-direction:column;gap:6px}
+.station-pick select{font-size:13.5px;font-weight:700}
+.st-row{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;background:#FBFCFE}
+.st-row .st-name{font-size:13px;font-weight:800;color:#31425C;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-row .st-unit{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;flex:none}
 
 .total-line{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#F7F9FC;border-radius:10px;padding:9px 11px;font-size:12.5px;font-weight:700;color:#41506B;margin-top:2px}
 .total-line b{font-size:14.5px;color:var(--navy)}
@@ -717,9 +722,17 @@ function mergeStates(local, remote){
   var l = local || {}, r = remote || {};
   var ls = l.settings || {}, rs = r.settings || {};
   var lu = num(l.settingsUpdated), ru = num(r.settingsUpdated);
+  /* 설정은 최신 쪽을 따르되, 충전소 단가 기억은 양쪽을 합쳐 충전소별 최신 단가를 남긴다. */
+  var baseSettings = (ru>lu) ? rs : ls;
+  var mergedSettings = {};
+  Object.keys(baseSettings || {}).forEach(function(k){ mergedSettings[k] = baseSettings[k]; });
+  mergedSettings.stations = normalizeStations(
+    (Array.isArray(ls.stations) ? ls.stations : []).concat(Array.isArray(rs.stations) ? rs.stations : [])
+  );
+  mergedSettings.stationsSeeded = Math.max(num(ls.stationsSeeded), num(rs.stationsSeeded)) || num(baseSettings.stationsSeeded);
   var out = {
     version: 1,
-    settings: (ru>lu) ? rs : ls,
+    settings: mergedSettings,
     settingsUpdated: Math.max(lu, ru),
     days: {},
     deleted: {},
@@ -740,6 +753,361 @@ function mergeStates(local, remote){
     if(del) out.deleted[k] = del;
   });
   return out;
+}
+
+/* ---------- 자주 가는 충전소 단가 기억 ---------- */
+var MAX_STATIONS = 40;
+/* 처음 실행·설정 초기 상태에 깔아 두는 기본 충전소 (오류동 자택 근처 LPG) */
+var DEFAULT_STATIONS = [{name:'대성산업(주)오류동충전소', fuel:'LPG', unit:1239, updated:0}];
+var DEFAULT_STATIONS_SEED = 1;
+function defaultStations(){
+  return DEFAULT_STATIONS.map(function(s){ return {name:s.name, fuel:s.fuel, unit:s.unit, updated:num(s.updated)}; });
+}
+/* 기본 충전소를 목록에 한 번만 더한다. 이미 같은 이름이 있으면 사용자가 넣은 이름·단가를 그대로 둔다. */
+function mergeDefaultStations(settings){
+  if(!settings) return false;
+  var list = normalizeStations(settings.stations);
+  var before = list.length;
+  defaultStations().forEach(function(d){
+    if(!findStation({stations:list}, d.name)) list.push(d);
+  });
+  if(list.length === before) return false;
+  settings.stations = normalizeStations(list);
+  return true;
+}
+function stationKey(name){
+  return String(name===undefined||name===null ? '' : name).replace(/\s+/g,' ').trim().toLowerCase();
+}
+function normalizeStations(list){
+  var out = [], byKey = {};
+  (Array.isArray(list) ? list : []).forEach(function(s){
+    if(!s || typeof s !== 'object') return;
+    var name = String(s.name===undefined||s.name===null ? '' : s.name).replace(/\s+/g,' ').trim();
+    if(!name) return;
+    var k = stationKey(name);
+    var rawU = s.unit;
+    var unit = (rawU===''||rawU===null||rawU===undefined) ? '' : (isFinite(Number(rawU)) ? Math.max(0, Math.round(Number(rawU))) : '');
+    if(unit === 0) unit = '';
+    var fuel = (typeof s.fuel==='string' && s.fuel) ? s.fuel : '';
+    var updated = num(s.updated);
+    var prev = byKey[k];
+    if(prev){
+      if(updated > prev.updated){
+        if(!fuel && prev.fuel) fuel = prev.fuel;
+        if(unit==='' && prev.unit!=='') unit = prev.unit;
+        prev.name = name; prev.fuel = fuel; prev.unit = unit; prev.updated = updated;
+      } else {
+        if(!prev.fuel && fuel) prev.fuel = fuel;
+        if(prev.unit==='' && unit!=='') prev.unit = unit;
+      }
+      return;
+    }
+    var item = {name:name, fuel:fuel, unit:unit, updated:updated};
+    byKey[k] = item;
+    out.push(item);
+  });
+  out.sort(function(a,b){
+    var d = num(b.updated) - num(a.updated);
+    if(d) return d;
+    return (a.name < b.name) ? -1 : (a.name > b.name ? 1 : 0);
+  });
+  return out.slice(0, MAX_STATIONS);
+}
+function findStation(settings, name){
+  var k = stationKey(name);
+  if(!k) return null;
+  var list = (settings && Array.isArray(settings.stations)) ? settings.stations : [];
+  for(var i=0;i<list.length;i++){ if(stationKey(list[i].name) === k) return list[i]; }
+  return null;
+}
+function stationLabel(s){
+  if(!s || !s.name) return '';
+  return num(s.unit) > 0 ? (s.name + ' (' + fmtNum(num(s.unit)) + '원)') : s.name;
+}
+function rememberStation(settings, name, fuel, unit, ts){
+  if(!settings) return [];
+  settings.stations = normalizeStations(settings.stations);
+  var clean = String(name===undefined||name===null ? '' : name).replace(/\s+/g,' ').trim();
+  if(!clean) return settings.stations;
+  var u = num(unit);
+  var f = (typeof fuel==='string' && fuel) ? fuel : '';
+  var at = num(ts) || Date.now();
+  var found = null;
+  for(var i=0;i<settings.stations.length;i++){
+    if(stationKey(settings.stations[i].name) === stationKey(clean)){ found = settings.stations[i]; break; }
+  }
+  if(found){
+    found.name = clean;
+    if(f) found.fuel = f;
+    if(u > 0) found.unit = Math.round(u);
+    found.updated = at;
+  } else {
+    settings.stations.push({name:clean, fuel: f || settings.fuel || 'LPG', unit: u > 0 ? Math.round(u) : '', updated:at});
+  }
+  settings.stations = normalizeStations(settings.stations);
+  return settings.stations;
+}
+function forgetStation(settings, name){
+  var k = stationKey(name);
+  if(!settings || !k) return [];
+  settings.stations = normalizeStations(settings.stations).filter(function(s){ return stationKey(s.name) !== k; });
+  return settings.stations;
+}
+function lastStation(settings, days){
+  var found = null;
+  ((settings && settings.stations) || []).forEach(function(s){
+    if(!found || num(s.updated) > num(found.updated)) found = s;
+  });
+  if(found) return found;
+  if(!days) return null;
+  var keys = Object.keys(days).sort().reverse();
+  for(var i=0;i<keys.length;i++){
+    var d = days[keys[i]];
+    var chs = (d && d.charges) || [];
+    for(var j=chs.length-1;j>=0;j--){
+      if(stationKey(chs[j].station)){
+        return {name:String(chs[j].station).replace(/\s+/g,' ').trim(), fuel:chs[j].fuel||'', unit:num(chs[j].unit), updated:num(d.u)};
+      }
+    }
+  }
+  return null;
+}
+/* 충전량·단가·금액 중 하나를 고치면 나머지를 맞춘다. edited: 'liters' | 'unit' | 'amount' */
+function syncChargeAmounts(c, edited){
+  if(!c) return c;
+  var hasL = (c.liters !== '' && c.liters !== null && c.liters !== undefined) && num(c.liters) > 0;
+  var hasU = (c.unit !== '' && c.unit !== null && c.unit !== undefined) && num(c.unit) > 0;
+  var hasA = (c.amount !== '' && c.amount !== null && c.amount !== undefined) && isFinite(Number(c.amount));
+  var L = num(c.liters), U = num(c.unit), A = num(c.amount);
+  if(edited === 'amount'){
+    if(hasL && hasA && A > 0) c.unit = Math.round(A / L);
+  } else if(edited === 'liters'){
+    if(hasL && hasU) c.amount = Math.round(L * U);
+    else if(hasL && hasA && A > 0) c.unit = Math.round(A / L);
+  } else if(edited === 'unit'){
+    if(hasL && hasU) c.amount = Math.round(L * U);
+  } else {
+    if(hasL && hasU) c.amount = Math.round(L * U);
+  }
+  return c;
+}
+/* 기억된 충전소 단가를 충전 행에 채운다. */
+function applyStation(c, st){
+  if(!c || !st) return c;
+  if(st.name) c.station = st.name;
+  if(st.fuel) c.fuel = st.fuel;
+  if(num(st.unit) > 0) c.unit = Math.round(num(st.unit));
+  if(num(c.liters) > 0 && num(c.unit) > 0) c.amount = Math.round(num(c.liters) * num(c.unit));
+  return c;
+}
+function seedStationsFromDays(st){
+  if(!st || !st.settings || !st.days) return false;
+  var before = normalizeStations(st.settings.stations).map(function(s){ return stationKey(s.name); }).join('|');
+  Object.keys(st.days).sort().reverse().forEach(function(k){
+    var d = st.days[k];
+    if(!d) return;
+    (d.charges || []).forEach(function(c){
+      if(!stationKey(c.station)) return;
+      if(findStation(st.settings, c.station)) return;
+      rememberStation(st.settings, c.station, c.fuel, c.unit, num(d.u) || keyDate(k).getTime());
+    });
+  });
+  var after = normalizeStations(st.settings.stations).map(function(s){ return stationKey(s.name); }).join('|');
+  return after !== before;
+}
+/* ---------- 오피넷(Opinet) 실시간 LPG 단가 ---------- */
+var OPINET_EPS = ['aroundAll', 'lowTop10', 'searchByName', 'detailById'];
+var OPINET_LPG = 'K015';           /* 제품코드: 자동차부탄(LPG) */
+var OPINET_SEOUL_AREA = '01';      /* 시도코드: 서울 */
+var OPINET_RADIUS_M = 5000;        /* 오피넷 반경 조회 최대 5km */
+var OPINET_MAX_NEW = 8;            /* 새로 담는 충전소 수 상한(목록이 넘치지 않게) */
+/* 상호 비교용 열쇠 — 공백·법인 표기·괄호를 지워 '대성산업(주)오류동충전소'와 '대성산업오류동충전소'를 같게 본다. */
+function opinetNameKey(name){
+  return String(name === undefined || name === null ? '' : name)
+    .replace(/\(주\)|\(유\)|\(사\)|\(합\)|주식회사|유한회사|㈜/g, '')
+    .replace(/[\s\-_.·,()\[\]{}'"`~!@#$%^&*+=|\\/?:;<>]/g, '')
+    .toLowerCase();
+}
+/* 중계(Worker) 호출 주소: <proxyUrl>?ep=<endpoint>&code=<opinetKey>&... */
+function opinetUrlFor(base, key, ep, params){
+  var b = String(base === undefined || base === null ? '' : base).replace(/\s+/g, '').replace(/\/+$/, '');
+  var k = String(key === undefined || key === null ? '' : key).replace(/\s+/g, '');
+  var e = String(ep === undefined || ep === null ? '' : ep).trim();
+  if(!b || !k || OPINET_EPS.indexOf(e) === -1) return '';
+  var qs = ['ep=' + encodeURIComponent(e), 'code=' + encodeURIComponent(k)];
+  var p = params || {};
+  Object.keys(p).forEach(function(name){
+    var v = p[name];
+    if(v === '' || v === null || v === undefined) return;
+    qs.push(encodeURIComponent(name) + '=' + encodeURIComponent(String(v)));
+  });
+  return b + (b.indexOf('?') === -1 ? '?' : '&') + qs.join('&');
+}
+/* 오피넷 응답(RESULT.OIL)을 충전소 목록으로 — 배열·한 건·빈 응답 모두 받아 준다. */
+function parseOpinetOils(data){
+  var src = null;
+  try{
+    var r = data && data.RESULT && data.RESULT.OIL;
+    if(Array.isArray(r)) src = r;
+    else if(r && typeof r === 'object') src = [r];
+  }catch(e){ src = null; }
+  if(!src){
+    if(data && Array.isArray(data.OIL)) src = data.OIL;
+    else if(Array.isArray(data)) src = data;
+  }
+  var out = [], seen = {};
+  (src || []).forEach(function(o){
+    if(!o || typeof o !== 'object') return;
+    var name = String(o.OS_NM === undefined || o.OS_NM === null ? '' : o.OS_NM).replace(/\s+/g, ' ').trim();
+    var price = num(o.PRICE);
+    if(!name || !(price > 0)) return;
+    var nk = opinetNameKey(name);
+    if(!nk || seen[nk]) return;
+    seen[nk] = 1;
+    var dist = num(o.DISTANCE);
+    out.push({
+      name: name,
+      price: Math.round(price),
+      id: o.UNI_ID ? String(o.UNI_ID) : '',
+      brand: o.POLL_DIV_CD ? String(o.POLL_DIV_CD) : '',
+      distance: dist > 0 ? Math.round(dist) : 0,
+      addr: String(o.NEW_ADR || o.VAN_ADR || '')
+    });
+  });
+  return out;
+}
+/* 이름이 조금 달라도 같은 충전소를 찾는다(정확히 같은 이름 → 공백·법인표기 무시). */
+function findStationLoose(settings, name){
+  var exact = findStation(settings, name);
+  if(exact) return exact;
+  var k = opinetNameKey(name);
+  if(!k) return null;
+  var list = (settings && Array.isArray(settings.stations)) ? settings.stations : [];
+  for(var i=0;i<list.length;i++){ if(opinetNameKey(list[i].name) === k) return list[i]; }
+  return null;
+}
+/* 실시간 단가를 충전소 목록에 반영한다. 단골 충전소는 이름을 그대로 두고 단가·시각만 새로 쓴다. */
+function mergeOpinetStations(settings, oils, ts, maxNew){
+  var out = {updated: 0, added: 0, matched: []};
+  if(!settings) return out;
+  var at = num(ts) || Date.now();
+  var cap = num(maxNew) > 0 ? num(maxNew) : 8;
+  (Array.isArray(oils) ? oils : []).forEach(function(o){
+    if(!o) return;
+    var name = String(o.name === undefined || o.name === null ? '' : o.name).replace(/\s+/g, ' ').trim();
+    var price = Math.round(num(o.price));
+    if(!name || !(price > 0)) return;
+    var mem = findStationLoose(settings, name);
+    if(mem){
+      if(Math.round(num(mem.unit)) !== price) out.updated++;
+      mem.unit = price;
+      if(!mem.fuel) mem.fuel = 'LPG';
+      /* 사용자가 마지막으로 쓴 순서(updated)는 건드리지 않는다 — 새 충전 행에 채워지는 '마지막 충전소'가 바뀌면 안 된다. */
+      out.matched.push({name: mem.name, liveName: name, price: price});
+      return;
+    }
+    if(out.added >= cap) return;
+    /* 새로 담는 실시간 충전소도 개인 사용 기록은 없다(updated 0) — 단가만 미리 채워 둔다. */
+    settings.stations.push({name: name, fuel: 'LPG', unit: price, updated: 0});
+    out.added++;
+    out.matched.push({name: name, liveName: name, price: price});
+  });
+  settings.stations = normalizeStations(settings.stations);
+  return out;
+}
+/* 지금 열어 둔 날짜의 충전 행 중 이름이 맞는 행에 실시간 단가·금액을 채운다. */
+function applyOpinetToDay(day, oils, ts){
+  var applied = [];
+  if(!day || !Array.isArray(day.charges)) return applied;
+  (oils || []).forEach(function(o){ /* 쓰지 않음 — 아래에서 행 기준으로 찾는다 */ });
+  day.charges.forEach(function(c){
+    if(!c || !stationKey(c.station)) return;
+    if(c.fuel && c.fuel !== 'LPG') return;   /* 오피넷에서 받는 값은 LPG 단가다 */
+    var hit = null;
+    for(var i=0;i<(oils || []).length;i++){
+      if(opinetNameKey(oils[i].name) === opinetNameKey(c.station)){ hit = oils[i]; break; }
+    }
+    if(!hit) return;
+    var price = Math.round(num(hit.price));
+    if(!(price > 0) || Math.round(num(c.unit)) === price) return;
+    /* 금액을 손으로 넣어 둔 행(할인·쿠폰 등)은 금액을 그대로 두고 단가만 새로 쓴다. */
+    var liters = num(c.liters), oldUnit = num(c.unit), oldAmount = num(c.amount);
+    var autoAmount = !(oldAmount > 0) || (liters > 0 && oldUnit > 0 && Math.abs(oldAmount - liters * oldUnit) <= 1);
+    c.unit = price;
+    if(!c.fuel) c.fuel = 'LPG';
+    if(autoAmount) syncChargeAmounts(c, 'unit');
+    applied.push({name: c.station, price: price, amount: num(c.amount), keptAmount: !autoAmount});
+  });
+  if(applied.length) day.u = num(ts) || Date.now();
+  return applied;
+}
+/* ---------- 좌표: WGS84(위경도) → KATEC(오피넷 좌표) ---------- */
+/* KATEC = Bessel1841 타원체, TM 중부원점(위도 38°·경도 128°), k=0.9999, 원점 400000/600000 */
+var WGS84_ELL = {a: 6378137.0, e2: 0.0066943799901413165};
+var KATEC_ELL = {a: 6377397.155, e2: 0.006674372230614};
+var KATEC_TM = {lat0: 38, lon0: 128, k0: 0.9999, x0: 400000, y0: 600000};
+/* WGS84 → Bessel 7-파라미터(위치벡터) — 국내 KATEC 변환에 널리 쓰는 값 */
+var KATEC_DATUM = {dx: -115.80, dy: 474.99, dz: 674.11, rx: 1.16, ry: -2.31, rz: -1.63, ds: 6.43};
+function toRad(d){ return d * Math.PI / 180; }
+function toDeg(r){ return r * 180 / Math.PI; }
+function geoToGeocent(latDeg, lonDeg, ell){
+  var lat = toRad(latDeg), lon = toRad(lonDeg);
+  var sp = Math.sin(lat), cp = Math.cos(lat), sl = Math.sin(lon), cl = Math.cos(lon);
+  var n = ell.a / Math.sqrt(1 - ell.e2 * sp * sp);
+  return {x: n * cp * cl, y: n * cp * sl, z: n * (1 - ell.e2) * sp};
+}
+function geocentToGeo(x, y, z, ell){
+  var lon = Math.atan2(y, x);
+  var p = Math.sqrt(x * x + y * y);
+  var lat = Math.atan2(z, p * (1 - ell.e2));
+  for(var i=0;i<8;i++){
+    var sp = Math.sin(lat);
+    var n = ell.a / Math.sqrt(1 - ell.e2 * sp * sp);
+    var next = Math.atan2(z + ell.e2 * n * sp, p);
+    if(Math.abs(next - lat) < 1e-12){ lat = next; break; }
+    lat = next;
+  }
+  return {lat: toDeg(lat), lon: toDeg(lon)};
+}
+function datumToBessel(p){
+  var sec = Math.PI / (180 * 3600);
+  var rx = KATEC_DATUM.rx * sec, ry = KATEC_DATUM.ry * sec, rz = KATEC_DATUM.rz * sec;
+  var m = 1 + KATEC_DATUM.ds * 1e-6;
+  var x = (p.x - KATEC_DATUM.dx) / m, y = (p.y - KATEC_DATUM.dy) / m, z = (p.z - KATEC_DATUM.dz) / m;
+  return {x: x + rz * y - ry * z, y: -rz * x + y + rx * z, z: ry * x - rx * y + z};
+}
+function meridianArc(lat, ell){
+  var e2 = ell.e2, e4 = e2 * e2, e6 = e4 * e2;
+  return ell.a * ((1 - e2 / 4 - 3 * e4 / 64 - 5 * e6 / 256) * lat
+    - (3 * e2 / 8 + 3 * e4 / 32 + 45 * e6 / 1024) * Math.sin(2 * lat)
+    + (15 * e4 / 256 + 45 * e6 / 1024) * Math.sin(4 * lat)
+    - (35 * e6 / 3072) * Math.sin(6 * lat));
+}
+function katecTmForward(latDeg, lonDeg){
+  var a = KATEC_ELL.a, e2 = KATEC_ELL.e2, ep2 = e2 / (1 - e2);
+  var la = toRad(latDeg), lo = toRad(lonDeg);
+  var sp = Math.sin(la), cp = Math.cos(la), tp = Math.tan(la);
+  var n = a / Math.sqrt(1 - e2 * sp * sp);
+  var t = tp * tp, c = ep2 * cp * cp, aa = (lo - toRad(KATEC_TM.lon0)) * cp;
+  var m = meridianArc(la, KATEC_ELL) - meridianArc(toRad(KATEC_TM.lat0), KATEC_ELL);
+  var a2 = aa * aa, a3 = a2 * aa, a4 = a3 * aa, a5 = a4 * aa, a6 = a5 * aa;
+  return {
+    x: KATEC_TM.x0 + KATEC_TM.k0 * n * (aa + (1 - t + c) * a3 / 6 + (5 - 18 * t + t * t + 72 * c - 58 * ep2) * a5 / 120),
+    y: KATEC_TM.y0 + KATEC_TM.k0 * (m + n * tp * (a2 / 2 + (5 - t + 9 * c + 4 * c * c) * a4 / 24 + (61 - 58 * t + t * t + 600 * c - 330 * ep2) * a6 / 720))
+  };
+}
+function wgs84ToKatec(lat, lng){
+  if(lat === '' || lng === '' || lat === null || lng === null || lat === undefined || lng === undefined) return null;
+  var la = Number(lat), lo = Number(lng);
+  if(!isFinite(la) || !isFinite(lo)) return null;
+  if(Math.abs(la) > 90 || Math.abs(lo) > 180) return null;
+  if(la === 0 && lo === 0) return null;
+  var g = geoToGeocent(la, lo, WGS84_ELL);
+  var b = datumToBessel(g);
+  var geo = geocentToGeo(b.x, b.y, b.z, KATEC_ELL);
+  var xy = katecTmForward(geo.lat, geo.lon);
+  if(!isFinite(xy.x) || !isFinite(xy.y)) return null;
+  return {x: Math.round(xy.x * 100) / 100, y: Math.round(xy.y * 100) / 100};
 }
 /* ===== CORE END ===== */
 
@@ -769,7 +1137,7 @@ function checkStorage(){
 function defaultState(){
   return {
     version: 1,
-    settings: {vehicle:'K5 LPI', plate:'서울 00자 0000', fuel:'LPG', offWeekdays:[], offMemo:'', gmapsKey:'', oauthClientId:''},
+    settings: {vehicle:'K5 LPI', plate:'서울 00자 0000', fuel:'LPG', offWeekdays:[], offMemo:'', gmapsKey:'', oauthClientId:'', opinetKey:'', opinetProxyUrl:'', opinetAt:0, stations:defaultStations(), stationsSeeded:DEFAULT_STATIONS_SEED},
     settingsUpdated: 0,
     days: {},
     deleted: {},
@@ -781,6 +1149,7 @@ function normalizeState(raw){
   var s = defaultState();
   if(!raw || typeof raw !== 'object') return s;
   var st = raw.settings || {};
+  var hasStations = Array.isArray(st.stations);
   s.settings = {
     vehicle: (typeof st.vehicle==='string' && st.vehicle) ? st.vehicle : 'K5 LPI',
     plate: (typeof st.plate==='string' && st.plate) ? st.plate : '서울 00자 0000',
@@ -788,7 +1157,14 @@ function normalizeState(raw){
     offWeekdays: Array.isArray(st.offWeekdays) ? st.offWeekdays.map(Number).filter(function(x){return x>=0 && x<=6;}) : [],
     offMemo: typeof st.offMemo==='string' ? st.offMemo : '',
     gmapsKey: typeof st.gmapsKey==='string' ? st.gmapsKey : '',
-    oauthClientId: typeof st.oauthClientId==='string' ? st.oauthClientId : ''
+    oauthClientId: typeof st.oauthClientId==='string' ? st.oauthClientId : '',
+    /* 오피넷 키는 이 기기에만 저장하고 클라우드 동기화에서 뺀다. */
+    opinetKey: typeof st.opinetKey==='string' ? st.opinetKey : '',
+    opinetProxyUrl: typeof st.opinetProxyUrl==='string' ? st.opinetProxyUrl : '',
+    opinetAt: num(st.opinetAt),
+    /* 저장된 목록이 아직 없는 상태(처음 실행·예전 기록)면 기본 충전소를 깔아 둔다. */
+    stations: hasStations ? normalizeStations(st.stations) : defaultStations(),
+    stationsSeeded: hasStations ? num(st.stationsSeeded) : DEFAULT_STATIONS_SEED
   };
   s.settingsUpdated = num(raw.settingsUpdated);
   var days = raw.days || {};
@@ -806,10 +1182,24 @@ function normalizeState(raw){
   return s;
 }
 function loadAll(){
+  var raw = null;
   try{
-    var raw = localStorage.getItem(STORE_KEY);
-    state = normalizeState(raw ? JSON.parse(raw) : null);
-  }catch(e){ state = defaultState(); }
+    var txt = localStorage.getItem(STORE_KEY);
+    raw = txt ? JSON.parse(txt) : null;
+    state = normalizeState(raw);
+  }catch(e){ state = defaultState(); raw = null; }
+  /* 충전소 기억 목록이 생기기 전에 쌓인 기록에서 충전소 이름·단가를 한 번만 모아 둔다. */
+  try{
+    if(raw && raw.settings && !Array.isArray(raw.settings.stations)){
+      if(seedStationsFromDays(state)) saveLocal();
+    }
+    /* 기본 충전소는 한 번만 깐다. 그 뒤에 사용자가 지우거나 단가를 바꾼 값은 건드리지 않는다. */
+    if(raw && raw.settings && num(raw.settings.stationsSeeded) < DEFAULT_STATIONS_SEED){
+      mergeDefaultStations(state.settings);
+      state.settings.stationsSeeded = DEFAULT_STATIONS_SEED;
+      saveLocal();
+    }
+  }catch(e){}
   try{
     var m = localStorage.getItem(SYNC_META_KEY);
     if(m){ var p = JSON.parse(m); if(p && typeof p==='object'){ syncMeta.email = p.email||''; syncMeta.lastSyncAt = num(p.lastSyncAt); syncMeta.fileId = p.fileId||''; } }
@@ -1061,6 +1451,7 @@ views.input = function(){
     if(s && e && e.getTime() <= s.getTime()) warn = '종료 시각이 시작보다 빠릅니다. 날짜를 확인해 주세요.';
   });
   var pattern = (state.settings.offWeekdays || []).map(function(x){ return WEEKDAYS[x]; }).join('·');
+  var stationOpts = normalizeStations(state.settings.stations);
 
   return ''
   + '<section class="card tight" style="display:flex;align-items:center;gap:10px">'
@@ -1137,15 +1528,29 @@ views.input = function(){
 
   + '<section class="card">'
   +   '<div class="card-h"><div class="card-t">충전</div><div class="card-sub" id="chargeTotal">' + fmtWon(ch.amount) + ' · ' + fmtNum(ch.liters) + 'L</div></div>'
+  +   '<div class="row wrap" style="gap:8px;margin-bottom:6px">'
+  +     '<button class="btn btn-sm btn-soft" data-act="opinetLoad">실시간 LPG 가격 불러오기</button>'
+  +   '</div>'
+  +   '<div class="tiny muted" id="opinetHint" style="margin-bottom:9px">' + esc(opinetHintText()) + '</div>'
   +   (d.charges.length ? d.charges.map(function(c, i){
+        var pickKey = stationKey(c.station);
+        var opts = stationOpts.map(function(s){
+          return '<option value="' + esc(s.name) + '"' + (pickKey && stationKey(s.name)===pickKey ? ' selected' : '') + '>' + esc(stationLabel(s)) + '</option>';
+        }).join('');
         return '<div class="list-row">'
         + '<div class="list-head full"><b>충전 ' + (i+1) + '</b><button class="del-x" data-act="delCharge" data-idx="' + i + '" aria-label="삭제">✕</button></div>'
-        + '<div class="field full"><label>충전소</label><input type="text" placeholder="예: SK가스 오류충전소" data-day="' + key + '" data-field="charges.' + i + '.station" value="' + esc(c.station||'') + '"></div>'
+        + '<div class="field full"><label>충전소</label>'
+        +   '<div class="station-pick">'
+        +     '<select data-day="' + key + '" data-station="' + i + '" aria-label="자주 가는 충전소">'
+        +       '<option value="">' + (stationOpts.length ? '자주 가는 충전소 선택 (최근 단가)' : '저장된 충전소 없음 · 직접 입력') + '</option>' + opts
+        +     '</select>'
+        +     '<input type="text" placeholder="예: SK가스 오류충전소" data-day="' + key + '" data-field="charges.' + i + '.station" value="' + esc(c.station||'') + '">'
+        +   '</div></div>'
         + '<div class="field"><label>유종</label><select data-day="' + key + '" data-field="charges.' + i + '.fuel">' + FUEL_KINDS.map(function(f){ return '<option' + ((c.fuel||state.settings.fuel)===f?' selected':'') + '>' + f + '</option>'; }).join('') + '</select></div>'
         + '<div class="field"><label>충전량 (L)</label><input class="num" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" data-day="' + key + '" data-field="charges.' + i + '.liters" value="' + esc(ival(c.liters)) + '"></div>'
         + '<div class="field"><label>단가 (원/L)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="charges.' + i + '.unit" value="' + esc(ival(c.unit)) + '"></div>'
         + '<div class="field"><label>충전금액 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="자동" data-day="' + key + '" data-field="charges.' + i + '.amount" value="' + esc(ival(c.amount)) + '"></div>'
-        + '<div class="tiny muted full">금액을 고치면 단가가, 단가·충전량을 고치면 금액이 자동으로 맞춰집니다.</div>'
+        + '<div class="tiny muted full">충전소를 고르면 기억된 단가가 채워지고, 충전량만 넣으면 금액이 계산됩니다.</div>'
         + '</div>';
       }).join('') : '<div class="small muted" style="margin-bottom:8px">충전 기록이 없습니다.</div>')
   +   '<button class="btn btn-sm btn-soft" data-act="addCharge">+ 충전 추가</button>'
@@ -1327,6 +1732,7 @@ views.settings = function(){
   var signedMsg = esc(syncStatusText());
   var pattern = (s.offWeekdays || []).map(function(d){ return WEEKDAYS[d]; }).join('·');
   var plateAuto = offWeekdayFromPlate(s.plate);
+  var stationList = normalizeStations(s.stations);
 
   return ''
   + '<div class="screen-title"><h2>설정</h2><div class="small muted">기기 저장 · 서버 없음</div></div>'
@@ -1338,6 +1744,26 @@ views.settings = function(){
   +       '<div class="field"><label>차량번호</label><input type="text" data-field="settings.plate" value="' + esc(s.plate) + '"></div>'
   +       '<div class="field"><label>기본 유종</label><select data-field="settings.fuel">' + FUEL_KINDS.map(function(f){ return '<option' + (s.fuel===f?' selected':'') + '>' + f + '</option>'; }).join('') + '</select></div>'
   +     '</div>'
+  +   '</div>'
+  +   '<div class="settings-block">'
+  +     '<h3>자주 가는 충전소</h3>'
+  +     (stationList.length ? stationList.map(function(st){
+          return '<div class="st-row"><span class="st-name">' + esc(st.name) + (st.fuel ? '<span class="tiny muted"> · ' + esc(st.fuel) + '</span>' : '') + '</span>'
+          + '<span class="st-unit">' + (num(st.unit) > 0 ? fmtNum(num(st.unit)) + '원/L' : '단가 없음')
+          + '<button class="del-x" data-act="delStation" data-name="' + esc(st.name) + '" aria-label="삭제">✕</button></span></div>';
+        }).join('') : '<div class="tiny muted">자료입력 → 충전에서 충전소와 단가를 넣으면 자동으로 저장됩니다.</div>')
+  +     '<div class="tiny muted" style="margin-top:7px;line-height:1.6">충전 행의 <b>충전소</b> 칸에서 골라 쓰면 최근 단가가 자동으로 들어가고, 충전량만 넣으면 금액이 계산됩니다. 여기서 지우면 목록에서만 빠지고 지난 기록은 그대로 남습니다.</div>'
+  +   '</div>'
+  +   '<div class="settings-block">'
+  +     '<h3>오피넷 LPG 실시간 단가</h3>'
+  +     '<div class="field"><label>오피넷(Opinet) API 키</label><input type="password" data-field="settings.opinetKey" value="' + esc(s.opinetKey||'') + '" placeholder="오피넷 오픈API 인증키" autocomplete="off" spellcheck="false"></div>'
+  +     '<div class="field" style="margin-top:8px"><label>오피넷 중계(Worker) URL</label><input type="text" data-field="settings.opinetProxyUrl" value="' + esc(s.opinetProxyUrl||'') + '" placeholder="https://opinet-proxy.abc123.workers.dev" autocomplete="off" spellcheck="false"></div>'
+  +     '<div class="row wrap" style="gap:8px;margin-top:9px">'
+  +       '<button class="btn btn-sm btn-soft" data-act="saveOpinet">저장</button>'
+  +       '<button class="btn btn-sm" data-act="testOpinet">연결 테스트</button>'
+  +     '</div>'
+  +     '<div id="opinetMsg" style="margin-top:9px"></div>'
+  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">오피넷 서버가 브라우저 직접 호출(CORS)을 막아 Cloudflare Workers 무료 중계 주소가 필요합니다. 자료입력 → 충전에서 <b>실시간 LPG 가격 불러오기</b>를 누르면 지금 위치 반경 5km(위치를 못 받으면 서울 전체 최저가) LPG 단가를 받아 충전소 목록과 지금 입력 중인 충전 행에 채웁니다. 키는 <b>이 기기 브라우저(localStorage)</b>에만 저장되고 코드에 들어가지 않으며 <b>클라우드 동기화에 올라가지 않습니다.</b></div>'
   +   '</div>'
   +   '<div class="settings-block">'
   +     '<h3>휴무 패턴 (부제)</h3>'
@@ -1376,7 +1802,7 @@ views.settings = function(){
   +       '<button class="btn btn-sm" data-act="signOut"' + (signed?'':' disabled') + '>로그아웃</button>'
   +     '</div>'
   +     (httpsOK ? '' : '<div class="warn-box" style="margin-top:10px"><b>지금은 파일로 열린 화면(file://)입니다.</b><br>구글 로그인은 <b>https:// 웹 주소(GitHub Pages 등)</b>에 올렸을 때 동작합니다. 그전에도 모든 기록은 이 기기에 저장되고, JSON 백업으로 옮길 수 있어요.</div>')
-  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">로그인하면 기록이 드라이브의 앱 전용 공간(<b>appDataFolder</b>)에 <b>tapp_personal_taxi_sync.json</b> 파일 하나로 저장되고, 저장·수정·START/STOP 때마다 자동으로 맞춰집니다. 같은 날짜를 두 기기에서 동시에 고치면 <b>나중에 고친 기록</b>이 남습니다. 운행 중 표시는 기기별로만 유지됩니다. <b>지도 API 키·OAuth 클라이언트 ID는 이 기기에만 저장되고 동기화되지 않습니다.</b><br>준비물: Google Cloud 콘솔 → <b>OAuth 클라이언트 ID(웹 애플리케이션)</b> 만들고 승인된 JavaScript 원본에 이 페이지 주소 추가 → 같은 프로젝트에서 <b>Google Drive API</b> 사용 설정. OAuth 동의 화면이 ‘테스트’ 상태라면 본인 구글 계정을 테스트 사용자로 추가해야 로그인됩니다.</div>'
+  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">로그인하면 기록이 드라이브의 앱 전용 공간(<b>appDataFolder</b>)에 <b>tapp_personal_taxi_sync.json</b> 파일 하나로 저장되고, 저장·수정·START/STOP 때마다 자동으로 맞춰집니다. 같은 날짜를 두 기기에서 동시에 고치면 <b>나중에 고친 기록</b>이 남습니다. 운행 중 표시는 기기별로만 유지됩니다. <b>지도 API 키·OAuth 클라이언트 ID·오피넷 인증키는 이 기기에만 저장되고 동기화되지 않습니다.</b><br>준비물: Google Cloud 콘솔 → <b>OAuth 클라이언트 ID(웹 애플리케이션)</b> 만들고 승인된 JavaScript 원본에 이 페이지 주소 추가 → 같은 프로젝트에서 <b>Google Drive API</b> 사용 설정. OAuth 동의 화면이 ‘테스트’ 상태라면 본인 구글 계정을 테스트 사용자로 추가해야 로그인됩니다.</div>'
   +   '</div>'
   + '</section>'
 
@@ -1824,6 +2250,8 @@ function resetAll(){
   state.days = {};
   state.settings.offWeekdays = [];
   state.settings.offMemo = '';
+  /* 충전소 목록은 그대로 둔다(사용자가 지운 충전소는 지운 채로). 목록이 아예 없을 때만 기본 충전소를 되살린다. */
+  if(!Array.isArray(state.settings.stations)) state.settings.stations = defaultStations();
   state.settingsUpdated = ts;
   saveNow(); render();
   toast('운행 기록을 모두 지웠습니다');
@@ -1948,7 +2376,7 @@ async function uploadSync(payload, fileId){
 function syncPayload(st){
   var settings = {};
   Object.keys(st.settings || {}).forEach(function(k){
-    if(k !== 'gmapsKey' && k !== 'oauthClientId') settings[k] = st.settings[k];
+    if(k !== 'gmapsKey' && k !== 'oauthClientId' && k !== 'opinetKey') settings[k] = st.settings[k];
   });
   return {version:1, appVersion:'1.0', settings:settings, settingsUpdated: st.settingsUpdated, days: st.days, deleted: st.deleted, meta: st.meta};
 }
@@ -1975,11 +2403,12 @@ async function syncNow(opts){
     var payload = syncPayload(base);
     var saved = await uploadSync(payload, file && file.id);
     var session = state.session;
-    var localKey = state.settings.gmapsKey, localCid = state.settings.oauthClientId;
+    var localKey = state.settings.gmapsKey, localCid = state.settings.oauthClientId, localOpinet = state.settings.opinetKey;
     var next = normalizeState(payload);
     next.session = session;
     next.settings.gmapsKey = localKey;
     next.settings.oauthClientId = localCid;
+    next.settings.opinetKey = localOpinet;
     state = next;
     syncMeta.fileId = (saved && saved.id) || (file && file.id) || '';
     syncMeta.lastSyncAt = Date.now();
@@ -2057,6 +2486,143 @@ function signOut(){
   toast('구글 동기화에서 로그아웃했습니다. 기록은 이 기기에 그대로 있습니다.');
 }
 
+/* ---------- 오피넷 실시간 LPG 단가 불러오기 ---------- */
+var opinetBusy = false;
+function opinetProxyBase(){
+  return String((state && state.settings && state.settings.opinetProxyUrl) || '').trim().replace(/\/+$/, '');
+}
+function opinetKeyValue(){
+  return String((state && state.settings && state.settings.opinetKey) || '').trim();
+}
+function opinetConfigured(){ return !!(opinetProxyBase() && opinetKeyValue()); }
+function opinetHintText(){
+  if(!opinetConfigured()) return '설정 → 오피넷에서 API 키와 중계(Worker) URL을 넣으면 켜집니다';
+  var at = num(state.settings.opinetAt);
+  return at > 0 ? ('마지막 조회 ' + fmtShortTime(at) + ' · 단가는 오피넷 기준') : '현재 위치 반경 5km LPG 가격을 받아 옵니다';
+}
+function opinetErrText(err){
+  var m = String(err && err.message ? err.message : err);
+  if(m === 'no_proxy') return '오피넷 중계(Worker) URL이 비어 있습니다';
+  if(m === 'not_ready') return '오피넷 API 키와 중계 URL을 먼저 넣어 주세요';
+  if(/^HTTP 429/.test(m)) return '오피넷 호출 한도(1,500회/일)를 넘었습니다';
+  if(/^HTTP 401|^HTTP 403/.test(m)) return '오피넷 인증키가 거부되었습니다 (키 확인)';
+  if(/^HTTP /.test(m)) return '중계 서버 오류 (' + m.slice(0, 40) + ')';
+  if(m === 'bad_json') return '중계 서버 응답을 읽지 못했습니다 (Worker 주소 확인)';
+  if(/Failed to fetch|NetworkError|network/i.test(m)) return '중계 서버에 연결하지 못했습니다 (URL·인터넷 확인)';
+  return m;
+}
+/* 현재 위치 한 번만 — 실패·시간 초과면 null(서울 전체 조회로 넘어간다). */
+function currentPosition(timeoutMs){
+  return new Promise(function(resolve){
+    var nav = (typeof navigator !== 'undefined') ? navigator : null;
+    if(!nav || !nav.geolocation || !nav.geolocation.getCurrentPosition) return resolve(null);
+    var wait = num(timeoutMs) > 0 ? num(timeoutMs) : 8000;
+    var done = false;
+    var timer = setTimeout(function(){ if(done) return; done = true; resolve(null); }, wait + 500);
+    try{
+      nav.geolocation.getCurrentPosition(function(pos){
+        if(done) return;
+        done = true; clearTimeout(timer);
+        var c = (pos && pos.coords) || {};
+        var la = Number(c.latitude), lo = Number(c.longitude);
+        if(!isFinite(la) || !isFinite(lo)){ resolve(null); return; }
+        resolve({lat: la, lng: lo});
+      }, function(){
+        if(done) return;
+        done = true; clearTimeout(timer); resolve(null);
+      }, {enableHighAccuracy: false, timeout: wait, maximumAge: 120000});
+    }catch(e){
+      if(!done){ done = true; clearTimeout(timer); resolve(null); }
+    }
+  });
+}
+/* 중계(Worker) 호출 — 주소는 <proxyUrl>?ep=...&code=... 형태 */
+function opinetFetch(ep, params){
+  var base = opinetProxyBase(), key = opinetKeyValue();
+  if(!base) return Promise.reject(new Error('no_proxy'));
+  if(!key) return Promise.reject(new Error('not_ready'));
+  var url = opinetUrlFor(base, key, ep, params);
+  if(!url) return Promise.reject(new Error('not_ready'));
+  return fetch(url, {method: 'GET'}).then(function(res){
+    if(!res || !res.ok) throw new Error('HTTP ' + ((res && res.status) || 0));
+    return res.text();
+  }).then(function(text){
+    try{ return JSON.parse(text); }catch(e){ throw new Error('bad_json'); }
+  });
+}
+async function loadOpinetPrices(){
+  if(opinetBusy) return;
+  if(!opinetConfigured()){
+    toast('설정에서 오피넷 API 키와 중계(Worker) URL을 먼저 넣어 주세요');
+    go('settings');
+    return;
+  }
+  opinetBusy = true;
+  toast('오피넷에서 LPG 가격을 불러오는 중…');
+  var scope = 'seoul';
+  try{
+    var pos = await currentPosition(8000);
+    var data = null;
+    if(pos){
+      var kt = wgs84ToKatec(pos.lat, pos.lng);
+      if(kt){
+        try{
+          data = await opinetFetch('aroundAll', {x: kt.x, y: kt.y, radius: OPINET_RADIUS_M, prodcd: OPINET_LPG, sort: 1, out: 'json'});
+          scope = 'around';
+        }catch(e){ data = null; }
+      }
+    }
+    var oils = parseOpinetOils(data);
+    if(!oils.length){
+      scope = 'seoul';
+      data = await opinetFetch('lowTop10', {area: OPINET_SEOUL_AREA, prodcd: OPINET_LPG, cnt: 20, out: 'json'});
+      oils = parseOpinetOils(data);
+    }
+    if(!oils.length){
+      toast('오피넷 응답에 LPG 가격이 없습니다 · 키와 중계 주소를 확인해 주세요');
+      return;
+    }
+    var ts = Date.now();
+    var res = mergeOpinetStations(state.settings, oils, ts, OPINET_MAX_NEW);
+    state.settings.opinetAt = ts;
+    var applied = applyOpinetToDay(state.days[ui.date], oils, ts);
+    saveNow();
+    render();
+    var msg = '오피넷 LPG ' + oils.length + '곳 · ' + (scope === 'around' ? '반경 5km' : '서울 최저가');
+    if(applied.length){
+      msg += ' · ' + applied[0].name + ' ' + fmtNum(applied[0].price) + '원/L 적용';
+      if(num(applied[0].amount) > 0) msg += ' (' + fmtNum(applied[0].amount) + '원)';
+    } else if(res.updated + res.added){
+      msg += ' · 충전소 ' + res.updated + '곳 단가 갱신' + (res.added ? ' · ' + res.added + '곳 추가' : '');
+    }
+    toast(msg);
+  }catch(err){
+    toast('오피넷 가격을 받지 못했습니다 · ' + opinetErrText(err));
+  }finally{
+    opinetBusy = false;
+  }
+}
+async function testOpinet(){
+  var base = opinetProxyBase(), key = opinetKeyValue();
+  if(!base || !key){
+    setHtml('opinetMsg', '<div class="warn-box">오피넷 API 키와 중계(Worker) URL을 먼저 넣어 주세요.</div>');
+    return;
+  }
+  setHtml('opinetMsg', '<div class="hint-box">오피넷에 시험 조회 중…</div>');
+  try{
+    var data = await opinetFetch('lowTop10', {area: OPINET_SEOUL_AREA, prodcd: OPINET_LPG, cnt: 3, out: 'json'});
+    var oils = parseOpinetOils(data);
+    if(!oils.length){
+      setHtml('opinetMsg', '<div class="warn-box">응답은 왔지만 LPG 가격이 없습니다. 인증키와 중계 주소를 확인해 주세요.</div>');
+      return;
+    }
+    setHtml('opinetMsg', '<div class="ok-box">연결 성공 · LPG ' + oils.length + '곳 (예: ' + esc(oils[0].name) + ' ' + fmtNum(oils[0].price) + '원/L)</div>');
+    toast('오피넷 연결 성공 · LPG ' + oils.length + '곳');
+  }catch(err){
+    setHtml('opinetMsg', '<div class="warn-box">연결하지 못했습니다 · ' + esc(opinetErrText(err)) + '</div>');
+  }
+}
+
 /* ---------- 이벤트 ---------- */
 function onField(el){
   var key = el.getAttribute('data-day');
@@ -2075,30 +2641,96 @@ function onField(el){
     saveSoon();
     if(path === 'settings.plate'){ var p = document.getElementById('hdrPlate'); if(p) p.textContent = val; }
     if(path === 'settings.vehicle'){ var sb = document.getElementById('hdrSub'); if(sb) sb.textContent = val + ' · 광고 없음'; }
-    if(path === 'settings.oauthClientId' || path === 'settings.gmapsKey'){ /* 저장만 */ }
+    if(path === 'settings.oauthClientId' || path === 'settings.gmapsKey' || path === 'settings.opinetKey' || path === 'settings.opinetProxyUrl'){ /* 저장만 */ }
     return;
   }
   var day = ensureDay(key);
   day.u = Date.now();
-  var cm = /^charges\.(\d+)\.(liters|unit|amount)$/.exec(path);
+  var cm = /^charges\.(\d+)\.(liters|unit|amount|station|fuel)$/.exec(path);
   setPath(day, path, val);
   if(cm){
     var idx = Number(cm[1]);
     var c = day.charges[idx];
     if(c){
-      if(cm[2] === 'amount'){
-        var amt = num(c.amount);
-        if(num(c.liters) > 0) c.unit = Math.round(amt / num(c.liters));
-      } else {
-        c.amount = Math.round(num(c.liters) * num(c.unit)) || '';
+      var cf = cm[2];
+      if(cf === 'liters' || cf === 'unit' || cf === 'amount'){
+        syncChargeAmounts(c, cf);
+        setFieldValue(idx, cf === 'amount' ? 'unit' : 'amount', c[cf === 'amount' ? 'unit' : 'amount']);
+        if(num(c.unit) > 0) rememberChargeStation(c);
+      } else if(cf === 'station'){
+        syncStationSelect(idx, c.station);
       }
-      var other = cm[2] === 'amount' ? 'unit' : 'amount';
-      var inp = document.querySelector('input[data-field="charges.' + idx + '.' + other + '"]');
-      if(inp) inp.value = (c[other] === '' || c[other] === undefined) ? '' : c[other];
     }
   }
   saveSoon();
   updateDayComputeds(key);
+}
+function setFieldValue(idx, field, value){
+  var el = document.querySelector('input[data-field="charges.' + idx + '.' + field + '"]');
+  if(el) el.value = (value === '' || value === undefined || value === null) ? '' : String(value);
+}
+/* 직접 친 충전소 이름에 맞춰 드롭다운 표시를 맞춘다(기억된 충전소가 아니면 선택 해제). */
+function syncStationSelect(idx, name){
+  var el = document.querySelector('select[data-station="' + idx + '"]');
+  if(!el || !el.options) return;
+  var k = stationKey(name);
+  var pick = '';
+  for(var i=0;i<el.options.length;i++){
+    if(k && stationKey(el.options[i].value) === k){ pick = el.options[i].value; break; }
+  }
+  if(el.value !== pick) el.value = pick;
+}
+function rememberChargeStation(c){
+  if(!c || !stationKey(c.station)) return;
+  if(num(c.unit) <= 0) return;
+  /* 충전소 단가는 settingsUpdated를 올리지 않고 충전소별 updated로만 맞춘다(다른 설정이 밀리지 않게). */
+  rememberStation(state.settings, c.station, c.fuel, c.unit, Date.now());
+  saveSoon();
+}
+/* 충전소 칸에 이름을 다 치고 나가면 기억된 단가로 채운다. */
+function onStationCommit(key, idx){
+  var d = state.days[key];
+  if(!d || !d.charges || !d.charges[idx]) return;
+  var c = d.charges[idx];
+  if(!stationKey(c.station)) return;
+  var mem = findStation(state.settings, c.station);
+  if(mem){
+    var filled = false;
+    if(num(c.unit) <= 0 && num(mem.unit) > 0){ c.unit = Math.round(num(mem.unit)); filled = true; }
+    if(!c.fuel && mem.fuel){ c.fuel = mem.fuel; filled = true; }
+    if(filled){
+      syncChargeAmounts(c, 'unit');
+      setFieldValue(idx, 'unit', c.unit);
+      setFieldValue(idx, 'amount', c.amount);
+      updateDayComputeds(key);
+      toast('기억해 둔 ' + mem.name + ' 단가 ' + fmtNum(num(mem.unit)) + '원/L를 넣었습니다');
+    }
+    rememberStation(state.settings, c.station, c.fuel, c.unit, Date.now());
+    saveSoon();
+    syncStationSelect(idx, c.station);
+  }
+}
+/* 자주 가는 충전소 드롭다운에서 골랐을 때 — 이름·유종·단가를 채우고 금액까지 계산한다. */
+function onStationPick(el){
+  var key = el.getAttribute('data-day');
+  var idx = Number(el.getAttribute('data-station'));
+  if(!key) return;
+  var d = state.days[key];
+  if(!d || !d.charges || !d.charges[idx]) return;
+  var c = d.charges[idx];
+  var name = el.value;
+  if(!name){ render(); return; }
+  var st = findStation(state.settings, name);
+  if(!st){ render(); return; }
+  d.u = Date.now();
+  applyStation(c, st);
+  rememberStation(state.settings, c.station, c.fuel, c.unit, Date.now());
+  saveSoon();
+  render();
+  if(num(st.unit) > 0){
+    toast(st.name + ' 단가 ' + fmtNum(num(st.unit)) + '원/L 적용'
+      + (num(c.amount) > 0 ? ' · ' + fmtNum(num(c.amount)) + '원' : ''));
+  }
 }
 function updateDayComputeds(key){
   var d = state.days[key];
@@ -2152,7 +2784,24 @@ function handleAct(act, el){
       d = state.days[ui.date];
       if(d && d.expenses.length > idx){ d.expenses.splice(idx, 1); d.u = Date.now(); saveNow(); render(); }
       break;
-    case 'addCharge': d = touchDay(ui.date); d.charges.push({id:'c'+Date.now(), station:'', fuel: state.settings.fuel, liters:'', unit:'', amount:''}); saveSoon(); render(); break;
+    case 'addCharge': {
+      d = touchDay(ui.date);
+      var lastSt = lastStation(state.settings, state.days);
+      var nc = {id:'c'+Date.now(), station:'', fuel: state.settings.fuel, liters:'', unit:'', amount:''};
+      if(lastSt){
+        nc.station = lastSt.name;
+        if(lastSt.fuel) nc.fuel = lastSt.fuel;
+        if(num(lastSt.unit) > 0) nc.unit = Math.round(num(lastSt.unit));
+      }
+      d.charges.push(nc);
+      saveSoon(); render();
+      if(lastSt && num(lastSt.unit) > 0) toast('마지막 충전소 ' + lastSt.name + ' · ' + fmtNum(num(lastSt.unit)) + '원/L를 채웠습니다');
+      break;
+    }
+    case 'delStation':
+      forgetStation(state.settings, el.getAttribute('data-name'));
+      saveNow(); render();
+      break;
     case 'delCharge':
       idx = Number(el.getAttribute('data-idx'));
       d = state.days[ui.date];
@@ -2215,6 +2864,13 @@ function handleAct(act, el){
       toast('Google Maps API 키를 저장했습니다');
       break;
     case 'testMapKey': testMapKey(); break;
+    case 'opinetLoad': loadOpinetPrices(); break;
+    case 'saveOpinet':
+      saveNow();
+      setHtml('opinetMsg', '<div class="ok-box">오피넷 키와 중계 주소를 이 기기에 저장했습니다. 자료입력 → 충전에서 <b>실시간 LPG 가격 불러오기</b>를 눌러 보세요.</div>');
+      toast('오피넷 설정을 저장했습니다');
+      break;
+    case 'testOpinet': testOpinet(); break;
     case 'signIn': signIn(); break;
     case 'signOut': signOut(); break;
     case 'syncNow': syncNow({interactive:true}); break;
@@ -2244,7 +2900,16 @@ document.addEventListener('change', function(ev){
   if(el.id === 'restoreInput'){ handleRestore(el); return; }
   if(el.id === 'csvMonth'){ ui.csvMonth = el.value; return; }
   if(el.id === 'yearSel'){ ui.year = Number(el.value); render(); return; }
-  if(el.getAttribute && el.getAttribute('data-field')) onField(el);
+  if(el.getAttribute){
+    var si = el.getAttribute('data-station');
+    if(si !== null && si !== undefined && si !== ''){ onStationPick(el); return; }
+  }
+  if(el.getAttribute && el.getAttribute('data-field')){
+    onField(el);
+    var fpath = el.getAttribute('data-field') || '';
+    var sm = /^charges\.(\d+)\.station$/.exec(fpath);
+    if(sm && el.getAttribute('data-day')) onStationCommit(el.getAttribute('data-day'), Number(sm[1]));
+  }
 });
 document.getElementById('modal').addEventListener('click', function(ev){
   if(ev.target && ev.target.id === 'modal') closePhoto();
