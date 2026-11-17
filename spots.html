@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B1120">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>서울 돈 되는 자리 · 택시 기사 대시보드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B1120'/%3E%3Ctext x='32' y='45' font-size='34' text-anchor='middle'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0B1120;--bg-deep:#05080F;--surface:#131C31;--surface2:#1A2539;--surface3:#0F172A;
+  --line:#243049;--line-soft:#1B2540;
+  --text:#E8EDF5;--muted:#8A98AE;--dim:#5D6B84;
+  --emerald:#10B981;--emerald-2:#34D399;--emerald-ink:#05261A;
+  --amber:#F59E0B;--amber-2:#F5B342;
+  --sky:#60A5FA;--rose:#F87171;--violet:#A78BFA;
+  --r:20px;--r-sm:14px;--shadow:0 10px 30px rgba(0,0,0,.30);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--bg-deep)}
+body{
+  margin:0;font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Segoe UI",Roboto,sans-serif;
+  background:radial-gradient(900px 460px at 50% -14%,#17243d 0%,#0B1120 46%,#070B15 100%) no-repeat,#070B15;
+  background-attachment:fixed;color:var(--text);font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom);
+}
+button,input,select{font-family:inherit}
+h1,h2,h3,p{margin:0}
+a{color:var(--emerald-2);text-decoration:none}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.wrap{max-width:600px;margin:0 auto;padding:0 14px}
+
+/* ===== sticky top ===== */
+.sticky{position:sticky;top:0;z-index:40;background:rgba(9,14,26,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line-soft)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(9px + env(safe-area-inset-top)) 14px 8px}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand .logo{width:34px;height:34px;border-radius:12px;background:linear-gradient(140deg,#1E3A5F,#131C31);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px;flex:0 0 auto}
+.brand h1{font-size:15.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.brand .sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{width:38px;height:38px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);color:var(--text);font-size:16px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer}
+.icon-btn:active{transform:scale(.96)}
+
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 12px 9px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--surface3);color:var(--muted);font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;line-height:1.2}
+.tab[aria-selected="true"]{background:var(--emerald);border-color:var(--emerald);color:#032018;box-shadow:0 4px 14px rgba(16,185,129,.28)}
+
+/* ===== cards ===== */
+main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
+.card{background:linear-gradient(180deg,var(--surface) 0%,#111A2C 100%);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.section-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:20px 2px 9px}
+.section-h h2{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.section-h .note{font-size:11px;color:var(--dim);font-weight:600}
+.hint{font-size:11.5px;color:var(--dim);line-height:1.5}
+
+/* ===== weather ===== */
+.wx{margin-top:12px;padding:13px 14px;display:flex;gap:12px;align-items:center;position:relative;overflow:hidden}
+.wx::after{content:"";position:absolute;right:-40px;top:-60px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.16),transparent 70%);pointer-events:none}
+.wx .ico{font-size:30px;line-height:1;flex:0 0 auto}
+.wx .body{flex:1;min-width:0}
+.wx .temp{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.wx .cond{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:1px}
+.wx .stats{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.wx .stat{font-size:11px;font-weight:700;color:var(--muted);background:#0E1728;border:1px solid var(--line-soft);padding:3px 8px;border-radius:999px}
+.wx .stat.hot{color:var(--amber-2);border-color:#4a3512;background:#231a08}
+.wx .stat.wet{color:var(--sky);border-color:#1d3557;background:#0c1a2e}
+.wx .refresh{align-self:flex-start;background:transparent;border:0;color:var(--dim);font-size:16px;padding:2px;cursor:pointer}
+.wx-skel{font-size:12px;color:var(--dim)}
+
+/* ===== base location ===== */
+.loc{margin-top:12px;padding:12px 14px}
+.loc-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.loc-name{font-size:13px;font-weight:800}
+.loc-sub{font-size:11px;color:var(--dim);font-weight:600}
+.btn-gps{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:var(--emerald);color:#03251A;border:0;font-weight:800;font-size:12.5px;padding:9px 13px;border-radius:11px;cursor:pointer;white-space:nowrap}
+.btn-gps.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line)}
+.btn-gps:active{transform:scale(.97)}
+.chips{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface3);color:var(--muted);font-size:12px;font-weight:700;padding:7px 11px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{border-color:var(--emerald);color:var(--emerald-2);background:#0C2A22}
+
+/* ===== TOP 3 ===== */
+.top3-wrap{margin-top:4px}
+.top3-lead{display:flex;align-items:baseline;gap:8px;margin:16px 2px 4px}
+.top3-lead h2{font-size:17px;font-weight:900;letter-spacing:-.03em}
+.top3-lead .when{font-size:11.5px;color:var(--amber-2);font-weight:800}
+.t3{margin-top:9px;padding:13px;border-radius:var(--r);border:1px solid var(--line);background:linear-gradient(180deg,#16223a 0%,#111A2C 100%);box-shadow:var(--shadow);position:relative}
+.t3.r1{border-color:#2C6B54;background:linear-gradient(160deg,#12362b 0%,#111c2c 62%)}
+.t3.r1::before{content:"";position:absolute;inset:0;border-radius:var(--r);pointer-events:none;box-shadow:inset 0 0 0 1px rgba(52,211,153,.18)}
+.t3-head{display:flex;align-items:flex-start;gap:10px}
+.rk{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex:0 0 auto;background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
+.r1 .rk{background:var(--emerald);border-color:var(--emerald);color:#03251A}
+.r2 .rk{background:#1e3a5f;border-color:#2b4f7d;color:#bfdbfe}
+.t3-title{flex:1;min-width:0}
+.t3-title h3{font-size:16.5px;font-weight:900;letter-spacing:-.03em;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.t3-title .pt{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px;line-height:1.35}
+.score{flex:0 0 auto;text-align:right}
+.score b{font-size:20px;font-weight:900;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.score small{font-size:10px;color:var(--dim);font-weight:700;display:block;margin-top:-2px}
+.score.s-hi b{color:var(--emerald-2)}
+.score.s-mid b{color:var(--amber-2)}
+.score.s-low b{color:var(--muted)}
+.bar{height:5px;border-radius:99px;background:#0B1424;overflow:hidden;margin:9px 0 8px;border:1px solid #1a2740}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--emerald),#6EE7B7)}
+.s-mid .bar i,.bar.s-mid i{background:linear-gradient(90deg,#D97706,var(--amber-2))}
+.s-low .bar i,.bar.s-low i{background:linear-gradient(90deg,#475569,#64748b)}
+.sortbar{display:flex;align-items:center;gap:7px}
+.sortbar .chip{padding:5px 9px;font-size:11px}
+.reason{font-size:12.5px;color:#CBD5E1;font-weight:600;line-height:1.45}
+.reason em{font-style:normal;color:var(--amber-2);font-weight:800}
+.badge-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.badge{font-size:10.5px;font-weight:800;padding:3px 7px;border-radius:6px;background:#0E1728;border:1px solid var(--line-soft);color:var(--muted)}
+.badge.em{color:var(--emerald-2);border-color:#1d4d3f;background:#0a2019}
+.badge.am{color:var(--amber-2);border-color:#4a3512;background:#221a08}
+.badge.sky{color:#93C5FD;border-color:#1d3557;background:#0c1a2e}
+.navrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.navbtn{display:flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:800;padding:10px 4px;border-radius:11px;border:1px solid var(--line);background:var(--surface2);color:var(--text);text-decoration:none;white-space:nowrap}
+.navbtn:active{transform:scale(.97)}
+.navbtn .k{font-size:9px;font-weight:900;opacity:.9}
+.navbtn.kakao{background:#2A2110;border-color:#4d3c14;color:#FDE68A}
+.navbtn.naver{background:#0C2A1E;border-color:#1c4d38;color:#A7F3D0}
+.navbtn.google{background:#1B2436;border-color:#2b3a54;color:#CBD5E1}
+
+/* ===== event check ===== */
+.ev-box{margin-top:12px;padding:12px 14px}
+.ev-box summary{cursor:pointer;font-size:13px;font-weight:800;list-style:none;display:flex;align-items:center;gap:7px}
+.ev-box summary::-webkit-details-marker{display:none}
+.ev-box summary .cnt{font-size:11px;font-weight:800;color:var(--amber-2);background:#221a08;border:1px solid #4a3512;padding:2px 7px;border-radius:999px}
+.ev-box .hint{margin-top:8px}
+.ev-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.ev{font-size:12px;font-weight:700;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface3);color:var(--muted);cursor:pointer}
+.ev[aria-pressed="true"]{border-color:var(--amber);color:#FDE68A;background:#241a07}
+
+/* ===== list ===== */
+.list{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.row{padding:12px 13px;border-radius:var(--r-sm);border:1px solid var(--line);background:linear-gradient(180deg,#121B2D,#0F1728)}
+.row .rhead{display:flex;align-items:flex-start;gap:9px}
+.row .rname{font-size:14.5px;font-weight:800;letter-spacing:-.02em;flex:1;min-width:0}
+.row .rname .gu{font-size:10.5px;font-weight:700;color:var(--dim);margin-left:5px}
+.row .rscore{font-size:14px;font-weight:900;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.row .rpoint{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px;line-height:1.4}
+.row .rwhy{font-size:11.5px;color:#9FB0C6;font-weight:500;margin-top:5px;line-height:1.45}
+.row .rtip{font-size:11.5px;color:#8AA0BA;margin-top:5px;line-height:1.45;border-left:2px solid #2b3a54;padding-left:8px}
+.row .dist{font-size:11px;font-weight:800;color:var(--sky)}
+.row .navrow{margin-top:9px}
+.row .navbtn{padding:9px 4px;font-size:11.5px}
+.row details{margin-top:7px}
+.row details summary{font-size:11px;color:var(--dim);font-weight:700;cursor:pointer;list-style:none}
+.row details summary::-webkit-details-marker{display:none}
+.empty{padding:22px 14px;text-align:center;font-size:12.5px;color:var(--dim)}
+
+/* ===== brief ===== */
+.brief{margin-top:16px;padding:14px}
+.brief .bh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brief h2{font-size:14.5px;font-weight:900;letter-spacing:-.02em;display:flex;align-items:center;gap:6px}
+.brief .src{font-size:10px;font-weight:800;color:var(--dim);border:1px solid var(--line);padding:3px 7px;border-radius:999px}
+.brief ol{margin:10px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:7px}
+.brief li{font-size:13px;color:#D6DEEA;font-weight:600;line-height:1.5}
+.brief .briefbody p{font-size:13px;color:#D6DEEA;font-weight:600;line-height:1.55;margin-top:7px}
+.brief .actions{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+.btn{background:var(--surface2);border:1px solid var(--line);color:var(--text);font-size:12.5px;font-weight:800;padding:10px 13px;border-radius:11px;cursor:pointer}
+.btn.em{background:var(--emerald);border-color:var(--emerald);color:#03251A}
+.btn:disabled{opacity:.55;cursor:default}
+.err{font-size:12px;color:#FCA5A5;margin-top:8px;line-height:1.45}
+
+/* ===== basis ===== */
+.basis{margin-top:14px;padding:12px 14px}
+.basis summary{cursor:pointer;font-size:12.5px;font-weight:800;color:var(--muted);list-style:none}
+.basis summary::-webkit-details-marker{display:none}
+.basis ul{margin:9px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:6px}
+.basis li{font-size:11.5px;color:var(--dim);line-height:1.5}
+.basis a{color:#7FB0E8}
+.foot{margin:18px 2px 0;font-size:10.5px;color:#3F4C61;text-align:center;line-height:1.6}
+
+/* ===== modal ===== */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(3,6,12,.72);display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal.open{display:flex}
+.sheet{width:100%;max-width:600px;max-height:92vh;overflow:auto;background:#0F1728;border:1px solid var(--line);border-radius:22px 22px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.5)}
+.sheet h3{font-size:16px;font-weight:900;letter-spacing:-.02em}
+.sheet .desc{font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:5px}
+.field{margin-top:12px}
+.field label{display:block;font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:5px}
+.field input,.field select{width:100%;background:#0A1220;border:1px solid var(--line);color:var(--text);font-size:13.5px;padding:11px 12px;border-radius:11px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--emerald)}
+.sheet .actions{display:flex;gap:8px;margin-top:16px}
+.sheet .actions .btn{flex:1;text-align:center}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;background:#0B1220;border:1px solid var(--line);color:var(--text);font-size:12.5px;font-weight:700;padding:10px 16px;border-radius:999px;z-index:90;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (min-width:620px){body{font-size:15.5px}}
+</style>
+</head>
+<body>
+
+<div class="sticky">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">💰</div>
+      <div style="min-width:0">
+        <h1>서울 돈 되는 자리</h1>
+        <div class="sub" id="nowLine">불러오는 중…</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="btnSettings" aria-label="AI·설정" title="AI 설정">⚙️</button>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="시간대 보기">
+    <button class="tab" role="tab" data-tab="now" aria-selected="true">지금</button>
+    <button class="tab" role="tab" data-tab="dawn" aria-selected="false">새벽·공항</button>
+    <button class="tab" role="tab" data-tab="late" aria-selected="false">심야·유흥</button>
+    <button class="tab" role="tab" data-tab="commute" aria-selected="false">출퇴근</button>
+    <button class="tab" role="tab" data-tab="day" aria-selected="false">낮·병원</button>
+    <button class="tab" role="tab" data-tab="weather" aria-selected="false">비·눈특수</button>
+  </nav>
+</div>
+
+<main class="wrap">
+
+  <!-- 날씨 -->
+  <section class="card wx" id="wxCard" aria-live="polite">
+    <div class="ico" id="wxIco">🌤</div>
+    <div class="body">
+      <div class="temp" id="wxTemp">--°</div>
+      <div class="cond" id="wxCond">서울 날씨 불러오는 중…</div>
+      <div class="stats" id="wxStats"></div>
+    </div>
+    <button class="refresh" id="btnWx" aria-label="날씨 새로고침" title="날씨 새로고침">⟳</button>
+  </section>
+
+  <!-- 기준 위치 -->
+  <section class="card loc" aria-label="기준 위치">
+    <div class="loc-row">
+      <div>
+        <div class="loc-name">📍 기준 위치 · <span id="baseName">오류동</span></div>
+        <div class="loc-sub" id="baseSub">직접 선택 · GPS로 잡으면 자동 반영</div>
+      </div>
+      <button class="btn-gps" id="btnGps">내 위치 잡기</button>
+    </div>
+    <div class="chips" id="baseChips" role="group" aria-label="주변 역·동 빠른 선택"></div>
+  </section>
+
+  <!-- TOP 3 -->
+  <section class="top3-wrap" aria-label="지금 내 위치 기준 추천">
+    <div class="top3-lead">
+      <h2>🎯 지금 내 위치 기준 추천 TOP 3</h2>
+      <span class="when" id="top3When"></span>
+    </div>
+    <div class="hint" id="top3Basis">시간대 수요 · 날씨 가중치 · 이동 거리로 계산 (실시간 콜 데이터 아님)</div>
+    <div id="top3List"></div>
+  </section>
+
+  <!-- 행사 체크 -->
+  <details class="card ev-box" id="evBox">
+    <summary>🚩 오늘 행사 체크 <span class="cnt" id="evCnt">0</span></summary>
+    <div class="hint">오늘 경기·콘서트·집회가 있는 곳을 눌러두면 그 자리 점수에 가산됩니다. (기기 저장)</div>
+    <div class="ev-list" id="evList" role="group" aria-label="오늘 행사"></div>
+  </details>
+
+  <div class="section-h">
+    <h2 id="listTitle">지금 이 시간대 스팟</h2>
+    <div class="sortbar"><span class="note" id="listCount"></span><button class="chip" id="btnSort">점수순</button></div>
+  </div>
+  <div class="list" id="list"></div>
+
+  <!-- 브리핑 -->
+  <section class="card brief" aria-label="오늘의 전략 브리핑">
+    <div class="bh">
+      <h2>🧠 오늘의 전략 브리핑</h2>
+      <span class="src" id="briefSrc">자동</span>
+    </div>
+    <div id="briefBody" aria-live="polite"></div>
+    <div class="actions">
+      <button class="btn em" id="btnBrief">브리핑 새로 만들기</button>
+      <button class="btn" id="btnAiOpen">AI 설정</button>
+    </div>
+  </section>
+
+  <!-- 근거 -->
+  <details class="card basis">
+    <summary>📚 이 점수는 무엇으로 계산했나 (근거·한계)</summary>
+    <ul>
+      <li><b>수요 점수</b> — 서울시 택시 운행(OD) 분석에서 확인되는 시간대·요일별 승차 패턴과 심야 유동인구 분포를 스팟별 0~100으로 정리했습니다. 하루 중 승차 최다 시간대는 23시~01시이고, 심야(0~4시) 유동인구는 역삼1동·서교동(홍대)·여의동·논현1동·신당동·화양동(건대) 순입니다.</li>
+      <li><b>요일 가중</b> — 금·토는 유흥 상권(건대·홍대·이태원·사당)이 강해지고 오피스 혼재 상권(강남·선릉·서울역)은 상대적으로 줄며, 일요일은 고속터미널·서울역·용산 같은 환승 거점이 늘어납니다. 금요일 퇴근 이후 호출은 월요일 같은 시간대의 2.5배 수준으로 보고됩니다.</li>
+      <li><b>날씨 가중</b> — 비·눈·한파·강풍이면 역세권·오피스·쇼핑몰·병원 앞 대기 수요를 올려 잡습니다. 실시간 값은 Open-Meteo(서울 중심 좌표) 현재값과 앞 2~3시간 강수확률입니다.</li>
+      <li><b>거리 페널티</b> — 직선거리와 시간대별 평균 속도로 이동 부담을 빼고, 공항·장거리 콜은 먼 거리를 감수하는 편이 낫기 때문에 페널티를 줄였습니다.</li>
+      <li><b>한계</b> — 이 화면은 실시간 호출량이 아니라 <b>패턴 기반 추정</b>입니다. KTX·공항 도착편, 갑작스러운 집회·사고, 비 예보가 빗나가는 경우는 반영되지 않습니다. 경쟁 차량이 몰리는 자리(역 출구 정면)는 한 블록 옆이 오히려 빠를 수 있습니다.</li>
+      <li><b>참고</b> — <a href="https://news.seoul.go.kr/traffic/archives/507582" target="_blank" rel="noopener">서울시 올빼미버스 분석(심야 유동인구)</a> · <a href="https://report.kakaomobility.com/taxi-problem-with-big-data-demand" target="_blank" rel="noopener">카카오모빌리티 택시 수요 리포트</a> · <a href="https://www.airport.kr/ap_ko/987/subview.do" target="_blank" rel="noopener">인천공항 택시 이용안내</a></li>
+    </ul>
+  </details>
+
+  <div class="foot">서울 개인택시 기사용 · 시간대/날씨/거리 기반 참고 화면<br>실시간 호출 데이터가 아니므로 판단은 현장 상황과 함께</div>
+</main>
+
+<!-- AI 설정 -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="sheet">
+    <h3 id="modalTitle">AI 브리핑 설정</h3>
+    <p class="desc">키를 넣으면 지금 시각·날씨·내 위치·상위 스팟을 바탕으로 “지금부터 2시간” 3줄 브리핑을 만들어 줍니다. 키는 <b>이 폰 브라우저(localStorage)에만</b> 저장되고, 브리핑을 만들 때 해당 AI 서버로만 전송됩니다. 페이지 코드에는 키가 들어가지 않습니다.</p>
+    <div class="field">
+      <label for="fProvider">AI 서비스</label>
+      <select id="fProvider">
+        <option value="gemini">Google Gemini (무료 키 발급 가능)</option>
+        <option value="openrouter">OpenRouter</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="fModel">모델</label>
+      <input id="fModel" type="text" autocomplete="off" spellcheck="false" placeholder="gemini-2.5-flash">
+    </div>
+    <div class="field">
+      <label for="fKey">API 키</label>
+      <input id="fKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza… 또는 sk-or-…">
+      <div class="hint" id="keyState" style="margin-top:6px"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnAiClear">키 삭제</button>
+      <button class="btn em" id="btnAiSave">저장</button>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnAiClose" style="flex:1">닫기</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   서울 돈 되는 자리 — 시간대 · 요일 · 날씨 · 이동거리 기반 추천
+   ※ 실시간 호출 데이터가 아닌 '패턴 기반 추정'입니다.
+   점수 = 0.8 × 시간대 수요 + 18 + 날씨 가중 − 이동 페널티
+   ===================================================================== */
+
+/* 시간대별 수요 d: dawn 4~6:30 / am 6:30~9:30 / day 9:30~17 / pm 17~21
+                   / night 21~23 / late 23~2 / deep 2~4
+   v: 이동가치(short 단거리형, mid, long, airport)  wx: 비·눈 민감도 0~1  ev: 행사장 id */
+var SPOTS = [
+ /* ---------- 구로 · 서남권 ---------- */
+ {id:"guro",n:"구로디지털단지",gu:"구로구",lat:37.4841,ln:126.9025,v:"short",wx:.85,
+  pt:"2호선 구로디지털단지역 1·2번 출구 앞 시흥대로변",tg:"출근 직장인 · IT 오피스",tag:["오피스","역세권"],
+  d:{dawn:38,am:85,day:62,pm:78,night:55,late:45,deep:30},
+  why:"IT·벤처 오피스 밀집지. 평일 7~9시 출근 콜이 가장 촘촘하고 오류동에서 2~3km라 공차 이동이 짧습니다.",
+  tip:"역 1번 출구 버스정류장~시흥대로변. 출근시간엔 정류장 앞 경쟁이 세니 한 블록 위 대로변도 노려보세요."},
+ {id:"gasan",n:"가산디지털단지",gu:"금천구",lat:37.4807,ln:126.8841,v:"short",wx:.8,
+  pt:"1·7호선 가산디지털단지역 1번 출구 · 마리오아울렛 앞",tg:"오피스 · 아울렛 쇼핑",tag:["오피스","쇼핑"],
+  d:{dawn:35,am:82,day:60,pm:76,night:50,late:42,deep:28},
+  why:"지식산업센터와 패션 아울렛이 몰린 곳. 출근·퇴근 콜이 모두 있고 밤엔 가산동 원룸가 귀가 단거리가 붙습니다.",
+  tip:"1번 출구 앞 대로변과 아울렛 주차장 출구를 번갈아 보세요. 7호선 쪽 출구는 유동이 적습니다."},
+ {id:"sindorim",n:"신도림",gu:"구로구",lat:37.5067,ln:126.8924,v:"short",wx:.9,
+  pt:"1·2호선 신도림역 1번 출구 · 디큐브시티 앞",tg:"환승 · 대단지 귀가",tag:["환승","역세권"],
+  d:{dawn:40,am:84,day:62,pm:80,night:58,late:52,deep:35},
+  why:"1·2호선 환승 거점에 대단지가 붙어 출근·퇴근·귀가가 모두 발생합니다. 오류동에서 6km 안쪽.",
+  tip:"디큐브시티 앞과 2호선 1번 출구 사이가 승차가 많습니다. 막차 이후엔 2번 출구 쪽 귀가 수요."},
+ {id:"daerim",n:"대림·구로",gu:"영등포·구로",lat:37.4947,ln:126.8948,v:"short",wx:.6,
+  pt:"2·7호선 대림역 3번 출구 · 대림동 먹자골목 입구",tg:"귀가 · 단거리",tag:["주거","유흥"],
+  d:{dawn:45,am:60,day:45,pm:58,night:62,late:68,deep:50},
+  why:"대단지 주거와 먹자골목이 겹쳐 밤 10시 이후 짧은 귀가 콜이 꾸준합니다. 오류동 생활권과 붙어 있습니다.",
+  tip:"역 3번 출구 골목 입구. 심야엔 도림천 방향 왕복이 많으니 도로 폭 넓은 쪽에 대세요."},
+ {id:"gaebong",n:"개봉·고척",gu:"구로구",lat:37.4951,ln:126.8588,v:"short",wx:.6,ev:"gocheok",
+  pt:"1호선 개봉역 2번 출구 · 고척스카이돔 1루측 광장",tg:"귀가 · 행사장",tag:["주거","행사"],
+  d:{dawn:62,am:58,day:45,pm:55,night:52,late:52,deep:40},
+  why:"오류동 바로 옆 대단지 생활권이라 새벽·출근 콜이 안정적. 고척돔 경기·행사 날엔 종료 직후가 최고입니다.",
+  tip:"경기 끝나면 1루측 광장~개봉역 사이가 터집니다. 평소엔 개봉역 2번 출구 대로변."},
+ {id:"yeongdeungpo",n:"영등포역·타임스퀘어",gu:"영등포구",lat:37.5166,ln:126.9071,v:"mid",wx:.9,
+  pt:"1호선 영등포역 1번 출구 · 타임스퀘어 정문 앞",tg:"쇼핑 · 유흥 · 환승",tag:["쇼핑","환승","유흥"],
+  d:{dawn:60,am:72,day:74,pm:80,night:76,late:84,deep:58},
+  why:"심야에도 유동이 남는 서남권 중심. 영등포역 뒤 유흥가와 타임스퀘어·백화점 수요가 겹칩니다.",
+  tip:"타임스퀘어 정문과 역 1번 출구가 승차가 많습니다. 심야엔 역 뒤쪽 골목 출구를 주시."},
+ {id:"yeouido",n:"여의도",gu:"영등포구",lat:37.5217,ln:126.9243,v:"mid",wx:.9,ev:"gwanghwamun",
+  pt:"5·9호선 여의도역 1번 출구 · IFC몰·여의도공원 앞",tg:"오피스 · 야경 · 집회",tag:["오피스","행사"],
+  d:{dawn:58,am:88,day:78,pm:86,night:76,late:84,deep:60},
+  why:"심야 유동인구 3위(여의동)에 오피스까지 겹친 곳. 평일 출근·퇴근 피크가 가장 진하고 밤엔 한강공원·유흥 수요가 남습니다.",
+  tip:"출근엔 1번 출구 쪽, 퇴근엔 IFC몰·파크원 로비 앞. 집회·행사 날엔 여의도공원 쪽이 붙습니다."},
+ {id:"dangsan",n:"당산",gu:"영등포구",lat:37.5348,ln:126.9026,v:"short",wx:.5,
+  pt:"2·9호선 당산역 12번 출구 · 당산동 먹자골목",tg:"귀가 · 회식",tag:["주거","유흥"],
+  d:{dawn:45,am:55,day:50,pm:62,night:55,late:52,deep:40},
+  why:"회식 후 9호선 귀가와 당산동 주거 수요가 겹칩니다. 강남·여의도에서 넘어오는 심야 귀가도 붙습니다.",
+  tip:"12번 출구 먹자골목 입구. 9호선 막차 시간대엔 급행 환승객이 몰립니다."},
+ {id:"mullae",n:"문래·양평",gu:"영등포구",lat:37.5190,ln:126.8950,v:"short",wx:.4,
+  pt:"2호선 문래역 1번 출구 · 문래창작촌 골목 입구",tg:"유흥 · 귀가",tag:["유흥","주거"],
+  d:{dawn:40,am:50,day:45,pm:55,night:58,late:62,deep:45},
+  why:"창작촌 술집·음식점이 밤늦게까지 열려 짧은 귀가 콜이 나옵니다. 영등포·여의도 사이 완충 자리.",
+  tip:"골목 안은 진입이 어려워 손님이 큰길로 나옵니다. 문래역 1번 출구 대로변에 대세요."},
+
+ /* ---------- 마포 · 서대문 ---------- */
+ {id:"hongdae",n:"홍대입구",gu:"마포구",lat:37.5573,ln:126.9238,v:"mid",wx:.9,
+  pt:"2호선·공항철도 홍대입구역 9번 출구 앞 · 홍대거리 입구",tg:"유흥 귀가 · 외국인",tag:["유흥","역세권"],
+  d:{dawn:28,am:32,day:58,pm:74,night:92,late:98,deep:72},
+  why:"서교동은 심야(0~4시) 유동인구 2위(약 1만 명). 하루 중 승차가 가장 많은 23시~01시에 전국 최상위권 자리입니다.",
+  tip:"9번 출구 앞이 정석. 새벽 2시 넘으면 클럽 귀가가 2호선 8번 출구·홍대거리 안쪽에서 나옵니다."},
+ {id:"hapjeong",n:"합정",gu:"마포구",lat:37.5494,ln:126.9137,v:"mid",wx:.7,
+  pt:"2·6호선 합정역 10번 출구 · 홍대 방면 큰길",tg:"유흥 · 귀가",tag:["유흥","역세권"],
+  d:{dawn:30,am:35,day:55,pm:62,night:72,late:76,deep:48},
+  why:"홍대 유흥권 끝자락이라 홍대가 꽉 찼을 때 대안이 됩니다. 망원·상수 귀가 단거리도 꾸준합니다.",
+  tip:"10번 출구 앞 큰길이 잡기 쉽습니다. 홍대 정체 땐 합정이 회전이 빠릅니다."},
+ {id:"sinchon",n:"신촌·이대",gu:"서대문구",lat:37.5598,ln:126.9424,v:"mid",wx:.8,
+  pt:"2호선 신촌역 2번 출구 · 연세로 입구",tg:"대학가 유흥 · 귀가",tag:["유흥","역세권"],
+  d:{dawn:28,am:40,day:60,pm:66,night:85,late:88,deep:60},
+  why:"대학가 술집·노래방이 많아 밤 11시~1시 귀가 콜이 집중됩니다. 세브란스병원 낮 수요도 함께 붙습니다.",
+  tip:"2번 출구 연세로 입구. 새벽엔 이대 방면 골목 출구 손님이 많습니다."},
+ {id:"gongdeok",n:"공덕",gu:"마포구",lat:37.5445,ln:126.9514,v:"short",wx:.7,
+  pt:"5·6호선·공항철도 공덕역 10번 출구 · 마포대로변",tg:"오피스 · 환승",tag:["오피스","환승"],
+  d:{dawn:48,am:72,day:62,pm:74,night:55,late:50,deep:35},
+  why:"공항철도·5·6호선 환승에 오피스가 붙어 출퇴근과 새벽 공항철도 첫차 전 수요가 같이 나옵니다.",
+  tip:"10번 출구 마포대로변. 새벽엔 공항철도 첫차 시간에 맞춰 역 입구 쪽."},
+ {id:"sangam",n:"상암 DMC",gu:"마포구",lat:37.5766,ln:126.8893,v:"mid",wx:.7,
+  pt:"6호선·공항철도 디지털미디어시티역 9번 출구 · DMC 첨단산업센터 앞",tg:"오피스 · 방송사",tag:["오피스"],
+  d:{dawn:30,am:78,day:70,pm:78,night:55,late:45,deep:30},
+  why:"방송사·IT 오피스가 밀집해 평일 출퇴근 콜이 두텁습니다. 야근·야간 촬영 끝난 밤 10시 이후도 있습니다.",
+  tip:"9번 출구와 누리꿈스퀘어 정문 사이. 야근 시간대엔 방송사 후문 쪽도 확인."},
+ {id:"worldcup",n:"상암월드컵경기장",gu:"마포구",lat:37.5683,ln:126.8973,v:"mid",wx:.5,ev:"worldcup",
+  pt:"6호선 월드컵경기장역 1번 출구 · 경기장 남문 광장",tg:"경기 · 공연 관중",tag:["행사"],
+  d:{dawn:22,am:30,day:55,pm:60,night:65,late:70,deep:35},
+  why:"축구·공연이 끝나면 3만 명이 한꺼번에 나옵니다. 행사 없는 날은 주거·공원 수요로 평범합니다.",
+  tip:"경기 종료 10분 전에 남문 광장 쪽으로 붙어야 합니다. 지하철 역 앞은 인파에 막힙니다."},
+
+ /* ---------- 도심 ---------- */
+ {id:"myeongdong",n:"명동·을지로입구",gu:"중구",lat:37.5609,ln:126.9860,v:"airport",wx:.8,
+  pt:"4호선 명동역 5·6번 출구 · 을지로입구역 2번 출구 호텔가",tg:"공항콜 · 관광 · 쇼핑",tag:["공항","관광"],
+  d:{dawn:92,am:55,day:80,pm:70,night:78,late:80,deep:55},
+  why:"호텔 밀집지라 새벽 4~6시 인천공항 출발 콜이 가장 확실합니다. 명동→공항 약 68~70분, 23~02시엔 심야 할증 40%.",
+  tip:"호텔 정문 앞 대기. 새벽엔 세종호텔·로얄호텔·나인트리 쪽 골목 출구 손님이 많습니다."},
+ {id:"euljiro",n:"을지로·종로",gu:"중구·종로구",lat:37.5662,ln:126.9836,v:"mid",wx:.8,
+  pt:"2호선 을지로입구역 1번 출구 · 을지로3가 골목 입구",tg:"오피스 · 야간 유흥",tag:["오피스","유흥"],
+  d:{dawn:52,am:76,day:78,pm:80,night:70,late:70,deep:45},
+  why:"오피스와 을지로 골목 술집이 겹쳐 낮엔 업무, 밤엔 회식 귀가가 이어집니다. 도심 호텔 공항 수요도 있습니다.",
+  tip:"낮엔 을지로입구 1번 출구, 밤엔 을지로3가 골목 입구. 도심은 일방통행이 많아 정차 위치를 미리 잡으세요."},
+ {id:"cityhall",n:"시청·소공동",gu:"중구",lat:37.5657,ln:126.9770,v:"mid",wx:.8,
+  pt:"1·2호선 시청역 6번 출구 · 웨스틴조선·프레이저플레이스 앞",tg:"오피스 · 호텔",tag:["오피스","공항"],
+  d:{dawn:66,am:76,day:76,pm:80,night:65,late:62,deep:42},
+  why:"시청 오피스와 특급호텔이 함께 있어 퇴근·호텔 공항콜이 같이 나옵니다. 도심 진입이 빨라 회전이 좋습니다.",
+  tip:"6번 출구와 호텔 정문 사이. 새벽 공항 출발은 호텔 벨데스크 앞이 확실합니다."},
+ {id:"gwanghwamun",n:"광화문",gu:"종로구",lat:37.5702,ln:126.9766,v:"mid",wx:.8,ev:"gwanghwamun",
+  pt:"5호선 광화문역 2·6번 출구 · 세종문화회관 앞",tg:"오피스 · 집회 · 관광",tag:["오피스","행사"],
+  d:{dawn:70,am:78,day:72,pm:80,night:62,late:60,deep:40},
+  why:"관공서·대기업 본사·호텔이 모여 퇴근 콜이 강합니다. 집회가 있는 날은 해산 직후 광화문광장 주변이 터집니다.",
+  tip:"2번 출구와 세종문화회관 앞. 집회 땐 통제로 접근로가 막히니 한 블록 밖에서 대기."},
+ {id:"jongno3",n:"종로3가·익선동",gu:"종로구",lat:37.5704,ln:126.9923,v:"mid",wx:.7,
+  pt:"1·3·5호선 종로3가역 4번 출구 · 익선동 골목 입구",tg:"유흥 · 관광",tag:["유흥","관광"],
+  d:{dawn:40,am:30,day:62,pm:66,night:82,late:88,deep:58},
+  why:"익선동·종로 골목 술집이 밤 11시 이후 가장 붐빕니다. 관광객·외국인 손님이 많아 목적지가 다양합니다.",
+  tip:"4번 출구 큰길에서 대기. 골목은 차가 못 들어가 손님이 큰길로 걸어 나옵니다."},
+ {id:"daehangno",n:"대학로·혜화",gu:"종로구",lat:37.5847,ln:127.0016,v:"short",wx:.6,
+  pt:"4호선 혜화역 2번 출구 · 마로니에공원 앞",tg:"연극 · 유흥 · 병원",tag:["유흥","병원"],
+  d:{dawn:32,am:50,day:70,pm:68,night:78,late:82,deep:55},
+  why:"연극 끝난 밤 10시와 술집 귀가가 겹칩니다. 서울대병원 낮 수요도 같은 권역.",
+  tip:"마로니에공원 앞과 혜화역 2번 출구. 공연 끝나는 22시 전후가 정확한 타이밍."},
+ {id:"ddp",n:"동대문 DDP",gu:"중구",lat:37.5655,ln:127.0093,v:"mid",wx:.85,
+  pt:"2·4·5호선 동대문역사문화공원역 1번 출구 · DDP·패션타운",tg:"쇼핑 · 야간 관광",tag:["쇼핑","관광"],
+  d:{dawn:45,am:35,day:70,pm:60,night:72,late:78,deep:50},
+  why:"새벽까지 도는 패션타운과 DDP 야경 관광으로 밤 11시 이후에도 손님이 끊기지 않습니다.",
+  tip:"DDP 1번 출구 앞. 도매상 새벽 시간엔 패션타운 건물 사이 골목 출구를 보세요."},
+ {id:"sindang",n:"신당·약수",gu:"중구",lat:37.5654,ln:127.0162,v:"mid",wx:.7,
+  pt:"6호선 신당역 1번 출구 · 신당동 떡볶이타운 입구",tg:"유흥 · 귀가",tag:["유흥","주거"],
+  d:{dawn:38,am:30,day:58,pm:60,night:74,late:80,deep:55},
+  why:"신당동은 심야 유동인구 5위 권역. 떡볶이타운·술집과 중구 주거가 겹쳐 짧은 귀가가 많습니다.",
+  tip:"1번 출구 큰길. 심야엔 약수역 방면 골목 출구 손님이 더 많습니다."},
+ {id:"insadong",n:"인사동·경복궁",gu:"종로구",lat:37.5740,ln:126.9850,v:"short",wx:.6,
+  pt:"3호선 안국역 6번 출구 · 인사동 쌈지길 입구",tg:"관광 · 외국인",tag:["관광"],
+  d:{dawn:25,am:40,day:72,pm:65,night:55,late:50,deep:30},
+  why:"낮 관광·외국인 수요가 중심. 오후 3~6시 인사동·경복궁에서 호텔로 돌아가는 콜이 나옵니다.",
+  tip:"안국역 6번 출구와 쌈지길 앞. 경복궁 쪽은 주차·정차 단속이 심합니다."},
+ {id:"cheongnyangni",n:"청량리·제기",gu:"동대문구",lat:37.5800,ln:127.0470,v:"mid",wx:.75,
+  pt:"1호선·경춘선 청량리역 1번 출구 · 롯데캐슬·전통시장 앞",tg:"KTX · 환승 · 시장",tag:["환승","주거"],
+  d:{dawn:60,am:70,day:65,pm:70,night:62,late:60,deep:42},
+  why:"KTX·경춘선 환승에 대단지가 붙어 출근과 새벽 첫차 수요가 있습니다. 경동시장 새벽 상인 수요도 꾸준합니다.",
+  tip:"1번 출구와 시장 입구. 새벽엔 첫차 시간에 맞춰 역 광장 쪽."},
+
+ /* ---------- 용산 · 서울역 ---------- */
+ {id:"seoulstation",n:"서울역",gu:"중구·용산구",lat:37.5554,ln:126.9726,v:"airport",wx:.95,
+  pt:"1·4호선·공항철도 서울역 1번 출구 · KTX 맞이방 앞",tg:"공항콜 · KTX · 환승",tag:["공항","환승"],
+  d:{dawn:88,am:70,day:70,pm:78,night:60,late:62,deep:50},
+  why:"공항철도 첫차 전(새벽 4~5시)과 KTX 첫차 시간대에 짐 많은 손님이 몰립니다. 일요일엔 승차 상위권.",
+  tip:"KTX 맞이방 1번 출구. 새벽 공항철도 시간엔 지하 공항철도 입구 앞이 정확합니다."},
+ {id:"yongsan",n:"용산역",gu:"용산구",lat:37.5298,ln:126.9646,v:"long",wx:.85,
+  pt:"1호선·KTX 용산역 1번 출구 · 아이파크몰 앞",tg:"KTX · 쇼핑 · 환승",tag:["환승","쇼핑"],
+  d:{dawn:72,am:55,day:62,pm:72,night:65,late:66,deep:48},
+  why:"KTX 환승과 아이파크몰 쇼핑이 겹칩니다. 일요일 저녁 귀가 콜이 특히 강합니다.",
+  tip:"1번 출구와 아이파크몰 정문. KTX 도착 10분 전이 가장 좋습니다."},
+ {id:"itaewon",n:"이태원",gu:"용산구",lat:37.5345,ln:126.9944,v:"mid",wx:.7,
+  pt:"6호선 이태원역 1번 출구 · 이태원 사거리",tg:"유흥 · 외국인",tag:["유흥","관광"],
+  d:{dawn:25,am:25,day:45,pm:60,night:82,late:90,deep:55},
+  why:"금·토 심야 승차 상위권 유흥 상권. 외국인 손님이 많아 목적지가 호텔·강남으로 갈라집니다.",
+  tip:"1번 출구 사거리. 경리단길 쪽은 차가 들어가기 어려워 큰길에서 대기."},
+
+ /* ---------- 강남권 ---------- */
+ {id:"gangnam",n:"강남역",gu:"강남구",lat:37.4979,ln:127.0276,v:"mid",wx:.9,
+  pt:"2호선·신분당선 강남역 11번 출구 · 강남대로변",tg:"유흥 · 오피스 · 귀가",tag:["유흥","오피스"],
+  d:{dawn:32,am:62,day:78,pm:85,night:94,late:100,deep:76},
+  why:"역삼1동은 심야 유동인구 1위(약 1.4만 명). 23시~01시 전국 최대 승차 지점이고 새벽 2시 이후도 남습니다.",
+  tip:"11번 출구 강남대로변이 회전 최고. 새벽엔 역삼역 방면 큰길도 좋습니다."},
+ {id:"seolleung",n:"선릉·역삼",gu:"강남구",lat:37.5058,ln:127.0484,v:"mid",wx:.85,
+  pt:"2호선 선릉역 1번 출구 · 테헤란로변",tg:"오피스 · 회식",tag:["오피스","유흥"],
+  d:{dawn:45,am:70,day:70,pm:80,night:80,late:86,deep:60},
+  why:"테헤란로 오피스 회식이 끝나는 21~23시와 심야 유흥이 겹치는 자리. 심야 승차 상위권 구간입니다.",
+  tip:"1번 출구 테헤란로변. 회식 시간엔 골목 입구에서 나오는 손님이 많습니다."},
+ {id:"samseong",n:"삼성·코엑스",gu:"강남구",lat:37.5088,ln:127.0631,v:"mid",wx:.95,ev:"coex",
+  pt:"2호선 삼성역 5·6번 출구 · 코엑스·현대백화점 앞",tg:"전시 · 쇼핑 · 오피스",tag:["쇼핑","오피스"],
+  d:{dawn:38,am:78,day:85,pm:82,night:60,late:55,deep:38},
+  why:"전시·쇼핑·오피스가 한 블록에 모여 낮 수요가 강하고, 비·눈이 오면 실내 이동 수요로 확실히 올라갑니다.",
+  tip:"코엑스 정문과 5번 출구. 전시 마감 시간(17~18시)에 광장 쪽이 터집니다."},
+ {id:"cheongdam",n:"청담",gu:"강남구",lat:37.5189,ln:127.0494,v:"mid",wx:.6,
+  pt:"7호선 청담역 10번 출구 · 명품거리 입구",tg:"유흥 · 고급 수요",tag:["유흥"],
+  d:{dawn:30,am:30,day:55,pm:66,night:72,late:80,deep:52},
+  why:"심야 유동인구 9위 권역. 고급 음식점·라운지 귀가가 단거리 위주로 나옵니다.",
+  tip:"10번 출구 명품거리 입구. 압구정로변은 정차 단속이 있으니 골목 입구 활용."},
+ {id:"nonhyeon",n:"논현·신사",gu:"강남구",lat:37.5111,ln:127.0213,v:"mid",wx:.7,
+  pt:"7호선 논현역 3번 출구 · 학동로·논현 먹자골목",tg:"유흥 · 회식",tag:["유흥","오피스"],
+  d:{dawn:35,am:45,day:62,pm:72,night:74,late:82,deep:55},
+  why:"논현1·2동이 심야 유동 4·8위. 회식과 유흥이 밤 12시 넘어까지 이어집니다.",
+  tip:"3번 출구 학동로변. 학동역 방면 골목 출구도 승차가 많습니다."},
+ {id:"garosu",n:"가로수길·압구정",gu:"강남구",lat:37.5206,ln:127.0232,v:"mid",wx:.7,
+  pt:"신사역 8번 출구 · 가로수길 입구",tg:"유흥 · 쇼핑",tag:["유흥","쇼핑"],
+  d:{dawn:25,am:25,day:55,pm:62,night:78,late:85,deep:55},
+  why:"심야 승차 상위권에 꾸준히 오르는 거리. 술집·레스토랑 귀가가 23시~1시에 집중됩니다.",
+  tip:"가로수길 입구 큰길에서 대기. 골목 안은 손님이 걸어 나옵니다."},
+ {id:"gyodae",n:"교대·서초",gu:"서초구",lat:37.4942,ln:127.0159,v:"mid",wx:.8,
+  pt:"2·3호선 교대역 5번 출구 · 법원·검찰청 앞",tg:"법원 · 오피스",tag:["오피스"],
+  d:{dawn:35,am:70,day:78,pm:78,night:55,late:50,deep:35},
+  why:"법원·검찰청·오피스 낮 수요가 강하고 서초 주거 귀가가 밤에 붙습니다. 서초3동은 심야 유동 7위 권역.",
+  tip:"5번 출구 법원 방면. 오전 9~10시 재판 시간대에 승차가 몰립니다."},
+ {id:"express",n:"고속터미널",gu:"서초구",lat:37.5050,ln:127.0049,v:"mid",wx:.95,
+  pt:"3·7·9호선 고속터미널역 1번 출구 · 센트럴시티·신세계 앞",tg:"터미널 · 쇼핑 · 환승",tag:["터미널","쇼핑"],
+  d:{dawn:62,am:62,day:88,pm:80,night:60,late:58,deep:40},
+  why:"일요일 승차 1위로 꼽히는 환승·쇼핑 거점. 버스 도착 시간대에 짐 많은 손님이 한꺼번에 나옵니다.",
+  tip:"센트럴시티 정문과 1번 출구 사이. 주말 오후엔 백화점 주차장 출구도 좋습니다."},
+ {id:"jamsil",n:"잠실",gu:"송파구",lat:37.5133,ln:127.1001,v:"mid",wx:.9,ev:"jamsil",
+  pt:"2·8호선 잠실역 4번 출구 · 롯데월드몰·롯데호텔 앞",tg:"쇼핑 · 경기 · 호텔",tag:["쇼핑","행사","공항"],
+  d:{dawn:70,am:62,day:80,pm:82,night:78,late:85,deep:55},
+  why:"쇼핑몰·백화점·호텔·야구장이 한 곳. 경기·공연 끝나면 20~30분이 최고이고 새벽엔 호텔 공항 출발이 있습니다.",
+  tip:"4번 출구와 롯데호텔 정문. 야구 끝나면 실내체육관 쪽 광장이 회전 빠릅니다."},
+ {id:"olympicpark",n:"올림픽공원·KSPO돔",gu:"송파구",lat:37.5186,ln:127.1265,v:"mid",wx:.5,ev:"olympic",
+  pt:"5·9호선 올림픽공원역 3번 출구 · KSPO돔·체조경기장 앞",tg:"콘서트 · 행사 관중",tag:["행사"],
+  d:{dawn:22,am:30,day:60,pm:62,night:72,late:80,deep:40},
+  why:"콘서트·경기 종료 직후 대기 콜이 폭발합니다. 행사 없는 날은 공원·주거 수요로 평범합니다.",
+  tip:"공연 끝나기 15분 전에 3번 출구 쪽으로. 끝난 뒤엔 도로가 막혀 들어가기 어렵습니다."},
+ {id:"asan",n:"서울아산병원",gu:"송파구",lat:37.5263,ln:127.1096,v:"short",wx:.9,
+  pt:"아산병원 본관 앞 · 풍납동 방면 주차장 출구",tg:"병원 · 보호자",tag:["병원"],
+  d:{dawn:30,am:62,day:78,pm:70,night:45,late:38,deep:25},
+  why:"전국에서 오는 대형병원이라 낮 진료·퇴원 시간대에 짐 많은 손님이 나옵니다. 비 오면 확실히 늘어납니다.",
+  tip:"본관 정문과 응급실 앞은 정차가 어렵습니다. 지하주차장 출구 쪽이 안전."},
+ {id:"samsung_med",n:"삼성서울병원",gu:"강남구",lat:37.4885,ln:127.0853,v:"short",wx:.85,
+  pt:"일원동 삼성서울병원 본관 앞 · 일원역 방면",tg:"병원 · 보호자",tag:["병원"],
+  d:{dawn:22,am:55,day:75,pm:65,night:40,late:35,deep:20},
+  why:"강남권 대형병원 수요. 오전 외래·오후 퇴원 시간에 집중되고 비·눈이면 크게 올라갑니다.",
+  tip:"본관 로비 앞보다 지하주차장 출구 쪽이 승차가 빠릅니다."},
+
+ /* ---------- 동북 · 동부 ---------- */
+ {id:"kondae",n:"건대입구",gu:"광진구",lat:37.5409,ln:127.0681,v:"mid",wx:.85,
+  pt:"2·7호선 건대입구역 2번 출구 · 건대 맛의거리 입구",tg:"유흥 · 대학가",tag:["유흥","역세권"],
+  d:{dawn:30,am:40,day:62,pm:70,night:90,late:95,deep:68},
+  why:"화양동은 심야 유동 6위. 금·토엔 홍대·이태원과 함께 최상위권으로 올라가는 대학가 유흥 상권입니다.",
+  tip:"2번 출구 맛의거리 입구. 새벽 2시 넘으면 7호선 쪽 출구 손님도 확인."},
+ {id:"seongsu",n:"성수",gu:"성동구",lat:37.5454,ln:127.0536,v:"mid",wx:.7,
+  pt:"2호선 성수역 1번 출구 · 성수동 카페거리 입구",tg:"유흥 · 쇼핑 · 오피스",tag:["유흥","쇼핑"],
+  d:{dawn:28,am:45,day:64,pm:66,night:74,late:80,deep:48},
+  why:"카페·바·팝업이 늘어 밤 10~12시 귀가 콜이 꾸준합니다. 성수 오피스 출근 수요도 함께.",
+  tip:"1번 출구 큰길. 연무장길 골목은 진입이 좁아 큰길 대기가 낫습니다."},
+ {id:"wangsimni",n:"왕십리",gu:"성동구",lat:37.5614,ln:127.0384,v:"short",wx:.6,
+  pt:"2·5호선·경의중앙 왕십리역 5번 출구 · 비트플렉스 앞",tg:"환승 · 귀가",tag:["환승","쇼핑"],
+  d:{dawn:40,am:55,day:55,pm:62,night:66,late:70,deep:40},
+  why:"4개 노선 환승에 대단지가 붙어 심야 귀가 콜이 안정적입니다. 성동·동대문 경계 수요.",
+  tip:"5번 출구 비트플렉스 앞. 막차 이후엔 주거 단지 쪽 출구로 이동."},
+ {id:"nowon",n:"노원역",gu:"노원구",lat:37.6553,ln:127.0613,v:"mid",wx:.85,
+  pt:"4·7호선 노원역 2번 출구 · 노원 먹자골목 입구",tg:"유흥 · 대단지 귀가",tag:["유흥","주거"],
+  d:{dawn:78,am:82,day:62,pm:70,night:78,late:82,deep:52},
+  why:"강북 3구는 오전 8시 호출이 심야보다 많은 대표 주거 상권. 금·토 밤엔 먹자골목 유흥 콜도 강합니다.",
+  tip:"2번 출구 먹자골목 입구. 평일 아침엔 4호선 출구 앞, 금·토 밤엔 골목 쪽."},
+ {id:"sanggye",n:"상계·중계",gu:"노원구",lat:37.6595,ln:127.0732,v:"short",wx:.8,
+  pt:"7호선 상계역 1번 출구 · 중계동 학원가 입구",tg:"대단지 출근 · 학원",tag:["주거"],
+  d:{dawn:78,am:74,day:50,pm:60,night:60,late:65,deep:50},
+  why:"대단지 아파트에서 새벽 4~6시 첫차 전 출근·공항 이동 수요가 꾸준합니다. 밤엔 학원·귀가 단거리.",
+  tip:"상계역 1번 출구와 중계 학원가 큰길. 새벽엔 단지 정문 쪽 손님이 많습니다."},
+ {id:"suyu",n:"수유·미아",gu:"강북구",lat:37.6375,ln:127.0253,v:"short",wx:.7,
+  pt:"4호선 수유역 3번 출구 · 수유시장 앞",tg:"주거 · 귀가",tag:["주거","유흥"],
+  d:{dawn:70,am:65,day:45,pm:55,night:55,late:58,deep:45},
+  why:"강북 대표 주거 상권. 새벽 출근과 심야 귀가 콜이 고르게 나옵니다.",
+  tip:"3번 출구 큰길. 수유시장 골목은 새벽에 차가 들어가기 어렵습니다."},
+ {id:"yeonsinnae",n:"연신내",gu:"은평구",lat:37.6179,ln:126.9225,v:"short",wx:.6,
+  pt:"3·6호선 연신내역 3번 출구 · 은평 로데오거리 입구",tg:"주거 · 유흥 · 환승",tag:["주거","유흥"],
+  d:{dawn:65,am:65,day:48,pm:58,night:55,late:55,deep:42},
+  why:"서북권 유일한 심야 거점. 은평·서대문 주거 귀가와 로데오거리 유흥이 겹칩니다.",
+  tip:"3번 출구 로데오 입구. 새벽엔 은평뉴타운 방면 단지 앞도 좋습니다."},
+ {id:"bulgwang",n:"불광·응암",gu:"은평구",lat:37.6090,ln:126.9319,v:"short",wx:.6,
+  pt:"3·6호선 불광역 2번 출구 · 은평구청 방면 큰길",tg:"주거 · 출근",tag:["주거"],
+  d:{dawn:62,am:62,day:45,pm:55,night:50,late:50,deep:38},
+  why:"아파트 단지 출근과 지하철 환승 귀가가 고른 편입니다. 연신내가 붐빌 때 대안.",
+  tip:"2번 출구 큰길. 응암오거리 방면 버스정류장 앞도 승차가 있습니다."},
+
+ /* ---------- 관악 · 동작 · 서남 ---------- */
+ {id:"sillim",n:"신림",gu:"관악구",lat:37.4852,ln:126.9296,v:"mid",wx:.8,
+  pt:"2호선 신림역 4번 출구 · 신림역 사거리",tg:"유흥 · 대학가 · 귀가",tag:["유흥","주거"],
+  d:{dawn:35,am:45,day:55,pm:62,night:85,late:92,deep:65},
+  why:"하루 중 승차가 많은 시간대(23시~01시) 상위권에 꼽히는 대학가. 저녁 9시 이후 원룸가 귀가가 몰립니다.",
+  tip:"4번 출구 사거리와 신림역 먹자골목 입구. 새벽엔 봉천 방면 큰길."},
+ {id:"bongcheon",n:"서울대입구·봉천",gu:"관악구",lat:37.4812,ln:126.9516,v:"short",wx:.6,
+  pt:"2호선 서울대입구역 3번 출구 · 봉천 사거리",tg:"대학가 · 귀가",tag:["주거","유흥"],
+  d:{dawn:45,am:55,day:55,pm:62,night:70,late:78,deep:60},
+  why:"대학가 술집과 원룸가가 붙어 심야 공백기(2~4시)에도 짧은 귀가 콜이 계속 나옵니다.",
+  tip:"3번 출구 큰길. 새벽엔 관악로 골목 출구 손님을 노리세요."},
+ {id:"sadang",n:"사당",gu:"동작·서초",lat:37.4766,ln:126.9828,v:"mid",wx:.85,
+  pt:"2·4호선 사당역 4번 출구 · 사당역 먹자골목 입구",tg:"환승 · 유흥",tag:["유흥","환승"],
+  d:{dawn:52,am:70,day:62,pm:78,night:80,late:88,deep:62},
+  why:"금·토 유흥 상권 승차가 많은 곳이자 경기 남부로 나가는 환승 거점. 심야에 장거리 콜이 섞입니다.",
+  tip:"4번 출구 먹자골목. 과천·안양 방면 장거리 손님은 2번 출구 쪽도 확인."},
+ {id:"mokdong",n:"목동",gu:"양천구",lat:37.5249,ln:126.8647,v:"short",wx:.7,
+  pt:"5호선 목동역 4번 출구 · 목동 학원가·오목교 방면",tg:"대단지 · 학원",tag:["주거"],
+  d:{dawn:70,am:66,day:52,pm:62,night:62,late:65,deep:48},
+  why:"대단지와 학원가가 붙어 새벽·늦은 밤 귀가 콜이 고릅니다. 방송국(목동) 야근 수요도 있습니다.",
+  tip:"4번 출구와 오목교 방면 큰길. 학원 끝나는 22시 전후가 좋습니다."},
+ {id:"gayang",n:"가양·발산",gu:"강서구",lat:37.5604,ln:126.8565,v:"short",wx:.7,
+  pt:"9호선 가양역 1번 출구 · 발산역 방면 큰길",tg:"오피스 · 주거",tag:["주거","오피스"],
+  d:{dawn:68,am:70,day:55,pm:62,night:55,late:55,deep:42},
+  why:"가양1동은 심야 유동 10위 권역. 오피스와 대단지가 섞여 출근·귀가가 고른 편입니다.",
+  tip:"가양역 1번 출구와 발산역 사이 큰길. 마곡 오피스 야근 수요도 붙습니다."},
+ {id:"magok",n:"마곡",gu:"강서구",lat:37.5668,ln:126.8258,v:"mid",wx:.8,
+  pt:"9호선 마곡나루역 1번 출구 · 마곡 연구단지 앞",tg:"오피스 · 연구단지",tag:["오피스"],
+  d:{dawn:45,am:80,day:72,pm:76,night:50,late:40,deep:25},
+  why:"신흥 업무지구라 평일 출퇴근 콜이 빠르게 늘었습니다. 공항철도·9호선 환승 수요도 있습니다.",
+  tip:"마곡나루역 1번 출구 연구단지 방면. 퇴근엔 오피스 로비 앞이 확실."},
+ {id:"gimpo",n:"김포공항",gu:"강서구",lat:37.5617,ln:126.8041,v:"airport",wx:.5,
+  pt:"5·9호선·공항철도 김포공항역 · 국내선 청사 앞",tg:"공항 · 환승",tag:["공항"],
+  d:{dawn:80,am:55,day:72,pm:62,night:55,late:55,deep:35},
+  why:"국내선 첫편·막편 시간대에 짐 많은 손님이 몰립니다. 서울 서남권에서 공항 수요를 가장 가까이 잡는 자리.",
+  tip:"국내선 청사 앞 승차장. 새벽엔 도착편 맞춰 국내선 게이트 쪽으로."}
+];
+
+/* ===================== 기준 위치 ===================== */
+var BASES = [
+ {id:"oryu",name:"오류동",lat:37.4956,ln:126.8427},
+ {id:"gaebong",name:"개봉",lat:37.4951,ln:126.8588},
+ {id:"yeongdeungpo",name:"영등포",lat:37.5166,ln:126.9071},
+ {id:"sindaebang",name:"신대방삼거리",lat:37.4999,ln:126.9282},
+ {id:"guro",name:"구로디지털",lat:37.4841,ln:126.9025},
+ {id:"hongdae",name:"홍대",lat:37.5573,ln:126.9238},
+ {id:"gangnam",name:"강남",lat:37.4979,ln:127.0276},
+ {id:"jamsil",name:"잠실",lat:37.5133,ln:127.1001},
+ {id:"sadang",name:"사당",lat:37.4766,ln:126.9828},
+ {id:"nowon",name:"노원",lat:37.6553,ln:127.0613},
+ {id:"uijeongbu",name:"의정부",lat:37.7387,ln:127.0459},
+ {id:"gimpo",name:"김포공항",lat:37.5617,ln:126.8041},
+ {id:"seoulst",name:"서울역",lat:37.5554,ln:126.9726},
+ {id:"yeouido",name:"여의도",lat:37.5217,ln:126.9243}
+];
+
+/* ===================== 시간대 정의 ===================== */
+var SLOTS = {
+ dawn:  {label:"새벽 4~6시",   short:"새벽",   speed:38, peak:"공항 출발·첫차 전"},
+ am:    {label:"출근 6:30~9:30", short:"출근", speed:17, peak:"출근 피크"},
+ day:   {label:"낮 9:30~17시", short:"낮",    speed:20, peak:"업무·병원·쇼핑"},
+ pm:    {label:"퇴근 17~21시", short:"퇴근",  speed:16, peak:"퇴근·회식"},
+ night: {label:"밤 21~23시",   short:"밤",    speed:26, peak:"유흥 시작"},
+ late:  {label:"심야 23~2시",  short:"심야",  speed:30, peak:"유흥·귀가 피크"},
+ deep:  {label:"새벽 2~4시",   short:"새벽공백", speed:38, peak:"심야 공백·귀가"}
+};
+var SLOT_SEQ = ["dawn","am","day","pm","night","late","deep"];
+
+var EVENTS = [
+ {id:"jamsil",      n:"잠실 야구·공연",      spots:["jamsil"]},
+ {id:"gocheok",     n:"고척돔 경기",         spots:["gaebong"]},
+ {id:"olympic",     n:"올림픽공원 공연",      spots:["olympicpark"]},
+ {id:"worldcup",    n:"상암 월드컵경기장",    spots:["worldcup"]},
+ {id:"coex",        n:"코엑스 전시",         spots:["samseong"]},
+ {id:"gwanghwamun", n:"광화문·여의도 집회",   spots:["gwanghwamun","yeouido"]}
+];
+
+var WX_URL = "https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.9780"
+  + "&current=temperature_2m,apparent_temperature,precipitation,rain,snowfall,weather_code,wind_speed_10m"
+  + "&hourly=precipitation_probability,precipitation,weather_code&forecast_days=2&timezone=Asia%2FSeoul";
+
+var LS_KEY = "sjd_";
+function lsGet(k, d){ try{ var v = localStorage.getItem(LS_KEY+k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } }
+function lsSet(k, v){ try{ localStorage.setItem(LS_KEY+k, JSON.stringify(v)); }catch(e){} }
+
+var S = {
+  base: lsGet("base", null) || {id:"oryu", name:"오류동", lat:37.4956, ln:126.8427, gps:false},
+  slot: "am",
+  tab: "now",
+  sortBy: "score",
+  wx: null,
+  evts: lsGet("evts", []),
+  ai: lsGet("ai", {provider:"gemini", key:"", model:""}),
+  aiDone: false
+};
+if(!S.base || typeof S.base.lat !== "number") S.base = {id:"oryu", name:"오류동", lat:37.4956, ln:126.8427, gps:false};
+if(!Array.isArray(S.evts)) S.evts = [];
+
+/* ===================== 유틸 ===================== */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function pad(n){ return n<10 ? "0"+n : ""+n; }
+var DOW = ["일","월","화","수","목","금","토"];
+
+function slotOf(d){
+  var m = d.getHours()*60 + d.getMinutes();
+  if(m >= 240 && m < 390) return "dawn";
+  if(m >= 390 && m < 570) return "am";
+  if(m >= 570 && m < 1020) return "day";
+  if(m >= 1020 && m < 1260) return "pm";
+  if(m >= 1260 && m < 1380) return "night";
+  if(m >= 1380 || m < 120) return "late";
+  return "deep";
+}
+function nextSlot(k){
+  var i = SLOT_SEQ.indexOf(k);
+  return SLOT_SEQ[(i+1) % SLOT_SEQ.length];
+}
+function haversine(lat1, ln1, lat2, ln2){
+  var R = 6371, toR = Math.PI/180;
+  var dLat = (lat2-lat1)*toR, dLn = (ln2-ln1)*toR;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*toR)*Math.cos(lat2*toR)*Math.sin(dLn/2)*Math.sin(dLn/2);
+  return 2*R*Math.asin(Math.min(1, Math.sqrt(a)));
+}
+function distKm(sp){ return haversine(S.base.lat, S.base.ln, sp.lat, sp.ln); }
+function fmtKm(km){ return (km < 10 ? km.toFixed(1) : Math.round(km)+"") ; }
+function dirName(fromLat, fromLn, toLat, toLn){
+  var toR = Math.PI/180;
+  var y = Math.sin((toLn-fromLn)*toR) * Math.cos(toLat*toR);
+  var x = Math.cos(fromLat*toR)*Math.sin(toLat*toR) - Math.sin(fromLat*toR)*Math.cos(toLat*toR)*Math.cos((toLn-fromLn)*toR);
+  var brng = (Math.atan2(y,x)*180/Math.PI + 360) % 360;
+  var names = ["북","북동","동","남동","남","남서","서","북서"];
+  return names[Math.round(brng/45) % 8];
+}
+function nearestBase(lat, ln){
+  var best = null;
+  for(var i=0;i<BASES.length;i++){
+    var d = haversine(lat, ln, BASES[i].lat, BASES[i].ln);
+    if(!best || d < best.d) best = {b:BASES[i], d:d};
+  }
+  return best;
+}
+
+/* ===================== 점수 계산 ===================== */
+function spotHasEvent(sp){
+  for(var i=0;i<EVENTS.length;i++){
+    var ev = EVENTS[i];
+    if(S.evts.indexOf(ev.id) < 0) continue;
+    if(ev.spots.indexOf(sp.id) >= 0) return true;
+  }
+  return false;
+}
+function weekdayFactor(sp, slotKey, dow){
+  var f = 1, note = "";
+  var fun = sp.tag.indexOf("유흥") >= 0;
+  if(dow === 5 || dow === 6){
+    if(fun){ f = slotKey === "late" ? 1.12 : (slotKey === "deep" ? 1.06 : 1.05); note = (dow===5?"금":"토")+"요일 유흥 +"+Math.round((f-1)*100)+"%"; }
+  } else if(dow === 0){
+    if(sp.tag.indexOf("환승") >= 0 || sp.tag.indexOf("터미널") >= 0){ f = 1.08; note = "일요일 환승 수요 +8%"; }
+    else if(fun){ f = 0.9; note = "일요일 유흥 한산"; }
+  } else if(dow === 1 && fun){
+    f = 0.95; note = "월요일 유흥 한산";
+  }
+  return {f:f, note:note};
+}
+function weatherBoost(sp){
+  var w = S.wx, add = 0, note = "";
+  if(!w) return {add:0, note:""};
+  var wet = (w.kind === "rain" || w.kind === "snow");
+  if(wet){
+    add += sp.wx * 16;
+    if(w.heavy) add += sp.wx * 8;
+    note = (w.kind === "snow" ? "눈" : "비") + (w.heavy ? " 강함" : "") + " → 역·오피스 앞 +" + Math.round(add);
+  } else if(w.pop >= 50){
+    add += sp.wx * 7;
+    note = "곧 비 올 확률 " + w.pop + "% → 미리 대기 +" + Math.round(add);
+  }
+  if(w.wind >= 30){ add += sp.wx * 5; note = note || ("강풍 → 역 출구 대기 +" + Math.round(sp.wx*5)); }
+  if(w.temp <= -5){ add += 5 + sp.wx*4; note = note || ("한파 " + Math.round(w.temp) + "° → 짧은 콜 ↑"); }
+  if(w.temp >= 33){ add += 4; note = note || "폭염 → 냉방 대기 수요 ↑"; }
+  return {add: Math.min(30, add), note: note};
+}
+function scoreOf(sp, slotKey){
+  var now = new Date(), dow = now.getDay();
+  var dem = sp.d[slotKey]; if(typeof dem !== "number") dem = 25;
+  var wf = weekdayFactor(sp, slotKey, dow);
+  dem = Math.min(100, dem * wf.f);
+  var wb = weatherBoost(sp);
+  var km = distKm(sp);
+  var pen = Math.min(46, 4.6 * Math.pow(Math.max(km, 0.3), 0.85));
+  var vf = sp.v === "airport" ? 0.55 : (sp.v === "long" ? 0.75 : (sp.v === "short" ? 1.25 : 1));
+  pen = pen * vf;
+  var ev = spotHasEvent(sp);
+  var score = Math.round(dem*0.8 + 18 + wb.add - pen + (ev ? 15 : 0));
+  score = Math.max(4, Math.min(99, score));
+  var eta = Math.round(km / SLOTS[slotKey].speed * 60 + 2);
+  return {sp:sp, score:score, dem:Math.round(dem), wb:wb, ev:ev, km:km, eta:eta, pen:pen, wf:wf};
+}
+function computeAll(slotKey){
+  var out = [];
+  for(var i=0;i<SPOTS.length;i++) out.push(scoreOf(SPOTS[i], slotKey));
+  out.sort(function(a,b){ return b.score - a.score; });
+  return out;
+}
+function tierOf(sc){
+  if(sc >= 78) return {t:"매우 유력", c:"hi"};
+  if(sc >= 66) return {t:"유력", c:"hi"};
+  if(sc >= 54) return {t:"보통", c:"mid"};
+  return {t:"약함", c:"low"};
+}
+function reasonText(r, slotKey){
+  var sp = r.sp;
+  var parts = [];
+  parts.push(dirName(S.base.lat, S.base.ln, sp.lat, sp.ln) + " " + fmtKm(r.km) + "km · 약 " + r.eta + "분");
+  parts.push(SLOTS[slotKey].short + " " + sp.tg.split("·")[0].trim() + " 수요 " + r.dem);
+  if(r.wb.note) parts.push("<em>" + esc(r.wb.note) + "</em>");
+  else if(r.wf.note) parts.push("<em>" + esc(r.wf.note) + "</em>");
+  if(r.ev) parts.push("<em>행사 종료 대기</em>");
+  return parts.join(" · ");
+}
+
+/* ===================== 지도 링크 ===================== */
+function kakaoUrl(sp){ return "https://map.kakao.com/link/to/" + encodeURIComponent(sp.n) + "," + sp.lat + "," + sp.ln; }
+function naverUrl(sp){ return "https://map.naver.com/p/search/" + encodeURIComponent(sp.n + " " + sp.pt.split("·")[0].replace(/[0-9]+호선\s*/,"")); }
+function googleUrl(sp){ return "https://www.google.com/maps/dir/?api=1&destination=" + sp.lat + "," + sp.ln + "&travelmode=driving"; }
+function navRow(sp){
+  return '<div class="navrow">'
+   + '<a class="navbtn kakao" href="' + kakaoUrl(sp) + '" target="_blank" rel="noopener" aria-label="' + esc(sp.n) + ' 카카오맵 길안내"><span class="k">●</span>카카오</a>'
+   + '<a class="navbtn naver" href="' + naverUrl(sp) + '" target="_blank" rel="noopener" aria-label="' + esc(sp.n) + ' 네이버지도 길안내"><span class="k">●</span>네이버</a>'
+   + '<a class="navbtn google" href="' + googleUrl(sp) + '" target="_blank" rel="noopener" aria-label="' + esc(sp.n) + ' 구글지도 길안내"><span class="k">●</span>구글</a>'
+   + '</div>';
+}
+
+/* ===================== 렌더: 상단 시간 ===================== */
+function renderClock(){
+  var d = new Date(), k = slotOf(d);
+  $("nowLine").textContent = (d.getMonth()+1) + "월 " + d.getDate() + "일 (" + DOW[d.getDay()] + ") "
+    + pad(d.getHours()) + ":" + pad(d.getMinutes()) + " · " + SLOTS[k].label + " · " + SLOTS[k].peak;
+  $("top3When").textContent = SLOTS[k].short + " 기준";
+  return k;
+}
+
+/* ===================== 렌더: 날씨 ===================== */
+function wxText(code){
+  var c = Number(code);
+  if(c === 0) return "맑음";
+  if(c === 1) return "대체로 맑음";
+  if(c === 2) return "구름 조금";
+  if(c === 3) return "흐림";
+  if(c === 45 || c === 48) return "안개";
+  if(c === 51 || c === 53 || c === 55) return "이슬비";
+  if(c === 56 || c === 57) return "어는 이슬비";
+  if(c === 61 || c === 63 || c === 65) return "비";
+  if(c === 66 || c === 67) return "어는 비";
+  if(c === 71 || c === 73 || c === 75) return "눈";
+  if(c === 77) return "눈알갱이";
+  if(c === 80 || c === 81 || c === 82) return "소나기";
+  if(c === 85 || c === 86) return "소낙눈";
+  if(c === 95) return "뇌우";
+  if(c === 96 || c === 99) return "뇌우·우박";
+  return "날씨 정보";
+}
+function wxIcon(code, kind){
+  var c = Number(code);
+  if(kind === "snow") return "🌨";
+  if(kind === "rain") return c >= 95 ? "⛈" : "🌧";
+  if(c === 0) return "☀️";
+  if(c === 1 || c === 2) return "🌤";
+  if(c === 3) return "☁️";
+  if(c === 45 || c === 48) return "🌫";
+  return "🌤";
+}
+function renderWx(){
+  var w = S.wx;
+  if(!w){
+    $("wxTemp").textContent = "--°";
+    $("wxCond").textContent = "서울 날씨를 못 받았습니다 (점수는 시간대·거리 기준)";
+    $("wxStats").innerHTML = "";
+    return;
+  }
+  $("wxIco").textContent = wxIcon(w.code, w.kind);
+  $("wxTemp").textContent = w.temp + "°";
+  var cond = wxText(w.code);
+  if(w.kind === "rain" || w.kind === "snow") cond += " · " + (w.kind === "snow" ? "적설 " + w.snow + "cm" : "강수 " + w.precip + "mm");
+  cond += " · 체감 " + w.feels + "°";
+  $("wxCond").textContent = cond;
+  var st = [];
+  st.push('<span class="stat' + (w.pop >= 50 ? " wet" : "") + '">앞 3시간 비 ' + w.pop + '%</span>');
+  st.push('<span class="stat' + (w.wind >= 30 ? " hot" : "") + '">바람 ' + w.wind + 'km/h</span>');
+  if(w.temp <= -5) st.push('<span class="stat hot">한파</span>');
+  if(w.temp >= 33) st.push('<span class="stat hot">폭염</span>');
+  if(w.kind === "rain" || w.kind === "snow") st.push('<span class="stat wet">악천후 특수 적용</span>');
+  st.push('<span class="stat">' + pad(new Date(w.at).getHours()) + ':' + pad(new Date(w.at).getMinutes()) + ' 갱신</span>');
+  $("wxStats").innerHTML = st.join("");
+}
+function loadWx(){
+  var btn = $("btnWx"); if(btn) btn.textContent = "…";
+  var ac = null, timer = null;
+  try{ ac = new AbortController(); timer = setTimeout(function(){ try{ ac.abort(); }catch(e){} }, 9000); }catch(e){}
+  fetch(WX_URL, {cache:"no-store", signal: ac ? ac.signal : undefined})
+    .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function(d){
+      if(timer) clearTimeout(timer);
+      var cw = d.current || {};
+      var h = d.hourly || {time:[], precipitation_probability:[]};
+      var now = new Date();
+      var key = now.getFullYear() + "-" + pad(now.getMonth()+1) + "-" + pad(now.getDate()) + "T" + pad(now.getHours());
+      var idx = -1, i;
+      for(i=0;i<h.time.length;i++){ if(String(h.time[i]).slice(0,13) === key){ idx = i; break; } }
+      if(idx < 0) idx = 0;
+      var pop = 0;
+      for(i=idx;i<Math.min(idx+3, h.time.length);i++){
+        var p = Number(h.precipitation_probability ? h.precipitation_probability[i] : 0) || 0;
+        if(p > pop) pop = p;
+      }
+      var code = Number(cw.weather_code) || 0;
+      var rain = Number(cw.rain) || 0, snow = Number(cw.snowfall) || 0, prec = Number(cw.precipitation) || 0;
+      var kind = "clear";
+      if(snow > 0 || [71,73,75,77,85,86].indexOf(code) >= 0) kind = "snow";
+      else if(rain > 0 || prec > 0 || [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].indexOf(code) >= 0) kind = "rain";
+      else if([2,3,45,48].indexOf(code) >= 0) kind = "cloud";
+      S.wx = {
+        temp: Math.round((Number(cw.temperature_2m)||0) * 10)/10,
+        feels: Math.round((Number(cw.apparent_temperature)||0) * 10)/10,
+        code: code, wind: Math.round(Number(cw.wind_speed_10m)||0),
+        precip: prec, rain: rain, snow: snow, pop: Math.round(pop), kind: kind,
+        heavy: (prec >= 2 || snow >= 0.5 || code >= 95),
+        at: Date.now()
+      };
+      renderWx(); renderAll();
+    })
+    .catch(function(){
+      if(timer) clearTimeout(timer);
+      S.wx = null; renderWx();
+    })
+    .then(function(){
+      if(btn) btn.textContent = "⟳";
+    });
+}
+
+/* ===================== 렌더: 기준 위치 ===================== */
+function renderBase(){
+  $("baseName").textContent = S.base.name;
+  var sub;
+  if(S.base.gps){
+    var mins = Math.round((Date.now() - (S.base.at||Date.now()))/60000);
+    sub = "GPS 위치" + (mins >= 60 ? " · " + Math.round(mins/60) + "시간 전 (다시 잡기 권장)" : " · 방금 잡음");
+  } else {
+    sub = "직접 선택 · GPS로 잡으면 자동 반영";
+  }
+  $("baseSub").textContent = sub;
+  var html = "";
+  for(var i=0;i<BASES.length;i++){
+    var b = BASES[i];
+    html += '<button class="chip" data-base="' + b.id + '" aria-pressed="' + (S.base.id === b.id ? "true" : "false") + '">' + esc(b.name) + '</button>';
+  }
+  $("baseChips").innerHTML = html;
+}
+function selectBase(id){
+  for(var i=0;i<BASES.length;i++){
+    if(BASES[i].id === id){
+      S.base = {id:BASES[i].id, name:BASES[i].name, lat:BASES[i].lat, ln:BASES[i].ln, gps:false};
+      lsSet("base", S.base); renderAll();
+      return;
+    }
+  }
+}
+function locate(){
+  var b = $("btnGps");
+  if(!navigator.geolocation){ toast("이 브라우저는 위치 기능이 없습니다. 아래에서 골라주세요."); return; }
+  b.textContent = "찾는 중…"; b.disabled = true;
+  navigator.geolocation.getCurrentPosition(function(pos){
+    b.disabled = false; b.textContent = "내 위치 다시 잡기";
+    var lat = pos.coords.latitude, ln = pos.coords.longitude;
+    var near = nearestBase(lat, ln);
+    var nm = (near && near.d <= 3) ? near.b.name + " 근처" : "현재 위치";
+    S.base = {id:"gps", name:nm, lat:lat, ln:ln, gps:true, at:Date.now()};
+    lsSet("base", S.base); renderAll();
+    toast("현재 위치로 잡았습니다" + (near && near.d <= 3 ? " (" + near.b.name + " 근처)" : ""));
+  }, function(err){
+    b.disabled = false; b.textContent = "내 위치 잡기";
+    var m = err && err.code === 1 ? "위치 권한이 막혀 있습니다"
+          : (err && err.code === 3 ? "위치 잡기가 시간 초과됐습니다" : "위치를 확인할 수 없습니다");
+    toast(m + " · 아래에서 역·동을 골라주세요");
+    $("baseSub").textContent = m + " · 아래에서 직접 선택";
+  }, {enableHighAccuracy:true, timeout:9000, maximumAge:60000});
+}
+
+/* ===================== 렌더: TOP 3 ===================== */
+function renderTop3(){
+  var k = slotOf(new Date());
+  var all = computeAll(k).slice(0,3);
+  var html = "";
+  for(var i=0;i<all.length;i++){
+    var r = all[i], sp = r.sp, t = tierOf(r.score);
+    html += '<article class="t3 r' + (i+1) + '">'
+      + '<div class="t3-head">'
+      +   '<div class="rk">' + (i+1) + '</div>'
+      +   '<div class="t3-title"><h3>' + esc(sp.n) + '<span class="badge em" style="font-size:10px">' + esc(sp.gu) + '</span></h3>'
+      +     '<div class="pt">' + esc(sp.pt) + '</div></div>'
+      +   '<div class="score s-' + t.c + '"><b>' + r.score + '</b><small>' + t.t + '</small></div>'
+      + '</div>'
+      + '<div class="bar s-' + t.c + '"><i style="width:' + r.score + '%"></i></div>'
+      + '<div class="reason">' + reasonText(r, k) + '</div>'
+      + '<div class="badge-row">'
+      +   '<span class="badge">' + esc(sp.tg) + '</span>'
+      +   '<span class="badge sky">' + (sp.v === "airport" ? "공항·장거리 유리" : (sp.v === "short" ? "짧은 회전" : "중거리")) + '</span>'
+      +   (r.ev ? '<span class="badge am">🚩 행사</span>' : '')
+      + '</div>'
+      + navRow(sp)
+      + '</article>';
+  }
+  $("top3List").innerHTML = html || '<div class="empty">추천을 계산할 수 없습니다.</div>';
+  $("top3Basis").textContent = "시간대 수요 " + SLOTS[k].label + " · 날씨 가중 · 이동거리 페널티로 계산 (실시간 콜 데이터 아님)";
+}
+
+/* ===================== 렌더: 행사 ===================== */
+function renderEvents(){
+  var html = "";
+  for(var i=0;i<EVENTS.length;i++){
+    var ev = EVENTS[i], on = S.evts.indexOf(ev.id) >= 0;
+    html += '<button class="ev" data-ev="' + ev.id + '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(ev.n) + '</button>';
+  }
+  $("evList").innerHTML = html;
+  $("evCnt").textContent = S.evts.length;
+}
+function toggleEvent(id){
+  var i = S.evts.indexOf(id);
+  if(i >= 0) S.evts.splice(i,1); else S.evts.push(id);
+  lsSet("evts", S.evts); renderEvents(); renderAll();
+}
+
+/* ===================== 렌더: 리스트 ===================== */
+function listSlotAndTitle(){
+  var k = slotOf(new Date());
+  var tab = S.tab, slotKey = k, title = "지금 이 시간대 스팟";
+  if(tab === "dawn"){ slotKey = "dawn"; title = "새벽·공항 스팟"; }
+  else if(tab === "late"){ slotKey = "late"; title = "심야·유흥 스팟"; }
+  else if(tab === "commute"){
+    slotKey = (new Date().getHours() < 12) ? "am" : "pm";
+    title = "출퇴근 스팟 · " + SLOTS[slotKey].label;
+  }
+  else if(tab === "day"){ slotKey = "day"; title = "낮·병원·쇼핑 스팟"; }
+  else if(tab === "weather"){
+    slotKey = k;
+    title = "비·눈 올 때 노릴 자리";
+  }
+  else { title = "지금 " + SLOTS[k].label + " 스팟"; }
+  return {slotKey:slotKey, title:title};
+}
+function renderList(){
+  var cfg = listSlotAndTitle();
+  var list = computeAll(cfg.slotKey);
+  if(S.tab === "weather") list = list.filter(function(r){ return r.sp.wx >= 0.7; });
+  if(S.sortBy === "dist") list = list.slice().sort(function(a,b){ return a.km - b.km; });
+  $("listTitle").textContent = cfg.title;
+  $("listCount").textContent = list.length + "곳";
+  var html = "";
+  for(var i=0;i<list.length;i++){
+    var r = list[i], sp = r.sp, t = tierOf(r.score);
+    html += '<article class="row">'
+      + '<div class="rhead"><div class="rname">' + esc(sp.n) + '<span class="gu">' + esc(sp.gu) + '</span></div>'
+      +   '<div class="rscore s-' + t.c + '" style="color:' + (t.c === "hi" ? "#34D399" : (t.c === "mid" ? "#F5B342" : "#94A3B8")) + '">' + r.score + '</div></div>'
+      + '<div class="rpoint">' + esc(sp.pt) + '</div>'
+      + '<div class="rwhy">' + esc(sp.why) + '</div>'
+      + '<div class="badge-row"><span class="badge sky">' + dirName(S.base.lat,S.base.ln,sp.lat,sp.ln) + ' ' + fmtKm(r.km) + 'km · 약 ' + r.eta + '분</span>'
+      +   '<span class="badge">' + SLOTS[cfg.slotKey].short + ' 수요 ' + r.dem + '</span>'
+      +   '<span class="badge">' + esc(sp.tg) + '</span>'
+      +   (r.ev ? '<span class="badge am">🚩 행사</span>' : '')
+      + '</div>'
+      + '<details><summary>대기 팁 보기</summary><div class="rtip">' + esc(sp.tip) + '</div></details>'
+      + navRow(sp)
+      + '</article>';
+  }
+  $("list").innerHTML = html || '<div class="empty">이 시간대에 표시할 자리가 없습니다.</div>';
+}
+
+/* ===================== 렌더: 브리핑 ===================== */
+function weatherSentence(){
+  var w = S.wx;
+  if(!w) return "";
+  if(w.kind === "snow") return "눈이 오고 있습니다. 역 출구·병원·대단지 앞에서 짧은 콜을 받는 게 낫습니다.";
+  if(w.kind === "rain") return "비" + (w.heavy ? "가 세게" : "") + " 옵니다. 지하철역 출구·오피스 로비·쇼핑몰 입구로 붙으세요.";
+  if(w.pop >= 50) return "앞 2~3시간 비 올 확률 " + w.pop + "%입니다. 터미널·역처럼 지붕 있는 대기 지점을 미리 잡아두세요.";
+  if(w.temp <= -5) return "한파(" + Math.round(w.temp) + "°)입니다. 긴 대기보다 역 앞 짧은 회전이 유리합니다.";
+  if(w.temp >= 33) return "폭염입니다. 냉방 되는 실내 대기 지점(백화점·몰 입구) 쪽이 낫습니다.";
+  return "";
+}
+function ruleBrief(){
+  var k = slotOf(new Date());
+  var all = computeAll(k);
+  var t1 = all[0], t2 = all[1], t3 = all[2];
+  var ns = nextSlot(k), nt = computeAll(ns)[0];
+  var lines = [];
+  lines.push("지금 " + SLOTS[k].label + "엔 " + t1.sp.n + " — " + t1.sp.tg + " 수요가 가장 큽니다. 여기서 " + fmtKm(t1.km) + "km, 약 " + t1.eta + "분.");
+  lines.push("2순위 " + t2.sp.n + "(" + fmtKm(t2.km) + "km), 3순위 " + t3.sp.n + "(" + fmtKm(t3.km) + "km). 이동 부담이 적은 쪽부터 붙으세요.");
+  var wl = weatherSentence();
+  lines.push((wl ? wl + " " : "") + "다음 " + SLOTS[ns].label + "엔 " + nt.sp.n + " 쪽이 좋습니다.");
+  return lines;
+}
+function renderBrief(){
+  var lines = ruleBrief();
+  var html = "<ol>";
+  for(var i=0;i<lines.length;i++) html += "<li>" + esc(lines[i]) + "</li>";
+  html += "</ol>";
+  $("briefBody").innerHTML = html;
+  $("briefSrc").textContent = "자동(규칙)";
+}
+
+/* ===================== AI 브리핑 ===================== */
+function aiPrompt(){
+  var now = new Date(), k = slotOf(now);
+  var tops = computeAll(k).slice(0,5);
+  var w = S.wx;
+  var wxLine = w ? (w.temp + "도, " + wxText(w.code) + ", 강수 " + w.precip + "mm, 적설 " + w.snow + "cm, 바람 " + w.wind + "km/h, 앞 3시간 강수확률 " + w.pop + "%")
+                 : "날씨 정보 없음";
+  var topLine = tops.map(function(r, i){
+    return (i+1) + ". " + r.sp.n + "(" + r.sp.gu + ", " + fmtKm(r.km) + "km, 약 " + r.eta + "분, 점수 " + r.score + ") - " + r.sp.tg + " / " + r.sp.pt;
+  }).join("\n");
+  return "너는 서울 개인택시 기사(밤낮 교대 운행)의 실전 전략 코치다. 아래 상황에서 '지금부터 2시간' 어디로 어떻게 움직일지 3줄로만 답한다.\n"
+   + "규칙: 정확히 3줄, 각 줄 45자 안팎, 번호·머리말 없이 줄바꿈으로만 구분. 없는 실시간 호출 수치를 지어내지 말고 아래 제시된 패턴·날씨·거리만 근거로 말한다. 마지막 줄은 반드시 구체적 이동 순서와 시각을 포함한다.\n\n"
+   + "상황\n"
+   + "- 일시: " + now.getFullYear() + "년 " + (now.getMonth()+1) + "월 " + now.getDate() + "일 (" + DOW[now.getDay()] + ") " + pad(now.getHours()) + ":" + pad(now.getMinutes()) + "\n"
+   + "- 현재 구간: " + SLOTS[k].label + " (" + SLOTS[k].peak + ")\n"
+   + "- 기준 위치: " + S.base.name + " (" + S.base.lat.toFixed(4) + ", " + S.base.ln.toFixed(4) + ")\n"
+   + "- 서울 날씨: " + wxLine + "\n"
+   + "- 오늘 켠 행사: " + (S.evts.length ? S.evts.join(", ") : "없음") + "\n"
+   + "- 후보 자리(시간대 수요 기준):\n" + topLine + "\n\n"
+   + "참고 패턴: 하루 중 택시 승차 최다 시간대는 23시~01시(홍대·강남·가로수길·선릉·신림·건대 순). 심야(0~4시) 유동인구는 역삼1동·서교동·여의동·논현·신당·화양동 순. 금·토는 유흥 상권이 강하고, 일요일은 고속터미널·서울역·용산 같은 환승 거점이 강하다. 강북 3구(노원·강북·도봉)는 오전 8시 호출이 심야보다 많다. 새벽 4~6시엔 명동·을지로 호텔가와 서울역에서 공항 출발 콜이 나온다.";
+}
+function callGemini(key, model, prompt){
+  var m = model || "gemini-2.5-flash";
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(m) + ":generateContent?key=" + encodeURIComponent(key);
+  return fetch(url, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({contents:[{parts:[{text:prompt}]}], generationConfig:{temperature:0.6, maxOutputTokens:600}})
+  }).then(function(r){
+    return r.json().then(function(j){
+      if(!r.ok){ throw new Error((j && j.error && j.error.message) ? j.error.message : ("HTTP " + r.status)); }
+      var c = j && j.candidates && j.candidates[0];
+      var t = c && c.content && c.content.parts && c.content.parts[0] && c.content.parts[0].text;
+      if(!t) throw new Error("응답이 비어 있습니다");
+      return t;
+    });
+  });
+}
+function callOpenRouter(key, model, prompt){
+  var m = model || "google/gemini-2.5-flash";
+  var headers = {"Content-Type":"application/json", "Authorization":"Bearer " + key};
+  try{ headers["HTTP-Referer"] = location.origin; headers["X-Title"] = "seoul-taxi-spots"; }catch(e){}
+  return fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method:"POST", headers:headers,
+    body: JSON.stringify({model:m, messages:[{role:"user", content:prompt}], max_tokens:600, temperature:0.6})
+  }).then(function(r){
+    return r.json().then(function(j){
+      if(!r.ok){ throw new Error((j && j.error && j.error.message) ? j.error.message : ("HTTP " + r.status)); }
+      var t = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+      if(!t) throw new Error("응답이 비어 있습니다");
+      return t;
+    });
+  });
+}
+function makeAiBrief(){
+  var cfg = S.ai;
+  if(!cfg || !cfg.key){ openSettings(); return; }
+  var btn = $("btnBrief");
+  btn.disabled = true; btn.textContent = "만드는 중…";
+  $("briefBody").innerHTML = '<div class="hint">AI가 지금 상황으로 3줄 브리핑을 만드는 중입니다…</div>';
+  var p = aiPrompt();
+  var call = cfg.provider === "openrouter" ? callOpenRouter(cfg.key, cfg.model, p) : callGemini(cfg.key, cfg.model, p);
+  call.then(function(text){
+    var lines = text.split(/\n+/).map(function(s){ return s.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim(); }).filter(function(s){ return s.length > 0; }).slice(0,4);
+    var html = "";
+    for(var i=0;i<lines.length;i++) html += "<p>" + esc(lines[i]) + "</p>";
+    $("briefBody").innerHTML = html || '<div class="hint">응답을 읽지 못했습니다.</div>';
+    $("briefSrc").textContent = "AI · " + (cfg.provider === "openrouter" ? "OpenRouter" : "Gemini");
+    S.aiDone = true;
+    btn.disabled = false; btn.textContent = "AI 브리핑 다시";
+  }).catch(function(e){
+    $("briefBody").innerHTML = '<div class="err">AI 브리핑 실패: ' + esc(e && e.message ? e.message : "알 수 없는 오류")
+      + '<br>키·모델 이름을 확인해 주세요. 계속 안 되면 아래 “브리핑 새로 만들기”로 규칙 브리핑을 쓰면 됩니다.</div>';
+    btn.disabled = false; btn.textContent = "AI 브리핑 다시 시도";
+  });
+}
+
+/* ===================== 설정 시트 ===================== */
+function openSettings(){
+  $("modal").classList.add("open");
+  $("fProvider").value = S.ai.provider || "gemini";
+  $("fModel").value = S.ai.model || "";
+  $("fKey").value = S.ai.key || "";
+  updateKeyState();
+  $("fModel").placeholder = (S.ai.provider === "openrouter") ? "google/gemini-2.5-flash" : "gemini-2.5-flash";
+}
+function closeSettings(){ $("modal").classList.remove("open"); }
+function updateKeyState(){
+  var k = $("fKey").value.trim();
+  $("keyState").textContent = k
+    ? "저장된 키: " + k.slice(0,4) + "…" + k.slice(-4) + " (이 폰에만 저장)"
+    : "키가 없으면 규칙 기반 브리핑으로 동작합니다.";
+}
+function saveAi(){
+  var provider = $("fProvider").value;
+  var model = $("fModel").value.trim();
+  var key = $("fKey").value.trim();
+  S.ai = {provider:provider, model:model, key:key};
+  lsSet("ai", S.ai);
+  updateKeyState();
+  toast(key ? "AI 설정을 저장했습니다" : "키를 지웠습니다 · 규칙 브리핑으로 동작");
+  closeSettings();
+  if(key) makeAiBrief(); else renderBrief();
+}
+function clearAi(){
+  $("fKey").value = "";
+  S.ai = {provider:S.ai.provider, model:S.ai.model, key:""};
+  lsSet("ai", S.ai);
+  updateKeyState();
+  toast("API 키를 지웠습니다");
+}
+
+/* ===================== 공통 ===================== */
+var toastTimer = null;
+function toast(msg){
+  var t = $("toast");
+  t.textContent = msg; t.classList.add("show");
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 3200);
+}
+function renderAll(){
+  renderClock();
+  renderBase();
+  renderTop3();
+  renderList();
+  renderEvents();
+}
+
+/* ===================== 이벤트 연결 ===================== */
+$("tabs").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest(".tab") : null;
+  if(!b) return;
+  var tab = b.getAttribute("data-tab");
+  S.tab = tab;
+  var tabs = document.querySelectorAll(".tab");
+  for(var i=0;i<tabs.length;i++) tabs[i].setAttribute("aria-selected", tabs[i] === b ? "true" : "false");
+  renderList();
+});
+$("baseChips").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest(".chip") : null;
+  if(!b) return;
+  selectBase(b.getAttribute("data-base"));
+});
+$("evList").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest(".ev") : null;
+  if(!b) return;
+  toggleEvent(b.getAttribute("data-ev"));
+});
+$("btnGps").addEventListener("click", locate);
+$("btnWx").addEventListener("click", loadWx);
+$("btnSettings").addEventListener("click", openSettings);
+$("btnAiOpen").addEventListener("click", openSettings);
+$("btnAiClose").addEventListener("click", closeSettings);
+$("btnAiSave").addEventListener("click", saveAi);
+$("btnAiClear").addEventListener("click", clearAi);
+$("fKey").addEventListener("input", updateKeyState);
+$("fProvider").addEventListener("change", function(){
+  var p = $("fProvider").value;
+  $("fModel").placeholder = p === "openrouter" ? "google/gemini-2.5-flash" : "gemini-2.5-flash";
+});
+$("modal").addEventListener("click", function(e){ if(e.target === $("modal")) closeSettings(); });
+$("btnBrief").addEventListener("click", function(){
+  if(S.ai && S.ai.key) makeAiBrief(); else { renderBrief(); toast("AI 키를 넣으면 AI 브리핑이 나옵니다 · 지금은 규칙 브리핑"); openSettings(); }
+});
+var btnSort = $("btnSort");
+if(btnSort){
+  btnSort.addEventListener("click", function(){
+    S.sortBy = S.sortBy === "score" ? "dist" : "score";
+    btnSort.textContent = S.sortBy === "score" ? "점수순" : "거리순";
+    renderList();
+  });
+}
+
+/* ===================== 시작 ===================== */
+renderClock(); renderBase(); renderEvents(); renderWx(); renderAll(); renderBrief();
+loadWx();
+var lastSlot = slotOf(new Date());
+setInterval(function(){
+  var k = slotOf(new Date());
+  renderClock();
+  if(k !== lastSlot){ lastSlot = k; renderAll(); renderBrief(); }
+}, 20000);
+setInterval(loadWx, 10 * 60 * 1000);
+/* 키가 이미 있으면 한 번만 자동 생성 */
+setTimeout(function(){ if(S.ai && S.ai.key && !S.aiDone) makeAiBrief(); }, 1500);
+</script>
+</body>
+</html>
