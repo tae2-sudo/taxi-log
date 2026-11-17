@@ -649,13 +649,13 @@ var BASES = [
 
 /* ===================== 시간대 정의 ===================== */
 var SLOTS = {
- dawn:  {label:"새벽 4~6시",   short:"새벽",   speed:38, peak:"공항 출발·첫차 전"},
- am:    {label:"출근 6:30~9:30", short:"출근", speed:17, peak:"출근 피크"},
- day:   {label:"낮 9:30~17시", short:"낮",    speed:20, peak:"업무·병원·쇼핑"},
- pm:    {label:"퇴근 17~21시", short:"퇴근",  speed:16, peak:"퇴근·회식"},
- night: {label:"밤 21~23시",   short:"밤",    speed:26, peak:"유흥 시작"},
- late:  {label:"심야 23~2시",  short:"심야",  speed:30, peak:"유흥·귀가 피크"},
- deep:  {label:"새벽 2~4시",   short:"새벽공백", speed:38, peak:"심야 공백·귀가"}
+ dawn:  {label:"새벽 4~6시",   short:"새벽",   speed:42, peak:"공항 출발·첫차 전"},
+ am:    {label:"출근 6:30~9:30", short:"출근", speed:20, peak:"출근 피크"},
+ day:   {label:"낮 9:30~17시", short:"낮",    speed:23, peak:"업무·병원·쇼핑"},
+ pm:    {label:"퇴근 17~21시", short:"퇴근",  speed:19, peak:"퇴근·회식"},
+ night: {label:"밤 21~23시",   short:"밤",    speed:28, peak:"유흥 시작"},
+ late:  {label:"심야 23~2시",  short:"심야",  speed:32, peak:"유흥·귀가 피크"},
+ deep:  {label:"새벽 2~4시",   short:"새벽공백", speed:42, peak:"심야 공백·귀가"}
 };
 var SLOT_SEQ = ["dawn","am","day","pm","night","late","deep"];
 
@@ -681,6 +681,7 @@ var S = {
   slot: "am",
   tab: "now",
   sortBy: "score",
+  expanded: false,
   wx: null,
   evts: lsGet("evts", []),
   ai: lsGet("ai", {provider:"gemini", key:"", model:""}),
@@ -780,11 +781,11 @@ function scoreOf(sp, slotKey){
   dem = Math.min(100, dem * wf.f);
   var wb = weatherBoost(sp);
   var km = distKm(sp);
-  var pen = Math.min(46, 4.6 * Math.pow(Math.max(km, 0.3), 0.85));
+  var pen = Math.min(42, 3.2 * Math.pow(Math.max(km, 0.3), 0.8));
   var vf = sp.v === "airport" ? 0.55 : (sp.v === "long" ? 0.75 : (sp.v === "short" ? 1.25 : 1));
   pen = pen * vf;
   var ev = spotHasEvent(sp);
-  var score = Math.round(dem*0.8 + 18 + wb.add - pen + (ev ? 15 : 0));
+  var score = Math.round(dem*0.82 + 22 + wb.add - pen + (ev ? 16 : 0));
   score = Math.max(4, Math.min(99, score));
   var eta = Math.round(km / SLOTS[slotKey].speed * 60 + 2);
   return {sp:sp, score:score, dem:Math.round(dem), wb:wb, ev:ev, km:km, eta:eta, pen:pen, wf:wf};
@@ -796,16 +797,16 @@ function computeAll(slotKey){
   return out;
 }
 function tierOf(sc){
-  if(sc >= 78) return {t:"매우 유력", c:"hi"};
-  if(sc >= 66) return {t:"유력", c:"hi"};
-  if(sc >= 54) return {t:"보통", c:"mid"};
+  if(sc >= 84) return {t:"매우 유력", c:"hi"};
+  if(sc >= 72) return {t:"유력", c:"hi"};
+  if(sc >= 58) return {t:"보통", c:"mid"};
   return {t:"약함", c:"low"};
 }
 function reasonText(r, slotKey){
   var sp = r.sp;
   var parts = [];
   parts.push(dirName(S.base.lat, S.base.ln, sp.lat, sp.ln) + " " + fmtKm(r.km) + "km · 약 " + r.eta + "분");
-  parts.push(SLOTS[slotKey].short + " " + sp.tg.split("·")[0].trim() + " 수요 " + r.dem);
+  parts.push(sp.tg + " 수요 " + r.dem);
   if(r.wb.note) parts.push("<em>" + esc(r.wb.note) + "</em>");
   else if(r.wf.note) parts.push("<em>" + esc(r.wf.note) + "</em>");
   if(r.ev) parts.push("<em>행사 종료 대기</em>");
@@ -1049,7 +1050,8 @@ function renderList(){
   $("listTitle").textContent = cfg.title;
   $("listCount").textContent = list.length + "곳";
   var html = "";
-  for(var i=0;i<list.length;i++){
+  var shown = S.expanded ? list.length : Math.min(list.length, 12);
+  for(var i=0;i<shown;i++){
     var r = list[i], sp = r.sp, t = tierOf(r.score);
     html += '<article class="row">'
       + '<div class="rhead"><div class="rname">' + esc(sp.n) + '<span class="gu">' + esc(sp.gu) + '</span></div>'
@@ -1064,6 +1066,9 @@ function renderList(){
       + '<details><summary>대기 팁 보기</summary><div class="rtip">' + esc(sp.tip) + '</div></details>'
       + navRow(sp)
       + '</article>';
+  }
+  if(!S.expanded && list.length > shown){
+    html += '<button class="btn" id="btnMore" style="width:100%">＋ ' + (list.length - shown) + '곳 더 보기</button>';
   }
   $("list").innerHTML = html || '<div class="empty">이 시간대에 표시할 자리가 없습니다.</div>';
 }
@@ -1085,10 +1090,10 @@ function ruleBrief(){
   var t1 = all[0], t2 = all[1], t3 = all[2];
   var ns = nextSlot(k), nt = computeAll(ns)[0];
   var lines = [];
-  lines.push("지금 " + SLOTS[k].label + "엔 " + t1.sp.n + " — " + t1.sp.tg + " 수요가 가장 큽니다. 여기서 " + fmtKm(t1.km) + "km, 약 " + t1.eta + "분.");
+  lines.push("지금은 " + SLOTS[k].label + ". " + t1.sp.n + " — " + t1.sp.tg + " 수요가 가장 큽니다. 여기서 " + fmtKm(t1.km) + "km, 약 " + t1.eta + "분.");
   lines.push("2순위 " + t2.sp.n + "(" + fmtKm(t2.km) + "km), 3순위 " + t3.sp.n + "(" + fmtKm(t3.km) + "km). 이동 부담이 적은 쪽부터 붙으세요.");
   var wl = weatherSentence();
-  lines.push((wl ? wl + " " : "") + "다음 " + SLOTS[ns].label + "엔 " + nt.sp.n + " 쪽이 좋습니다.");
+  lines.push((wl ? wl + " " : "") + "다음 " + SLOTS[ns].label + "에는 " + nt.sp.n + " 쪽이 좋습니다.");
   return lines;
 }
 function renderBrief(){
@@ -1232,7 +1237,7 @@ $("tabs").addEventListener("click", function(e){
   var b = e.target.closest ? e.target.closest(".tab") : null;
   if(!b) return;
   var tab = b.getAttribute("data-tab");
-  S.tab = tab;
+  S.tab = tab; S.expanded = false;
   var tabs = document.querySelectorAll(".tab");
   for(var i=0;i<tabs.length;i++) tabs[i].setAttribute("aria-selected", tabs[i] === b ? "true" : "false");
   renderList();
@@ -1246,6 +1251,11 @@ $("evList").addEventListener("click", function(e){
   var b = e.target.closest ? e.target.closest(".ev") : null;
   if(!b) return;
   toggleEvent(b.getAttribute("data-ev"));
+});
+$("list").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("#btnMore") : null;
+  if(!b) return;
+  S.expanded = true; renderList();
 });
 $("btnGps").addEventListener("click", locate);
 $("btnWx").addEventListener("click", loadWx);
@@ -1267,6 +1277,7 @@ var btnSort = $("btnSort");
 if(btnSort){
   btnSort.addEventListener("click", function(){
     S.sortBy = S.sortBy === "score" ? "dist" : "score";
+    S.expanded = false;
     btnSort.textContent = S.sortBy === "score" ? "점수순" : "거리순";
     renderList();
   });
