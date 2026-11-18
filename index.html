@@ -258,7 +258,6 @@ input[type=datetime-local],input[type=month],input[type=date]{font-size:13.5px;p
 .off-toggle .s{font-size:11.5px;color:var(--muted);margin-top:2px}
 
 /* ---------- 달력 ---------- */
-.cal-wrap{margin-top:2px}
 .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:5px}
 .cal-dow div{text-align:center;font-size:11px;font-weight:700;color:var(--muted)}
 .cal-dow div:first-child{color:#F08A8A}
@@ -278,8 +277,6 @@ input[type=datetime-local],input[type=month],input[type=date]{font-size:13.5px;p
 .cell.pat{background:rgba(255,255,255,.035)}
 .cell.off{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.18)}
 .cell.today{outline:2px solid rgba(52,211,153,.7);outline-offset:-2px}
-.cell .offtag{font-size:8px;font-weight:800;color:var(--amber-2);background:rgba(245,158,11,.16);border-radius:4px;padding:0 3px;line-height:12px}
-.cell.mini{min-height:44px}
 
 .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:2px -4px 0;padding-bottom:2px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .chart-scroll::-webkit-scrollbar,.table-wrap::-webkit-scrollbar{height:6px}
@@ -406,6 +403,157 @@ body.helper-open{overflow:hidden}
 .card.map .map-hint{border:0;border-radius:0}
 .card.map .map-wrap{border-radius:0}
 
+/* ---------- 영업달력 (얇은 격자 · 스샷 구성) ---------- */
+.cal-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 2px 12px}
+.cal-month{display:flex;align-items:center;gap:4px;min-width:0}
+.cal-month b{font-size:19px;font-weight:800;letter-spacing:-.03em;padding:0 2px;white-space:nowrap}
+.cal-nav{width:30px;height:30px;border-radius:9px;border:1px solid var(--line-soft);background:transparent;color:var(--muted);
+  font-size:11px;font-weight:800;cursor:pointer;line-height:1;display:grid;place-items:center;flex:0 0 auto}
+.cal-nav:active{background:var(--surface2);color:var(--text)}
+.cal-sel{border:0;background:none;color:#C6D2E2;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;
+  padding:6px 2px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.cal-sel .caret{font-size:10px;color:var(--muted)}
+.cal-sum4{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:2px 2px 11px;border-bottom:1px solid var(--line)}
+.cal-sum4 .cs{display:flex;flex-direction:column;gap:5px;min-width:0}
+.cal-sum4 .k{font-size:11px;font-weight:700;letter-spacing:-.02em;white-space:nowrap}
+.cal-sum4 .v{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-sum4 .k-sales{color:var(--amber-2)}
+.cal-sum4 .k-card{color:var(--sky)}
+.cal-sum4 .k-cash{color:var(--muted)}
+.cal-sum4 .k-out{color:#C6D2E2}
+.cal-grid.thin{gap:0;margin-top:0;border-top:1px solid var(--line-soft)}
+.cal-grid.thin .cell{min-height:70px;border-radius:0;background:transparent;border:0;border-bottom:1px solid var(--line-soft);
+  border-right:1px solid var(--line-soft);padding:5px 3px 4px;align-items:flex-start;gap:1px;overflow:visible}
+.cal-grid.thin .cell:nth-child(7n){border-right:0}
+.cal-grid.thin .cell.empty{background:transparent;border-color:transparent transparent var(--line-soft) transparent}
+.cal-grid.thin .cell .d{font-size:11.5px;font-weight:700;color:var(--muted);line-height:1.2;margin-bottom:1px}
+.cal-grid.thin .cell.sun .d{color:#F08A8A}
+.cal-grid.thin .cell.sat .d{color:var(--sky)}
+.cal-grid.thin .cell.today{background:rgba(52,211,153,.10);outline:1.5px solid rgba(52,211,153,.55);outline-offset:-1.5px}
+.cal-grid.thin .cell.off{background:rgba(245,158,11,.05)}
+.cal-grid.thin .cell.pat{background:rgba(255,255,255,.02)}
+.cal-grid.thin .cell .ln{font-size:8.5px;line-height:1.28;font-variant-numeric:tabular-nums;letter-spacing:-.35px;white-space:nowrap}
+.cal-grid.thin .cell .ln.sales{color:var(--amber-2);font-weight:800}
+.cal-grid.thin .cell .ln.card{color:var(--sky);font-weight:700}
+.cal-grid.thin .cell .ln.cash{color:#A9B6C9;font-weight:700}
+.cal-grid.thin .cell .ln.out{color:#8899AD;font-weight:600;font-size:8px;margin-top:1px}
+.cal-grid.thin .cell .t-hours{font-size:9.5px;font-weight:800;color:var(--emerald-2);line-height:1.25;letter-spacing:-.2px}
+.cal-foot-tip{font-size:11px;color:var(--dim);font-weight:600;text-align:center;padding:10px 4px 2px}
+@media (max-width:360px){
+  .cal-sum4 .v{font-size:12.5px}
+  .cal-grid.thin .cell{min-height:62px;padding:4px 2px 3px}
+  .cal-grid.thin .cell .ln{font-size:8px;letter-spacing:-.4px}
+}
+@media (min-width:560px){
+  .cal-grid.thin .cell{min-height:86px}
+  .cal-grid.thin .cell .ln{font-size:10px}
+  .cal-grid.thin .cell .d{font-size:12.5px}
+}
+
+/* ---------- 홈: 수입·지출 / 주행 / 충전 ---------- */
+.sum-blocks-wrap{margin:2px 0 14px}
+.sum-blocks-wrap .sb-page{display:block}
+.sum-blocks-wrap .sb-page[data-page-view="1"]{display:none}
+.sum-blocks-wrap.year .sb-page[data-page-view="0"]{display:none}
+.sum-blocks-wrap.year .sb-page[data-page-view="1"]{display:block}
+.sum-blocks{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px 14px;box-shadow:var(--shadow)}
+.sb-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px}
+.sb-period{font-size:12px;font-weight:800;color:var(--emerald-2);letter-spacing:-.01em}
+.sb-work{font-size:11.5px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.sb-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:12px 0 7px}
+.sb-h span{font-size:12.5px;font-weight:800;color:#C6D2E2;letter-spacing:-.01em}
+.sb-h .sb-net{font-size:12.5px;font-weight:800;color:var(--emerald-2);font-variant-numeric:tabular-nums}
+.sb-h .sb-eco{font-size:12.5px;font-weight:800;color:var(--amber-2);font-variant-numeric:tabular-nums}
+.sb-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sb-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sb-box{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.22);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}
+.sb-box.out{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.22)}
+.sb-box .bk{font-size:11px;font-weight:700;color:var(--muted)}
+.sb-box .bv{font-size:15px;font-weight:800;color:#EAF1FB;letter-spacing:-.03em}
+.sb-box.in .bv{color:#BFDBFE}
+.sb-box.out .bv{color:#FCA5A5}
+.sb-cell{background:var(--surface3);border:1px solid var(--line-soft);border-radius:12px;padding:9px 10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.sb-cell .ck{font-size:10.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.sb-cell .cv{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-cell .cv .u,.sb-box .bv .u,.sb-h .sb-net .u{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:2px;letter-spacing:0}
+
+/* ---------- 계산기 팝업 ---------- */
+.sheet{position:fixed;inset:0;z-index:72;display:none;align-items:center;justify-content:center;padding:16px;
+  background:rgba(4,7,13,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.sheet.show{display:flex}
+body.sheet-open{overflow:hidden}
+.sheet-panel{width:100%;max-width:360px;background:linear-gradient(180deg,#16223A 0%,#111A2C 100%);
+  border:1px solid #2A3B5C;border-radius:20px;padding:14px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.calc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.calc-title{font-size:14.5px;font-weight:800;color:var(--text);letter-spacing:-.01em}
+.calc-unit{font-size:11.5px;color:var(--muted);font-weight:700}
+.calc-screen{background:#0B1424;border:1px solid var(--line);border-radius:13px;padding:9px 12px;margin-bottom:11px;min-height:62px;
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:2px}
+.calc-expr{font-size:11.5px;color:var(--muted);font-weight:600;min-height:15px;letter-spacing:.02em;word-break:break-all;text-align:right}
+.calc-now{font-size:27px;font-weight:800;color:#F4F8FF;letter-spacing:-.04em;line-height:1.12}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.calc-grid .ck{min-height:54px;border-radius:13px;border:1px solid var(--line);background:var(--surface2);color:#EAF1FB;
+  font-size:20px;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;font-variant-numeric:tabular-nums}
+.calc-grid .ck:active{transform:translateY(1px);filter:brightness(1.15)}
+.calc-grid .ck.op{background:rgba(96,165,250,.14);border-color:rgba(96,165,250,.3);color:#BFDBFE}
+.calc-grid .ck.del{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.3);color:#FCA5A5;font-size:17px}
+.calc-grid .ck.eq{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.34);color:var(--emerald-2)}
+.calc-grid .ck.wide{grid-column:span 2}
+.calc-foot{display:flex;gap:8px;margin-top:11px}
+.calc-foot .btn{flex:1;min-height:46px;font-size:14px;font-weight:800}
+.calc-cancel{background:var(--surface2)}
+.calc-ok{}
+
+/* ---------- 원형 시계 다이얼 ---------- */
+.clock-panel{max-width:350px}
+.clock-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
+.clock-title{font-size:14.5px;font-weight:800;color:var(--text)}
+.clock-date{font-size:11px;color:var(--muted);font-weight:600}
+.cd-next{color:var(--amber-2);font-weight:800}
+.clock-time{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.ct-box{flex:1;min-height:58px;border-radius:14px;border:1px solid var(--line);background:#0E1A2E;color:#F4F8FF;
+  font-size:30px;font-weight:800;font-family:inherit;letter-spacing:-.04em;cursor:pointer;font-variant-numeric:tabular-nums}
+.ct-box.on{background:rgba(96,165,250,.18);border-color:rgba(96,165,250,.42);color:#DBEAFE}
+.ct-colon{font-size:26px;font-weight:800;color:var(--muted);padding-bottom:4px}
+.ct-ampm{display:flex;flex-direction:column;gap:4px;flex:0 0 auto}
+.ct-ampm button{width:52px;min-height:27px;border-radius:9px;border:1px solid var(--line);background:var(--surface2);
+  color:var(--muted);font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer}
+.ct-ampm button.on{background:rgba(52,211,153,.16);border-color:rgba(52,211,153,.34);color:var(--emerald-2)}
+.clock-nudge{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 2px}
+.clock-nudge button{min-height:26px;border-radius:8px;border:1px solid var(--line-soft);background:transparent;color:var(--muted);
+  font-size:11px;font-weight:700;font-family:inherit;padding:0 9px;cursor:pointer}
+.clock-nudge span{font-size:10.5px;color:var(--dim);font-weight:600}
+.dial{position:relative;width:min(78vw,268px);aspect-ratio:1/1;margin:6px auto 2px;border-radius:50%;touch-action:none;user-select:none}
+.dial-face{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 45%,#12203A 0%,#0C1626 100%);border:1px solid #24334F}
+.dial-hand{position:absolute;left:50%;top:50%;height:2px;background:linear-gradient(90deg,rgba(96,165,250,.15),var(--sky));
+  transform-origin:0 50%;border-radius:2px;margin-top:-1px}
+.dial-pin{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--sky);transform:translate(-50%,-50%);
+  box-shadow:0 0 0 5px rgba(96,165,250,.16)}
+.dial-num{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:0;background:transparent;
+  color:#C6D2E2;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;font-variant-numeric:tabular-nums}
+.dial-num.on{background:var(--sky);color:#04121F;font-weight:800}
+.dial-hint{text-align:center;font-size:10.5px;color:var(--dim);font-weight:600;margin-top:2px}
+.clock-foot{display:flex;align-items:center;gap:8px;margin-top:10px}
+.clock-kb{min-height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);
+  font-size:11.5px;font-weight:700;font-family:inherit;padding:0 10px;cursor:pointer}
+.clock-foot .btn{min-height:42px;padding:0 20px;font-size:13.5px;font-weight:800}
+.clock-kb-wrap{display:flex;flex-direction:column;gap:6px;padding:12px 2px}
+.clock-kb-wrap label{font-size:11.5px;color:var(--muted);font-weight:600}
+.clock-kb-wrap input{min-height:56px;font-size:24px;font-weight:800;text-align:center;letter-spacing:.06em}
+
+/* ---------- 숫자·시간 입력칸 ---------- */
+input.calc-input{cursor:pointer;background:var(--surface3);-webkit-tap-highlight-color:transparent}
+input.calc-input:focus{outline:2px solid rgba(52,211,153,.45);outline-offset:1px}
+.time-input{display:flex;align-items:center;gap:6px;min-height:44px;width:100%;padding:0 12px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface3);color:var(--text);font-family:inherit;font-size:15px;
+  font-weight:800;letter-spacing:.02em;cursor:pointer;text-align:left;font-variant-numeric:tabular-nums}
+.time-input .tv{flex:1}
+.time-input.empty{color:var(--dim);font-weight:700}
+.time-input .nextday,.overnight-tag{font-size:9.5px;font-weight:800;color:var(--amber-2);background:rgba(245,158,11,.16);
+  border-radius:5px;padding:1px 5px;letter-spacing:0}
+.save-hint{font-size:10.5px;font-weight:700;color:var(--emerald-2);opacity:0;transition:opacity .2s;font-variant-numeric:tabular-nums}
+.save-hint.on{opacity:1}
+
 /* ---------- 월간 요약 ---------- */
 .month-card{background:linear-gradient(155deg,#1D3054 0%,#17253F 46%,#131C31 100%);border:1px solid #2A3B5C;border-radius:22px;padding:13px 16px 4px;margin-bottom:16px;box-shadow:0 16px 38px rgba(0,0,0,.34)}
 .month-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding-bottom:11px;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -497,6 +645,8 @@ body.helper-open{overflow:hidden}
 
 <div class="toast" id="toast" role="status"></div>
 <div class="modal" id="modal" role="dialog" aria-label="사진 보기"><button class="x" data-act="closePhoto" aria-label="닫기">✕</button><img id="modalImg" alt="첨부 사진"></div>
+<div class="sheet" id="calcModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="숫자 입력 계산기"></div>
+<div class="sheet" id="clockModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="시간 입력 시계"></div>
 
 <div class="helper-view" id="helperView" role="dialog" aria-modal="true" aria-hidden="true" aria-label="야간·운행 도우미">
   <div class="helper-bar">
@@ -516,10 +666,17 @@ body.helper-open{overflow:hidden}
 var WEEKDAYS = ['일','월','화','수','목','금','토'];
 
 function pad2(n){ n = Number(n)||0; return (n<10?'0':'')+n; }
+/* 입력칸·AI·동기화에서 온 값을 숫자로 읽는다.
+   "354,800" · "354,800원" · "41.38 L" · " 12 345 " 처럼 쉼표·공백·단위가 섞여도 숫자만 골라 읽는다. */
 function num(v){
   if(v===null||v===undefined||v==='') return 0;
   if(typeof v==='number') return isFinite(v)?v:0;
-  var n = Number(String(v).replace(/[,\s]/g,''));
+  if(typeof v==='boolean') return v?1:0;
+  var s = String(v).trim();
+  if(!s) return 0;
+  var n = Number(s.replace(/[,\s]/g,''));
+  if(isFinite(n)) return n;
+  n = Number(s.replace(/[^0-9.\-]/g,''));
   return isFinite(n)?n:0;
 }
 function round1(n){ return Math.round((Number(n)||0)*10)/10; }
@@ -555,6 +712,17 @@ function fmtDec1(n){
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   return (v<0?'-':'') + parts.join('.');
 }
+/* 자릿수 지정 소수 표기 (거리 1자리, LPG 2자리 등) */
+function fmtDec(v, digits){
+  var d = Math.max(0, Math.min(4, Math.round(Number(digits)||0)));
+  var n = Math.round(num(v) * Math.pow(10, d)) / Math.pow(10, d);
+  var s = Math.abs(n).toFixed(d);
+  if(d > 0 && s.indexOf('.') >= 0) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  var parts = s.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (n<0?'-':'') + parts.join('.');
+}
+function fmtDec2(v){ return fmtDec(v, 2); }
 function fmtMan(v){
   var n = Math.round(num(v));
   if(!n) return '';
@@ -664,10 +832,28 @@ function normalizeDay(d){
 }
 
 function runsOf(day){ return (day && Array.isArray(day.runs)) ? day.runs : []; }
+/* 운행 1건의 분. 종료 시각이 시작보다 이르면 자정을 넘긴 운행으로 보고 하루를 더한다.
+   (21:00 시작 · 07:00 종료 → 10시간. 날짜가 이미 다른 날이면 그대로 계산한다.) */
+function isOvernightRun(run){
+  if(!run || !run.s || !run.e) return false;
+  var s = parseDT(run.s), e = parseDT(run.e);
+  if(!s || !e) return false;
+  if(minutesBetween(s, e) >= 0) return false;
+  return dateKey(s) === dateKey(e);
+}
+function runEndDate(run, nowTs){
+  if(!run || !run.s) return null;
+  var s = parseDT(run.s);
+  if(!s) return null;
+  var e = run.e ? parseDT(run.e) : new Date(toTs(nowTs));
+  if(!e) return null;
+  if(isOvernightRun(run)) e = new Date(e.getTime() + 86400000);
+  return e;
+}
 function runMinutes(run, nowTs){
   if(!run || !run.s) return 0;
   var s = parseDT(run.s); if(!s) return 0;
-  var e = run.e ? parseDT(run.e) : new Date(toTs(nowTs));
+  var e = runEndDate(run, nowTs);
   if(!e) return 0;
   var m = minutesBetween(s, e);
   if(!(m>0)) return 0;
@@ -684,7 +870,7 @@ function dayWorkMinutes(day, nowTs){
 function daySpan(day){
   var first=null, last=null;
   runsOf(day).forEach(function(r){
-    var s = parseDT(r.s), e = parseDT(r.e);
+    var s = parseDT(r.s), e = runEndDate(r, Date.now());
     if(s && (!first || s<first)) first=s;
     if(e && (!last || e>last)) last=e;
   });
@@ -725,7 +911,7 @@ function workDayOf(d, nowTs){
 }
 function monthStats(days, ym, nowTs){
   var out = {ym:ym, sales:0, card:0, cash:0, kakaoCash:0, toll:0, expenses:0, chargeLiters:0, chargeAmount:0,
-    km:0, bizKm:0, workMinutes:0, workDays:0, rideRate:null, fuelEco:null, avgMinutes:0, hourly:0, net:0, gpsPoints:0};
+    km:0, bizKm:0, workMinutes:0, workDays:0, rideRate:null, fuelEco:null, avgMinutes:0, hourly:0, net:0, outTotal:0, gpsPoints:0};
   var keys = Object.keys(days||{}).filter(function(k){ return k.slice(0,7)===ym; });
   keys.forEach(function(k){
     var d = days[k]; if(!d) return;
@@ -745,21 +931,36 @@ function monthStats(days, ym, nowTs){
   out.fuelEco = out.chargeLiters>0 ? round1(out.km/out.chargeLiters) : null;
   out.avgMinutes = out.workDays>0 ? out.workMinutes/out.workDays : 0;
   out.hourly = out.workMinutes>0 ? out.sales/(out.workMinutes/60) : 0;
-  out.net = out.sales - out.expenses - out.chargeAmount;
+  /* 지출금액 = 기타 지출 + LPG 충전금액 (충전은 지출로만 잡고 수입에서 빼지 않는다). */
+  out.outTotal = out.expenses + out.chargeAmount;
+  out.net = out.sales - out.outTotal;
   return out;
 }
 function yearStats(days, year, nowTs){
   var ymd = String(year);
-  var out = {year:Number(year), sales:0, card:0, cash:0, kakaoCash:0, toll:0, workMinutes:0, workDays:0, avgMinutes:0};
+  var out = {year:Number(year), sales:0, card:0, cash:0, kakaoCash:0, toll:0, expenses:0, chargeLiters:0, chargeAmount:0,
+    km:0, bizKm:0, workMinutes:0, workDays:0, rideRate:null, fuelEco:null, avgMinutes:0, hourly:0, net:0, outTotal:0, gpsPoints:0};
   Object.keys(days||{}).forEach(function(k){
     if(k.slice(0,4) !== ymd) return;
     var d = days[k]; if(!d) return;
     var inc = incomeOf(d);
     out.sales += inc.sales; out.card += inc.card; out.cash += inc.cash; out.kakaoCash += inc.kakaoCash; out.toll += inc.toll;
+    out.expenses += expenseTotal(d);
+    var c = chargeTotals(d);
+    out.chargeLiters += c.liters; out.chargeAmount += c.amount;
+    out.km += num(d.distance && d.distance.total);
+    out.bizKm += num(d.distance && d.distance.business);
     out.workMinutes += dayWorkMinutes(d, nowTs);
     if(workDayOf(d, nowTs)) out.workDays++;
+    if(d.gps && d.gps.points) out.gpsPoints += d.gps.points.length;
   });
+  out.chargeLiters = round1(out.chargeLiters);
+  out.rideRate = out.km>0 ? round1(out.bizKm/out.km*100) : null;
+  out.fuelEco = out.chargeLiters>0 ? round1(out.km/out.chargeLiters) : null;
   out.avgMinutes = out.workDays > 0 ? out.workMinutes/out.workDays : 0;
+  out.hourly = out.workMinutes>0 ? out.sales/(out.workMinutes/60) : 0;
+  out.outTotal = out.expenses + out.chargeAmount;
+  out.net = out.sales - out.outTotal;
   return out;
 }
 function calendarCells(year, month){
@@ -1378,6 +1579,66 @@ function geminiBody(parts, opts){
   return body;
 }
 
+/* ---------- 계산기·시계 순수 계산 (화면 없이 시험 가능) ---------- */
+function calcEval(expr){
+  var s = String(expr === null || expr === undefined ? '' : expr)
+    .replace(/[×xX]/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/[,\s]/g, '');
+  while(/[+*/-]$/.test(s)) s = s.slice(0, -1);
+  if(!s) return null;
+  var toks = s.match(/\d+(?:\.\d*)?|\.\d+|[+*/-]/g);
+  if(!toks || toks.join('') !== s) return null;
+  if(toks.length % 2 === 0) return null;
+  for(var i = 0; i < toks.length; i++){
+    if(i % 2 === 0){ if(!/^(\d|\.)/.test(toks[i])) return null; }
+    else if(!/^[+*/-]$/.test(toks[i])) return null;
+  }
+  var nums = [Number(toks[0])], ops = [];
+  for(var j = 1; j < toks.length; j += 2){
+    var op = toks[j], v = Number(toks[j + 1]);
+    if(op === '*' || op === '/'){
+      var prev = nums[nums.length - 1];
+      nums[nums.length - 1] = (op === '*') ? prev * v : (v === 0 ? 0 : prev / v);
+    } else { ops.push(op); nums.push(v); }
+  }
+  var r = nums[0];
+  for(var n = 0; n < ops.length; n++){
+    r = (ops[n] === '-') ? r - nums[n + 1] : r + nums[n + 1];
+  }
+  return isFinite(r) ? r : null;
+}
+function clockParts(h24){
+  var ampm = (h24 < 12) ? '오전' : '오후';
+  var h12 = h24 % 12;
+  if(h12 === 0) h12 = 12;
+  return {ampm:ampm, h12:h12};
+}
+function clockPointToHour(dx, dy){
+  var ang = Math.atan2(dx, -dy) * 180 / Math.PI;
+  if(ang < 0) ang += 360;
+  var h = Math.round(ang / 30) % 12;
+  return h === 0 ? 12 : h;
+}
+function clockPointToMinute(dx, dy){
+  var ang = Math.atan2(dx, -dy) * 180 / Math.PI;
+  if(ang < 0) ang += 360;
+  var m = Math.round(ang / 6) % 60;
+  return m < 0 ? m + 60 : m;
+}
+/* 12시간 값을 지금의 오전/오후에 맞춰 24시간으로 바꾼다. */
+function clockSetHourPart(hour24, h12){
+  var pm = hour24 >= 12;
+  var h = h12 % 12;
+  if(pm) h += 12;
+  return h;
+}
+function clockParseText(txt){
+  var m = /^(\d{1,2})\s*:?\s*(\d{1,2})$/.exec(String(txt || '').trim());
+  if(!m) return null;
+  var h = Number(m[1]), mi = Number(m[2]);
+  if(h > 23 || mi > 59) return null;
+  return {hour:h, minute:mi};
+}
+
 /* ===== CORE END ===== */
 
 /* ===== APP ===== */
@@ -1492,7 +1753,28 @@ function saveLocal(){
 }
 function saveSoon(){
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(function(){ saveLocal(); scheduleAutoSync(); }, 350);
+  saveTimer = setTimeout(function(){ saveTimer = null; saveLocal(); scheduleAutoSync(); }, 350);
+}
+/* 화면을 옮기거나 앱이 뒤로 갈 때 미뤄 둔 저장을 곧바로 흘려보낸다.
+   (입력 직후 다른 앱으로 넘어가 타이머가 멈추면 방금 친 값이 사라질 수 있어서) */
+function flushSave(){
+  if(saveTimer){
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    saveLocal();
+    scheduleAutoSync();
+  }
+}
+function flashSaved(){
+  var el = document.getElementById('saveHint');
+  if(!el) return;
+  var d = new Date();
+  el.textContent = '저장됨 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  if(el.classList) el.classList.add('on');
+  setTimeout(function(){
+    var e2 = document.getElementById('saveHint');
+    if(e2 && e2.classList) e2.classList.remove('on');
+  }, 1600);
 }
 function saveNow(){
   clearTimeout(saveTimer);
@@ -1586,6 +1868,7 @@ function updateTabs(){
   }
 }
 function go(screen){
+  flushSave();
   ui.screen = screen;
   render();
   try{ window.scrollTo(0,0); }catch(e){}
@@ -1747,7 +2030,13 @@ views.home = function(){
   +   '</div>'
   + '</section>'
 
-  /* 4) 맨 아래: 운행 도우미 (앱 안에서 바로 열리는 작은 화면 두 개) */
+  /* 4) 월간·연간 상세: 수입·지출 / 주행 / 충전 (위 슬라이드와 같이 움직인다) */
+  + '<div class="sum-blocks-wrap' + (ui.sumPage ? ' year' : '') + '" id="sumBlocks" aria-label="' + (ui.sumPage ? '연간' : '월간') + ' 상세">'
+  +   '<div class="sb-page" data-page-view="0">' + sumBlocksHtml(stats, ymLabel(ym)) + '</div>'
+  +   '<div class="sb-page" data-page-view="1">' + sumBlocksHtml(ystats, thisYear + '년') + '</div>'
+  + '</div>'
+
+  /* 5) 맨 아래: 운행 도우미 (앱 안에서 바로 열리는 작은 화면 두 개) */
   + '<section class="helper-wrap" aria-label="운행 도우미">'
   +   '<div class="section-h"><h2>운행 도우미</h2><span class="sec-meta">앱 안에서 바로</span></div>'
   +   '<div class="helper-grid">'
@@ -1765,6 +2054,32 @@ views.home = function(){
   + '</section>';
 };
 
+/* ---------- 홈: 수입·지출 / 주행 / 충전 ---------- */
+function sumBlocksHtml(st, label){
+  var eco = (st.fuelEco === null || st.fuelEco === undefined) ? null : st.fuelEco;
+  var rate = (st.rideRate === null || st.rideRate === undefined) ? null : st.rideRate;
+  return '<section class="sum-blocks" aria-label="' + esc(label) + ' 상세">'
+  +   '<div class="sb-row sb-stats"><span class="sb-period">' + esc(label) + '</span>'
+  +     '<span class="sb-work">근무 ' + st.workDays + '일 · ' + fmtDur(st.workMinutes) + '</span></div>'
+  +   '<div class="sb-h"><span>수입·지출</span><b class="sb-net">순수익 ' + fmtNum(st.net) + '<span class="u">원</span></b></div>'
+  +   '<div class="sb-2">'
+  +     '<div class="sb-box in"><span class="bk">수입</span><span class="bv num">' + fmtNum(st.sales) + '<span class="u">원</span></span></div>'
+  +     '<div class="sb-box out"><span class="bk">지출</span><span class="bv num">' + fmtNum(st.outTotal) + '<span class="u">원</span></span></div>'
+  +   '</div>'
+  +   '<div class="sb-h"><span>주행</span></div>'
+  +   '<div class="sb-3">'
+  +     '<div class="sb-cell"><span class="ck">주행거리</span><span class="cv num">' + fmtDec(st.km, 1) + '<span class="u">km</span></span></div>'
+  +     '<div class="sb-cell"><span class="ck">영업거리</span><span class="cv num">' + fmtDec(st.bizKm, 1) + '<span class="u">km</span></span></div>'
+  +     '<div class="sb-cell"><span class="ck">승차율</span><span class="cv num">' + (rate === null ? '－' : fmtDec(rate, 1) + '<span class="u">%</span>') + '</span></div>'
+  +   '</div>'
+  +   '<div class="sb-h"><span>충전</span>' + (eco === null ? '' : '<b class="sb-eco">연비 ' + fmtDec(eco, 2) + ' km/ℓ</b>') + '</div>'
+  +   '<div class="sb-2">'
+  +     '<div class="sb-cell"><span class="ck">LPG 사용량</span><span class="cv num">' + fmtDec(st.chargeLiters, 1) + '<span class="u">ℓ</span></span></div>'
+  +     '<div class="sb-cell"><span class="ck">LPG 충전금액</span><span class="cv num">' + fmtNum(st.chargeAmount) + '<span class="u">원</span></span></div>'
+  +   '</div>'
+  + '</section>';
+}
+
 /* ---------- 요약 카드: 월간 ↔ 연간 ---------- */
 var sumDrag = {x:0, y:0, dx:0, dy:0, active:false};
 function setSumPage(page){
@@ -1772,6 +2087,8 @@ function setSumPage(page){
   ui.sumPage = p;
   var track = document.getElementById('sumTrack');
   if(track && track.classList) track.classList[p ? 'add' : 'remove']('year');
+  var blocks = document.getElementById('sumBlocks');
+  if(blocks && blocks.classList) blocks.classList[p ? 'add' : 'remove']('year');
   var dots = document.querySelectorAll ? document.querySelectorAll('.sum-dots .dot') : [];
   for(var i=0; i<dots.length; i++){
     var on = Number(dots[i].getAttribute('data-page')) === p;
@@ -1789,29 +2106,365 @@ function sumSwipeFinish(){
   setSumPage(dx < 0 ? 1 : 0);
 }
 
-function miniCalendarHtml(today){
-  var ym = today.slice(0,7);
-  var p = ym.split('-');
-  var y = Number(p[0]), mo = Number(p[1]);
-  var cells = calendarCells(y, mo);
-  var html = '<div class="cal-dow">' + WEEKDAYS.map(function(w){ return '<div>'+w+'</div>'; }).join('') + '</div>';
-  html += '<div class="cal-grid">';
-  cells.forEach(function(c){
-    if(!c){ html += '<div class="cell empty mini"></div>'; return; }
-    var d = state.days[c.key];
-    var off = d && d.off;
-    var pat = isPatternOff(c.key, state.settings.offWeekdays);
-    var mins = d ? dayWorkMinutes(d, Date.now()) : 0;
-    var cls = 'cell mini' + (c.dow===0?' sun':'') + (c.dow===6?' sat':'') + (off?' off':'') + (pat&&!off?' pat':'') + (c.key===today?' today':'');
-    html += '<div class="' + cls + '" data-act="openDay" data-key="' + c.key + '" title="' + esc(c.key + (off?' 휴무':(mins?' '+fmtDur(mins):''))) + '">'
-      + '<div class="d">' + c.d + '</div>'
-      + (mins>0 ? '<div class="hr">' + fmtDurShort(mins) + '</div>' : '')
-      + (off ? '<div class="offtag">휴</div>' : '')
-      + '</div>';
-  });
-  html += '</div>';
-  html += '<div class="legend"><span><i style="background:rgba(245,158,11,.16)"></i>휴무</span><span><i style="background:rgba(255,255,255,.06)"></i>부제</span><span><i style="background:#34D399"></i>일한 시간</span></div>';
-  return html;
+/* ---------- 입력칸: 계산기 팝업 · 원형 시계 다이얼 ---------- */
+/* 숫자칸은 폰 기본 키보드 대신 앱 안 계산기로 받는다(readonly + inputmode=none). */
+function calcFieldHtml(key, path, label, value, kind){
+  var shown = inputText(value, kind || 'int');
+  return '<input class="num calc-input" type="text" inputmode="none" readonly autocomplete="off"'
+    + ' data-calc="' + esc(kind || 'int') + '" data-day="' + esc(key) + '" data-field="' + esc(path) + '"'
+    + ' data-label="' + esc(label) + '" value="' + esc(shown) + '" placeholder="0">';
+}
+/* 시간칸도 기본 time 피커 대신 원형 시계판으로 받는다. */
+function timeFieldHtml(key, path, label, value){
+  var d = parseDT(value);
+  var txt = d ? pad2(d.getHours()) + ':' + pad2(d.getMinutes()) : '--:--';
+  var nextDay = (d && key && dateKey(d) !== key);
+  return '<button type="button" class="time-input num' + (d ? '' : ' empty') + '" data-act="openClock"'
+    + ' data-day="' + esc(key) + '" data-field="' + esc(path) + '" data-label="' + esc(label) + '"'
+    + ' data-date="' + esc(d ? dateKey(d) : key) + '" title="' + esc(d ? dateLabelKR(dateKey(d)) + ' ' + txt : '눌러서 시간 고르기') + '">'
+    + '<span class="tv">' + txt + '</span>'
+    + (nextDay ? '<span class="nextday">익일</span>' : '')
+    + '</button>';
+}
+
+/* 계산기 상태 */
+var calcUI = {open:false, key:'', path:'', label:'', kind:'int', expr:''};
+function calcOpenState(){ return calcUI.open; }
+function openCalc(el){
+  if(!el) return;
+  calcUI.open = true;
+  calcUI.key = el.getAttribute('data-day') || ui.date;
+  calcUI.path = el.getAttribute('data-field') || '';
+  calcUI.label = el.getAttribute('data-label') || '금액';
+  calcUI.kind = el.getAttribute('data-calc') || 'int';
+  calcUI.expr = String(el.value || '').replace(/,/g, '');
+  renderCalc();
+}
+function calcValueNow(){
+  if(!calcUI.expr) return '';
+  var v = calcEval(calcUI.expr);
+  return v === null ? '' : v;
+}
+function calcDisplayText(){
+  var v = calcValueNow();
+  if(v === '') return '0';
+  if(calcUI.kind === 'dec' || calcUI.kind === 'dec2') return fmtDec(v, calcUI.kind === 'dec' ? 1 : 2);
+  return fmtNum(Math.round(v));
+}
+function renderCalc(){
+  var box = document.getElementById('calcModal');
+  if(!box) return;
+  var keys = ['+','-','×','÷','7','8','9','C','4','5','6','←','1','2','3','.','0','00','='];
+  var grid = '';
+  for(var i=0;i<keys.length;i++){
+    var k = keys[i];
+    var cls = 'ck';
+    if(k === '+' || k === '-' || k === '×' || k === '÷') cls += ' op';
+    if(k === 'C' || k === '←') cls += ' del';
+    if(k === '=') cls += ' eq';
+    if(k === '0' || k === '00' || k === '=') cls += ' wide';
+    grid += '<button type="button" class="' + cls + '" data-act="calcKey" data-k="' + esc(k) + '">' + esc(k) + '</button>';
+  }
+  box.innerHTML = '<div class="sheet-panel calc-panel">'
+    + '<div class="calc-head"><span class="calc-title">' + esc(calcUI.label) + '</span>'
+    +   '<span class="calc-unit">' + (calcUI.kind === 'dec' ? 'km' : (calcUI.kind === 'dec2' ? 'L' : '원')) + '</span></div>'
+    + '<div class="calc-screen"><div class="calc-expr num">' + esc(calcUI.expr || '') + '</div>'
+    +   '<div class="calc-now num" id="calcNow">' + calcDisplayText() + '</div></div>'
+    + '<div class="calc-grid">' + grid + '</div>'
+    + '<div class="calc-foot">'
+    +   '<button type="button" class="btn calc-cancel" data-act="calcCancel">취소</button>'
+    +   '<button type="button" class="btn btn-primary calc-ok" data-act="calcOk">확인</button>'
+    + '</div></div>';
+  box.classList.add('show');
+  box.setAttribute('aria-hidden', 'false');
+  if(document.body && document.body.classList) document.body.classList.add('sheet-open');
+}
+function renderCalcNow(){
+  var now = document.getElementById('calcNow');
+  if(now) now.textContent = calcDisplayText();
+  var ex = document.querySelector('#calcModal .calc-expr');
+  if(ex) ex.textContent = calcUI.expr || '';
+}
+var CALC_DIGITS = '0123456789.';
+var CALC_OPS = '+-×÷*/';
+function calcKeyPress(k){
+  if(!calcUI.open) return;
+  var e = String(calcUI.expr || '');
+  if(k === 'C'){ calcUI.expr = ''; renderCalcNow(); return; }
+  if(k === '←'){ calcUI.expr = e.slice(0, -1); renderCalcNow(); return; }
+  if(k === '='){
+    var v = calcEval(e);
+    if(v !== null){
+      calcUI.expr = String(calcUI.kind === 'int' ? Math.round(v) : Math.round(v * 100) / 100);
+      renderCalcNow();
+    }
+    return;
+  }
+  if(CALC_OPS.indexOf(k) >= 0){
+    var op = (k === '*') ? '×' : (k === '/' ? '÷' : k);
+    if(!e){ calcUI.expr = (op === '-' ? '-' : ''); renderCalcNow(); return; }
+    if(CALC_OPS.indexOf(e.slice(-1)) >= 0){ calcUI.expr = e.slice(0, -1) + op; }
+    else { calcUI.expr = e + op; }
+    renderCalcNow();
+    return;
+  }
+  if(k === '.'){
+    var tail = e.split(/[+\-×÷]/).pop();
+    if(tail.indexOf('.') >= 0) return;
+    calcUI.expr = e + (tail === '' ? '0.' : '.');
+    renderCalcNow();
+    return;
+  }
+  if(k === '00'){
+    if(!e || CALC_OPS.indexOf(e.slice(-1)) >= 0) return;
+    calcUI.expr = e + '00';
+    renderCalcNow();
+    return;
+  }
+  if(CALC_DIGITS.indexOf(k.charAt(0)) >= 0 || /^[0-9]+$/.test(k)){
+    calcUI.expr = e + k;
+    renderCalcNow();
+  }
+}
+function calcClose(){
+  calcUI.open = false;
+  var box = document.getElementById('calcModal');
+  if(box){
+    box.classList.remove('show');
+    box.setAttribute('aria-hidden', 'true');
+  }
+  if(document.body && document.body.classList) document.body.classList.remove('sheet-open');
+}
+function calcCancel(){ calcClose(); }
+function calcOk(){
+  var key = calcUI.key, path = calcUI.path, kind = calcUI.kind;
+  var v = calcEval(calcUI.expr);
+  var expr = String(calcUI.expr || '');
+  calcClose();
+  if(!key || !path) return;
+  if(v === null || !isFinite(v)){
+    if(expr === ''){
+      /* 빈 채로 확인하면 값을 지운다. */
+      applyDayField(key, path, '');
+      refreshCalcField(key, path, '');
+      return;
+    }
+    toast('숫자를 확인해 주세요');
+    return;
+  }
+  var out;
+  if(kind === 'dec') out = Math.round(v * 10) / 10;
+  else if(kind === 'dec2') out = Math.round(v * 100) / 100;
+  else out = Math.round(v);
+  if(out < 0) out = 0;
+  applyDayField(key, path, out);
+  refreshCalcField(key, path, out);
+  flashSaved();
+}
+
+/* 사칙연산만 계산한다(괄호·함수 없음). 숫자가 아니면 null. */
+
+/* ---------- 원형 시계 다이얼 ---------- */
+var clockUI = {open:false, key:'', path:'', label:'', date:'', hour:0, minute:0, mode:'hour', kb:false, text:''};
+function openClock(el){
+  if(!el) return;
+  var key = el.getAttribute('data-day') || ui.date;
+  var path = el.getAttribute('data-field') || '';
+  var label = el.getAttribute('data-label') || '시간';
+  var d = state.days[key];
+  var value = '';
+  try{
+    var m = /^runs\.(\d+)\.([se])$/.exec(path);
+    if(m && d && d.runs && d.runs[Number(m[1])]) value = d.runs[Number(m[1])][m[2]] || '';
+  }catch(e){}
+  var t = parseDT(value) || new Date();
+  clockUI.open = true;
+  clockUI.key = key;
+  clockUI.path = path;
+  clockUI.label = label;
+  clockUI.date = value ? dateKey(parseDT(value)) : key;
+  clockUI.hour = t.getHours();
+  clockUI.minute = t.getMinutes();
+  clockUI.mode = 'hour';
+  clockUI.kb = false;
+  clockUI.text = pad2(t.getHours()) + ':' + pad2(t.getMinutes());
+  renderClock();
+}
+function clockHour24(){
+  var p = clockParts(clockUI.hour);
+  return clockUI.hour;
+}
+function renderClock(){
+  var box = document.getElementById('clockModal');
+  if(!box) return;
+  var p = clockParts(clockUI.hour);
+  var dateTxt = dateLabelKR(clockUI.date) + ' (' + weekdayKR(clockUI.date) + ')';
+  var extra = (clockUI.date !== clockUI.key) ? ' <span class="cd-next">익일</span>' : '';
+  var dial = clockUI.kb ? clockKbHtml() : clockDialHtml();
+  box.innerHTML = '<div class="sheet-panel clock-panel">'
+    + '<div class="clock-head"><span class="clock-title">' + esc(clockUI.label) + '</span>'
+    +   '<span class="clock-date">' + esc(dateTxt) + extra + '</span></div>'
+    + '<div class="clock-time">'
+    +   '<button type="button" class="ct-box' + (clockUI.kb ? '' : (clockUI.mode === 'hour' ? ' on' : '')) + '" data-act="clockMode" data-mode="hour" aria-label="시 고르기">' + pad2(p.h12) + '</button>'
+    +   '<span class="ct-colon">:</span>'
+    +   '<button type="button" class="ct-box' + (clockUI.kb ? '' : (clockUI.mode === 'minute' ? ' on' : '')) + '" data-act="clockMode" data-mode="minute" aria-label="분 고르기">' + pad2(clockUI.minute) + '</button>'
+    +   '<div class="ct-ampm">'
+    +     '<button type="button" class="' + (p.ampm === '오전' ? 'on' : '') + '" data-act="clockAmpm" data-v="am">오전</button>'
+    +     '<button type="button" class="' + (p.ampm === '오후' ? 'on' : '') + '" data-act="clockAmpm" data-v="pm">오후</button>'
+    +   '</div>'
+    + '</div>'
+    + (clockUI.kb ? '' : '<div class="clock-nudge"><button type="button" data-act="clockNudge" data-v="-1" data-target="minute">분 −1</button><span>1분 단위 미세 조정</span><button type="button" data-act="clockNudge" data-v="1" data-target="minute">분 +1</button></div>')
+    + dial
+    + '<div class="clock-foot">'
+    +   '<button type="button" class="clock-kb" data-act="clockKb" aria-label="직접 입력">' + (clockUI.kb ? '🕘 시계판' : '⌨ 직접 입력') + '</button>'
+    +   '<div class="spacer"></div>'
+    +   '<button type="button" class="btn calc-cancel" data-act="clockCancel">취소</button>'
+    +   '<button type="button" class="btn btn-primary calc-ok" data-act="clockOk">확인</button>'
+    + '</div></div>';
+  box.classList.add('show');
+  box.setAttribute('aria-hidden', 'false');
+  if(document.body && document.body.classList) document.body.classList.add('sheet-open');
+  clockBindDial();
+}
+function clockDialHtml(){
+  var isHour = clockUI.mode === 'hour';
+  var items = [];
+  var i, ang, x, y;
+  if(isHour){
+    for(i = 1; i <= 12; i++){
+      ang = (i % 12) * 30;
+      x = 50 + 36 * Math.sin(ang * Math.PI / 180);
+      y = 50 - 36 * Math.cos(ang * Math.PI / 180);
+      var on = clockParts(clockUI.hour).h12 === i;
+      items.push('<button type="button" class="dial-num' + (on ? ' on' : '') + '" data-act="clockHour" data-v="' + i + '" style="left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) + '%">' + i + '</button>');
+    }
+  } else {
+    for(i = 0; i < 12; i++){
+      var mm = i * 5;
+      ang = mm * 6;
+      x = 50 + 36 * Math.sin(ang * Math.PI / 180);
+      y = 50 - 36 * Math.cos(ang * Math.PI / 180);
+      var onm = Math.round(clockUI.minute / 5) * 5 % 60 === mm;
+      items.push('<button type="button" class="dial-num' + (onm ? ' on' : '') + '" data-act="clockMinute" data-v="' + mm + '" style="left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) + '%">' + pad2(mm) + '</button>');
+    }
+  }
+  var handAng = isHour ? (clockParts(clockUI.hour).h12 % 12) * 30 : clockUI.minute * 6;
+  var hx = 50 + (isHour ? 26 : 32) * Math.sin(handAng * Math.PI / 180);
+  var hy = 50 - (isHour ? 26 : 32) * Math.cos(handAng * Math.PI / 180);
+  return '<div class="dial" id="clockDial" aria-label="원형 시계판">'
+    + '<div class="dial-face"></div>'
+    + '<div class="dial-hand" style="width:' + (isHour ? 26 : 32) + '%;transform:rotate(' + handAng + 'deg)"></div>'
+    + '<span class="dial-pin" style="left:' + hx.toFixed(2) + '%;top:' + hy.toFixed(2) + '%"></span>'
+    + items.join('')
+    + '</div>'
+    + '<div class="dial-hint">' + (isHour ? '시를 고르면 분으로 넘어갑니다' : '끌어서 1분 단위로 맞출 수 있습니다') + '</div>';
+}
+function clockKbHtml(){
+  return '<div class="clock-kb-wrap"><label>24시간으로 입력 (예: 20:15)</label>'
+    + '<input id="clockKbInput" class="num" type="text" inputmode="numeric" maxlength="5" value="' + esc(clockUI.text) + '" placeholder="20:15"></div>'
+    + '<div class="dial-hint">직접 입력을 마치고 확인을 누르세요</div>';
+}
+function clockBindDial(){
+  var dial = document.getElementById('clockDial');
+  if(!dial || !dial.addEventListener) return;
+  function point(ev){
+    var r = dial.getBoundingClientRect ? dial.getBoundingClientRect() : {left:0, top:0, width:1, height:1};
+    var cx = (ev.touches && ev.touches[0]) ? ev.touches[0].clientX : ev.clientX;
+    var cy = (ev.touches && ev.touches[0]) ? ev.touches[0].clientY : ev.clientY;
+    return {dx: cx - (r.left + r.width / 2), dy: cy - (r.top + r.height / 2)};
+  }
+  function move(ev){
+    var p = point(ev);
+    if(clockUI.mode === 'hour') clockUI.hour = clockSetHourPart(clockUI.hour, clockPointToHour(p.dx, p.dy));
+    else clockUI.minute = clockPointToMinute(p.dx, p.dy);
+    renderClock();
+  }
+  var dragging = false;
+  dial.addEventListener('touchstart', function(ev){ dragging = true; move(ev); if(ev.preventDefault) ev.preventDefault(); }, {passive:false});
+  dial.addEventListener('touchmove', function(ev){ if(dragging) move(ev); if(ev.preventDefault) ev.preventDefault(); }, {passive:false});
+  dial.addEventListener('touchend', function(){ dragging = false; });
+  dial.addEventListener('mousedown', function(ev){ dragging = true; move(ev); });
+  dial.addEventListener('mousemove', function(ev){ if(dragging) move(ev); });
+  dial.addEventListener('mouseup', function(){ dragging = false; });
+  dial.addEventListener('mouseleave', function(){ dragging = false; });
+}
+function clockTap(kind, val){
+  if(!clockUI.open) return;
+  if(kind === 'hour'){
+    var h = Number(val);
+    clockUI.hour = clockSetHourPart(clockUI.hour, h % 12 === 0 ? 12 : h);
+    clockUI.mode = 'minute';
+    renderClock();
+    return;
+  }
+  if(kind === 'minute'){
+    clockUI.minute = Math.max(0, Math.min(59, Number(val) || 0));
+    renderClock();
+    return;
+  }
+  if(kind === 'ampm'){
+    var pmNow = clockUI.hour >= 12;
+    var wantPm = (val === 'pm');
+    if(pmNow !== wantPm) clockUI.hour = (clockUI.hour + 12) % 24;
+    renderClock();
+    return;
+  }
+  if(kind === 'mode'){
+    clockUI.mode = (val === 'minute') ? 'minute' : 'hour';
+    renderClock();
+    return;
+  }
+  if(kind === 'nudge'){
+    var d = Number(val) || 0;
+    clockUI.minute = clockUI.minute + d;
+    if(clockUI.minute > 59) clockUI.minute = 59;
+    if(clockUI.minute < 0) clockUI.minute = 0;
+    renderClock();
+    return;
+  }
+  if(kind === 'kb'){
+    if(clockUI.kb){
+      clockUI.kb = false;
+    } else {
+      clockUI.kb = true;
+      clockUI.text = pad2(clockUI.hour) + ':' + pad2(clockUI.minute);
+    }
+    renderClock();
+    var inp = document.getElementById('clockKbInput');
+    if(inp && inp.focus) try{ inp.focus(); }catch(e){}
+    return;
+  }
+}
+function clockClose(){
+  clockUI.open = false;
+  var box = document.getElementById('clockModal');
+  if(box){
+    box.classList.remove('show');
+    box.setAttribute('aria-hidden', 'true');
+  }
+  if(document.body && document.body.classList) document.body.classList.remove('sheet-open');
+}
+function clockCancel(){ clockClose(); }
+function clockOk(){
+  var key = clockUI.key, path = clockUI.path, date = clockUI.date || clockUI.key;
+  if(clockUI.kb){
+    var inp = document.getElementById('clockKbInput');
+    var parsed = clockParseText(inp ? inp.value : clockUI.text);
+    if(!parsed){ toast('시간을 20:15 처럼 넣어 주세요'); return; }
+    clockUI.hour = parsed.hour;
+    clockUI.minute = parsed.minute;
+  }
+  var value = date + 'T' + pad2(clockUI.hour) + ':' + pad2(clockUI.minute);
+  clockClose();
+  if(!key || !path) return;
+  applyDayField(key, path, value);
+  var btn = document.querySelector('button.time-input[data-day="' + key + '"][data-field="' + path + '"]');
+  if(btn){
+    btn.innerHTML = '<span class="tv">' + pad2(clockUI.hour) + ':' + pad2(clockUI.minute) + '</span>'
+      + (date !== key ? '<span class="nextday">익일</span>' : '');
+    if(btn.classList) btn.classList.remove('empty');
+  }
+  flashSaved();
 }
 
 /* ---------- 입력 ---------- */
@@ -1845,7 +2498,10 @@ views.input = function(){
   +   '<button class="btn btn-sm" data-act="prevDay" aria-label="이전 날">◀</button>'
   +   '<div style="flex:1;text-align:center;min-width:0">'
   +     '<div style="font-size:15.5px;font-weight:800">' + dateLabelKR(key) + ' <span class="muted" style="font-weight:700">(' + weekdayKR(key) + ')</span></div>'
-  +     '<button class="btn btn-ghost btn-sm" data-act="today" style="min-height:26px;font-size:11.5px">오늘로</button>'
+  +     '<div class="row" style="justify-content:center;gap:7px">'
+  +       '<button class="btn btn-ghost btn-sm" data-act="today" style="min-height:26px;font-size:11.5px">오늘로</button>'
+  +       '<span class="save-hint" id="saveHint" aria-live="polite"></span>'
+  +     '</div>'
   +   '</div>'
   +   '<button class="btn btn-sm" data-act="nextDay" aria-label="다음 날">▶</button>'
   + '</section>'
@@ -1874,17 +2530,19 @@ views.input = function(){
         + '<div class="rr-top"><b class="small">' + (i===0 ? '운행' : '추가 운행 ' + (i+1)) + '</b>'
         + (i>0 ? '<button class="del-x" data-act="delRun" data-idx="' + i + '" aria-label="삭제">✕</button>' : '') + '</div>'
         + '<div class="run-fields">'
-        +   '<div class="field"><label>운행시작</label><input type="datetime-local" data-day="' + key + '" data-field="runs.' + i + '.s" value="' + esc(r.s) + '"></div>'
-        +   '<div class="field"><label>운행종료</label><input type="datetime-local" data-day="' + key + '" data-field="runs.' + i + '.e" value="' + esc(r.e) + '"></div>'
+        +   '<div class="field"><label>운행시작</label>' + timeFieldHtml(key, 'runs.' + i + '.s', '운행시작 시간', r.s) + '</div>'
+        +   '<div class="field"><label>운행종료</label>' + timeFieldHtml(key, 'runs.' + i + '.e', '운행종료 시간', r.e) + '</div>'
         + '</div>'
-        + '<div class="tiny muted" style="margin-top:5px">' + (r.s && r.e ? '이 운행 ' + fmtDur(runMinutes(r, nowTs)) : (r.s && !r.e ? (key === todayKey() ? '진행 중 (STOP 전까지 계속 계산)' : '종료 시각이 비어 있습니다') : '')) + '</div>'
+        + '<div class="tiny muted" style="margin-top:5px">' + (r.s && r.e
+            ? ('이 운행 ' + fmtDur(runMinutes(r, nowTs)) + (isOvernightRun(r) ? ' <span class="overnight-tag">익일 종료</span>' : ''))
+            : (r.s && !r.e ? (key === todayKey() ? '진행 중 (STOP 전까지 계속 계산)' : '종료 시각이 비어 있습니다') : '')) + '</div>'
         + '</div>';
       }).join('')
   +   '<div class="row wrap" style="gap:8px;margin-top:6px">'
   +     '<button class="btn btn-sm btn-soft" data-act="addRun">+ 운행 추가</button>'
   +     (live ? '<button class="btn btn-sm btn-red" data-act="stop">STOP</button>' : '')
   +     '<div class="spacer"></div>'
-  +     '<div class="field" style="width:132px"><label>휴식(분) 차감</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="breakMinutes" value="' + esc(ival(d.breakMinutes)) + '"></div>'
+  +     '<div class="field" style="width:132px"><label>휴식(분) 차감</label>' + calcFieldHtml(key, 'breakMinutes', '휴식(분)', d.breakMinutes, 'int') + '</div>'
   +   '</div>'
   +   '<div class="total-line" style="margin-top:10px"><span>총 일한 시간</span><b id="workTotal">' + fmtDur(work) + '</b></div>'
   +   '<div class="total-line" style="margin-top:6px"><span>시간당 매출</span><b id="hourlyRev">' + (work>0 ? fmtNum(inc.sales/(work/60))+'원' : '－') + '</b></div>'
@@ -1898,20 +2556,20 @@ views.input = function(){
   +       '<button class="' + (d.income.mode==='direct'?'on':'') + '" data-act="incomeMode" data-mode="direct">직접입력</button>'
   +     '</div></div>'
   +   '<div class="grid2">'
-  +     '<div class="field"><label>카드수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.card" value="' + esc(ival(d.income.card)) + '"></div>'
-  +     '<div class="field"><label>현금수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.cash" value="' + esc(ival(d.income.cash)) + '"></div>'
-  +     '<div class="field"><label>카콜현금 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.kakaoCash" value="' + esc(ival(d.income.kakaoCash)) + '"></div>'
-  +     '<div class="field"><label>통행요금 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.toll" value="' + esc(ival(d.income.toll)) + '"></div>'
+  +     '<div class="field"><label>카드수입 (원)</label>' + calcFieldHtml(key, 'income.card', '카드수입', d.income.card, 'int') + '</div>'
+  +     '<div class="field"><label>현금수입 (원)</label>' + calcFieldHtml(key, 'income.cash', '현금수입', d.income.cash, 'int') + '</div>'
+  +     '<div class="field"><label>카콜현금 (원)</label>' + calcFieldHtml(key, 'income.kakaoCash', '카콜현금', d.income.kakaoCash, 'int') + '</div>'
+  +     '<div class="field"><label>통행요금 (원)</label>' + calcFieldHtml(key, 'income.toll', '통행요금', d.income.toll, 'int') + '</div>'
   +   '</div>'
-  +   (d.income.mode==='direct' ? '<div class="field" style="margin-top:8px"><label>영업금액 직접 입력 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="카드+현금과 다른 금액" data-day="' + key + '" data-field="income.direct" value="' + esc(ival(d.income.direct)) + '"></div>' : '')
+  +   (d.income.mode==='direct' ? '<div class="field" style="margin-top:8px"><label>영업금액 직접 입력 (원)</label>' + calcFieldHtml(key, 'income.direct', '영업금액', d.income.direct, 'int') + '</div>' : '')
   +   '<div class="total-line" style="margin-top:10px"><span>영업금액 <span class="tiny muted">' + (d.income.mode==='direct'?'직접 입력':'카드+현금+카콜 자동') + '</span></span><b id="salesTotal">' + fmtWon(inc.sales) + '</b></div>'
   + '</section>'
 
   + '<section class="card">'
   +   '<div class="card-h"><div class="card-t">주행거리</div><div class="card-sub">승차율 ' + (rate===null?'－':rate+'%') + '</div></div>'
   +   '<div class="grid2">'
-  +     '<div class="field"><label>총 주행거리 (km)</label><input class="num" type="number" inputmode="decimal" min="0" step="0.1" placeholder="0" data-day="' + key + '" data-field="distance.total" value="' + esc(ival(dist.total)) + '"></div>'
-  +     '<div class="field"><label>영업거리 (km)</label><input class="num" type="number" inputmode="decimal" min="0" step="0.1" placeholder="0" data-day="' + key + '" data-field="distance.business" value="' + esc(ival(dist.business)) + '"></div>'
+  +     '<div class="field"><label>총 주행거리 (km)</label>' + calcFieldHtml(key, 'distance.total', '총 주행거리', dist.total, 'dec') + '</div>'
+  +     '<div class="field"><label>영업거리 (km)</label>' + calcFieldHtml(key, 'distance.business', '영업거리', dist.business, 'dec') + '</div>'
   +   '</div>'
   +   '<div class="total-line" style="margin-top:10px"><span>승차율 <span class="tiny muted">영업거리÷총 주행</span></span><b id="rideRate">' + (rate===null?'－':rate+'%') + '</b></div>'
   + '</section>'
@@ -1923,7 +2581,7 @@ views.input = function(){
         + '<div class="list-head full"><b>지출 ' + (i+1) + '</b><button class="del-x" data-act="delExp" data-idx="' + i + '" aria-label="삭제">✕</button></div>'
         + '<div class="field"><label>구분</label><select data-day="' + key + '" data-field="expenses.' + i + '.cat">' + EXP_CATS.map(function(c){ return '<option' + (e.cat===c?' selected':'') + '>' + c + '</option>'; }).join('') + '</select></div>'
         + '<div class="field"><label>결제수단</label><select data-day="' + key + '" data-field="expenses.' + i + '.pay">' + PAY_KINDS.map(function(c){ return '<option' + (e.pay===c?' selected':'') + '>' + c + '</option>'; }).join('') + '</select></div>'
-        + '<div class="field"><label>금액 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="expenses.' + i + '.amount" value="' + esc(ival(e.amount)) + '"></div>'
+        + '<div class="field"><label>금액 (원)</label>' + calcFieldHtml(key, 'expenses.' + i + '.amount', '지출 금액', e.amount, 'int') + '</div>'
         + '<div class="field"><label>메모</label><input type="text" placeholder="예: 김밥, 워셔액" data-day="' + key + '" data-field="expenses.' + i + '.memo" value="' + esc(e.memo||'') + '"></div>'
         + '</div>';
       }).join('') : '<div class="small muted" style="margin-bottom:8px">지출이 없습니다.</div>')
@@ -1951,9 +2609,9 @@ views.input = function(){
         +     '<input type="text" placeholder="예: SK가스 오류충전소" data-day="' + key + '" data-field="charges.' + i + '.station" value="' + esc(c.station||'') + '">'
         +   '</div></div>'
         + '<div class="field"><label>유종</label><select data-day="' + key + '" data-field="charges.' + i + '.fuel">' + FUEL_KINDS.map(function(f){ return '<option' + ((c.fuel||state.settings.fuel)===f?' selected':'') + '>' + f + '</option>'; }).join('') + '</select></div>'
-        + '<div class="field"><label>충전량 (L)</label><input class="num" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" data-day="' + key + '" data-field="charges.' + i + '.liters" value="' + esc(ival(c.liters)) + '"></div>'
-        + '<div class="field"><label>단가 (원/L)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="charges.' + i + '.unit" value="' + esc(ival(c.unit)) + '"></div>'
-        + '<div class="field"><label>충전금액 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="자동" data-day="' + key + '" data-field="charges.' + i + '.amount" value="' + esc(ival(c.amount)) + '"></div>'
+        + '<div class="field"><label>충전량 (L)</label>' + calcFieldHtml(key, 'charges.' + i + '.liters', '충전량', c.liters, 'dec2') + '</div>'
+        + '<div class="field"><label>단가 (원/L)</label>' + calcFieldHtml(key, 'charges.' + i + '.unit', '충전단가', c.unit, 'int') + '</div>'
+        + '<div class="field"><label>충전금액 (원)</label>' + calcFieldHtml(key, 'charges.' + i + '.amount', '충전금액', c.amount, 'int') + '</div>'
         + '<div class="tiny muted full">충전소를 고르면 기억된 단가가 채워지고, 충전량만 넣으면 금액이 계산됩니다.</div>'
         + '</div>';
       }).join('') : '<div class="small muted" style="margin-bottom:8px">충전 기록이 없습니다.</div>')
@@ -2006,51 +2664,55 @@ views.calendar = function(){
   var stats = monthStats(state.days, ym, Date.now());
   var cells = calendarCells(y, mo);
   var today = todayKey();
-  var pattern = (state.settings.offWeekdays || []).map(function(d){ return WEEKDAYS[d]; }).join('·');
+  var view = (ui.calView === 'time') ? 'time' : 'income';
+  var outTotal = stats.outTotal;
 
-  var html = ''
-  + '<section class="card tight" style="display:flex;align-items:center;gap:10px">'
-  +   '<button class="btn btn-sm" data-act="prevMonth" aria-label="이전 달">◀</button>'
-  +   '<div style="flex:1;text-align:center;font-size:16px;font-weight:800">' + ymLabel(ym) + '</div>'
-  +   '<button class="btn btn-sm" data-act="nextMonth" aria-label="다음 달">▶</button>'
-  + '</section>'
-  + '<section class="card tight">'
-  +   '<div class="grid2" style="gap:8px">'
-  +     '<div class="kpi"><div class="v money hi">' + fmtWon(stats.sales) + '</div><div class="l">영업금액</div></div>'
-  +     '<div class="kpi"><div class="v money sky">' + fmtWon(stats.card) + '</div><div class="l">카드수입</div></div>'
-  +     '<div class="kpi"><div class="v money">' + fmtWon(stats.cash) + '</div><div class="l">현금수입</div></div>'
-  +     '<div class="kpi"><div class="v money">' + fmtWon(stats.expenses) + '</div><div class="l">지출금액</div></div>'
-  +     '<div class="kpi"><div class="v time">' + fmtDur(stats.workMinutes) + '</div><div class="l">총 운행시간</div></div>'
-  +     '<div class="kpi"><div class="v time">' + (stats.workDays ? fmtDur(stats.avgMinutes) : '－') + '</div><div class="l">일평균 운행시간</div></div>'
+  return ''
+  + '<section class="cal-bar">'
+  +   '<div class="cal-month">'
+  +     '<button class="cal-nav" data-act="prevMonth" aria-label="이전 달">◀</button>'
+  +     '<b>' + ymLabel(ym) + '</b>'
+  +     '<button class="cal-nav" data-act="nextMonth" aria-label="다음 달">▶</button>'
   +   '</div>'
-  +   '<div class="sum-foot"><span>근무 ' + stats.workDays + '일</span><span>충전 ' + fmtWon(stats.chargeAmount) + '</span><span>부제: ' + (pattern || '없음') + '</span></div>'
+  +   '<button class="cal-sel" data-act="calView" data-view="' + (view === 'time' ? 'income' : 'time') + '" aria-label="보기 바꾸기">'
+  +     (view === 'time' ? '운행시간' : '운행수입') + '<span class="caret">▾</span>'
+  +   '</button>'
   + '</section>'
-  + '<section class="card tight">'
-  +   '<div class="cal-wrap">'
-  +     '<div class="cal-dow">' + WEEKDAYS.map(function(w){ return '<div>' + w + '</div>'; }).join('') + '</div>'
-  +     '<div class="cal-grid">' + cells.map(function(c){ return calCellHtml(c, today); }).join('') + '</div>'
-  +   '</div>'
-  +   '<div class="legend"><span><i style="background:#34D399"></i>영업금액</span><span><i style="background:#60A5FA"></i>카드</span><span><i style="background:#A9B6C9"></i>현금</span><span><i style="background:rgba(52,211,153,.35)"></i>일한 시간</span><span>금액 단위: 만원</span></div>'
+  + '<section class="cal-sum4" aria-label="월간 요약">'
+  +   '<div class="cs"><span class="k k-sales">영업금액</span><span class="v num">' + fmtNum(stats.sales) + '</span></div>'
+  +   '<div class="cs"><span class="k k-card">카드수입</span><span class="v num">' + fmtNum(stats.card) + '</span></div>'
+  +   '<div class="cs"><span class="k k-cash">현금수입</span><span class="v num">' + fmtNum(stats.cash + stats.kakaoCash) + '</span></div>'
+  +   '<div class="cs"><span class="k k-out">지출금액</span><span class="v num">' + fmtNum(outTotal) + '</span></div>'
   + '</section>'
-  + '<div class="tiny muted center" style="padding:0 8px 6px">날짜를 누르면 그 날의 입력 화면으로 갑니다.</div>';
-  return html;
+  + '<div class="cal-dow">' + WEEKDAYS.map(function(w){ return '<div>' + w + '</div>'; }).join('') + '</div>'
+  + '<div class="cal-grid thin">' + cells.map(function(c){ return calCellHtml(c, today, view); }).join('') + '</div>'
+  + '<div class="cal-foot-tip">날짜를 누르면 그 날 자료입력으로 갑니다.</div>';
 };
 
-function calCellHtml(c, today){
+function calCellHtml(c, today, view){
   if(!c) return '<div class="cell empty"></div>';
   var d = state.days[c.key];
   var inc = incomeOf(d);
   var mins = d ? dayWorkMinutes(d, Date.now()) : 0;
+  var outTotal = d ? (expenseTotal(d) + chargeTotals(d).amount) : 0;
+  var cashAll = inc.cash + inc.kakaoCash;
   var off = !!(d && d.off);
   var pat = isPatternOff(c.key, state.settings.offWeekdays);
-  var cls = 'cell' + (c.dow===0?' sun':'') + (c.dow===6?' sat':'') + (off?' off':'') + (pat&&!off?' pat':'') + (c.key===today?' today':'');
-  var html = '<div class="' + cls + '" data-act="openDay" data-key="' + c.key + '" title="' + esc(c.key + ' · ' + (off ? '휴무' : fmtDur(mins)) + ' · ' + fmtWon(inc.sales)) + '">';
+  var cls = 'cell' + (c.dow === 0 ? ' sun' : '') + (c.dow === 6 ? ' sat' : '')
+    + (off ? ' off' : '') + (!off && pat ? ' pat' : '') + (c.key === today ? ' today' : '');
+  var tip = c.key + ' · ' + (off ? '휴무' : fmtDur(mins)) + ' · ' + fmtWon(inc.sales)
+    + (outTotal > 0 ? ' · 지출 ' + fmtWon(outTotal) : '');
+  var html = '<div class="' + cls + '" data-act="openDay" data-key="' + c.key + '" title="' + esc(tip) + '">';
   html += '<div class="d">' + c.d + '</div>';
-  if(mins > 0) html += '<div class="hr">' + fmtDurShort(mins) + '</div>';
-  if(off) html += '<div class="offtag">휴무</div>';
-  if(inc.sales > 0) html += '<div class="amt sales">' + fmtMan(inc.sales) + '</div>';
-  if(inc.card > 0) html += '<div class="amt kcard">' + fmtMan(inc.card) + '</div>';
-  if(inc.cash > 0) html += '<div class="amt kcash">' + fmtMan(inc.cash) + '</div>';
+  if(view === 'time'){
+    if(mins > 0) html += '<div class="t-hours num">' + fmtDurShort(mins) + '</div>';
+    if(inc.sales > 0) html += '<div class="ln sales">' + fmtNum(inc.sales) + '</div>';
+  } else {
+    if(inc.sales > 0) html += '<div class="ln sales">' + fmtNum(inc.sales) + '</div>';
+    if(inc.card > 0) html += '<div class="ln card">' + fmtNum(inc.card) + '</div>';
+    if(cashAll > 0) html += '<div class="ln cash">' + fmtNum(cashAll) + '</div>';
+  }
+  if(outTotal > 0) html += '<div class="ln out">' + fmtNum(outTotal) + '</div>';
   html += '</div>';
   return html;
 }
@@ -2285,9 +2947,10 @@ function fmtShortTime(ts){
 }
 
 /* ---------- 시작 / 종료 ---------- */
-function doStart(){
-  if(state.session){ toast('이미 운행 중입니다.'); return; }
-  var now = new Date();
+function doStart(){ return startRunAt(new Date()); }
+/* START를 누른 날짜(영업일)에 운행을 붙인다. 야간 운행은 이 날짜가 기준이다. */
+function startRunAt(now){
+  if(state.session){ toast('이미 운행 중입니다.'); return false; }
   var key = dateKey(now);
   var d = touchDay(key);
   if(d.off) d.off = false;
@@ -2295,13 +2958,17 @@ function doStart(){
   state.session = {start: dtInput(now), dayKey: key};
   saveNow();
   startGeo();
+  ui.date = key;
   ui.screen = 'home';
   render();
   toast('운행 시작 · ' + hm(dtInput(now)));
+  return true;
 }
-function doStop(){
-  if(!state.session){ toast('운행 중이 아닙니다.'); return; }
-  var now = new Date();
+function doStop(){ return stopRunAt(new Date()); }
+/* STOP은 언제 눌러도 START를 누른 날짜의 운행으로 끝낸다.
+   화요일 21:00 START → 수요일 07:00 STOP 이면 화요일 기록 한 칸에 10시간. */
+function stopRunAt(now){
+  if(!state.session){ toast('운행 중이 아닙니다.'); return false; }
   var startAt = parseDT(state.session.start);
   var elapsedMin = startAt ? minutesBetween(startAt, now) : 0;
   if(elapsedMin > 20*60){
@@ -2309,7 +2976,7 @@ function doStop(){
       ui.date = state.session.dayKey || dateKey(now);
       ui.screen = 'input';
       render();
-      return;
+      return false;
     }
   }
   var key = state.session.dayKey || dateKey(now);
@@ -3372,7 +4039,9 @@ function onField(el){
       var cf = cm[2];
       if(cf === 'liters' || cf === 'unit' || cf === 'amount'){
         syncChargeAmounts(c, cf);
+        refreshCalcField(key, path, c[cf]);
         setFieldValue(idx, cf === 'amount' ? 'unit' : 'amount', c[cf === 'amount' ? 'unit' : 'amount']);
+        refreshCalcField(key, 'charges.' + idx + '.' + (cf === 'amount' ? 'unit' : 'amount'), c[cf === 'amount' ? 'unit' : 'amount']);
         if(num(c.unit) > 0) rememberChargeStation(c);
       } else if(cf === 'station'){
         syncStationSelect(idx, c.station);
@@ -3380,7 +4049,44 @@ function onField(el){
     }
   }
   saveSoon();
+  flashSaved();
   updateDayComputeds(key);
+}
+/* 숫자 입력칸(계산기 팝업)에 계산된 값을 되돌려 보여 준다. */
+function refreshCalcField(key, path, value){
+  var el = document.querySelector('input[data-calc][data-day="' + key + '"][data-field="' + path + '"]');
+  if(!el) return;
+  el.value = inputText(value, el.getAttribute('data-calc'));
+}
+function inputText(value, kind){
+  if(value === '' || value === undefined || value === null) return '';
+  var v = num(value);
+  if(!isFinite(v)) return '';
+  if(kind === 'dec') return fmtDec(v, 1);
+  if(kind === 'dec2') return fmtDec(v, 2);
+  return fmtNum(v);
+}
+/* 계산기·시계 팝업에서 확정한 값을 그 날 기록에 넣는다. */
+function applyDayField(key, path, value){
+  var day = ensureDay(key);
+  day.u = Date.now();
+  setPath(day, path, value);
+  var cm = /^charges\.(\d+)\.(liters|unit|amount)$/.exec(path);
+  if(cm){
+    var idx = Number(cm[1]);
+    var c = day.charges[idx];
+    if(c && c[cm[2]] !== undefined){
+      syncChargeAmounts(c, cm[2]);
+      var other = (cm[2] === 'amount') ? 'unit' : 'amount';
+      setFieldValue(idx, other, c[other]);
+      refreshCalcField(key, 'charges.' + idx + '.' + other, c[other]);
+      if(num(c.unit) > 0) rememberChargeStation(c);
+    }
+  }
+  saveNow();
+  flashSaved();
+  updateDayComputeds(key);
+  return day;
 }
 function setFieldValue(idx, field, value){
   var el = document.querySelector('input[data-field="charges.' + idx + '.' + field + '"]');
@@ -3604,6 +4310,20 @@ function handleAct(act, el){
     case 'syncNow': syncNow({interactive:true}); break;
     case 'openHelper': openHelper(el.getAttribute('data-tool')); break;
     case 'sumPage': setSumPage(el.getAttribute('data-page')); break;
+    case 'openCalc': openCalc(el); break;
+    case 'calcKey': calcKeyPress(el.getAttribute('data-k')); break;
+    case 'calcOk': calcOk(); break;
+    case 'calcCancel': calcCancel(); break;
+    case 'openClock': openClock(el); break;
+    case 'clockHour': clockTap('hour', el.getAttribute('data-v')); break;
+    case 'clockMinute': clockTap('minute', el.getAttribute('data-v')); break;
+    case 'clockAmpm': clockTap('ampm', el.getAttribute('data-v')); break;
+    case 'clockMode': clockTap('mode', el.getAttribute('data-mode')); break;
+    case 'clockNudge': clockTap('nudge', el.getAttribute('data-v')); break;
+    case 'clockKb': clockTap('kb'); break;
+    case 'clockOk': clockOk(); break;
+    case 'clockCancel': clockCancel(); break;
+    case 'calView': ui.calView = (el.getAttribute('data-view') === 'time') ? 'time' : 'income'; render(); break;
     case 'closeHelper': closeHelper(); break;
     case 'helperExternal': openHelperExternal(); break;
     default: break;
@@ -3618,6 +4338,18 @@ document.addEventListener('click', function(ev){
   closePhotoIfDocumentClick(ev, el);
   try{ handleAct(el.getAttribute('data-act'), el); }
   catch(err){ toast('처리하지 못했습니다 · ' + String(err && err.message ? err.message : err)); }
+});
+document.addEventListener('click', function(ev){
+  var t = ev.target;
+  var el = (t && t.closest) ? t.closest('input[data-calc]') : null;
+  if(!el) return;
+  ev.preventDefault();
+  openCalc(el);
+});
+document.addEventListener('focusin', function(ev){
+  var el = ev.target;
+  if(calcUI.open) return;
+  if(el && el.getAttribute && el.getAttribute('data-calc')) openCalc(el);
 });
 document.addEventListener('input', function(ev){
   var el = ev.target;
@@ -3642,6 +4374,7 @@ document.addEventListener('change', function(ev){
     var fpath = el.getAttribute('data-field') || '';
     var sm = /^charges\.(\d+)\.station$/.exec(fpath);
     if(sm && el.getAttribute('data-day')) onStationCommit(el.getAttribute('data-day'), Number(sm[1]));
+    flushSave();
   }
 });
 document.getElementById('modal').addEventListener('click', function(ev){
@@ -3799,19 +4532,28 @@ function boot(){
   });
   window.addEventListener('pagehide', function(){
     clearTimeout(saveTimer);
+    saveTimer = null;
     saveLocal();
   });
+  window.addEventListener('beforeunload', function(){ clearTimeout(saveTimer); saveTimer = null; saveLocal(); });
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible'){
       if(state.session && gpsState.watch === null) startGeo();
       if(ui.screen === 'home') refreshHomeCourse();
       updateGpsLine();
+    } else {
+      flushSave();
     }
   });
   window.addEventListener('online', function(){ if(syncMeta.email) scheduleAutoSync(); });
   window.addEventListener('offline', function(){ /* 로컬 저장은 계속 */ });
   window.addEventListener('popstate', function(){ helperPushed = false; if(helperTool) closeHelper(true); });
-  document.addEventListener('keydown', function(ev){ if(ev && ev.key === 'Escape' && helperTool) closeHelper(); });
+  document.addEventListener('keydown', function(ev){
+    if(!ev || ev.key !== 'Escape') return;
+    if(calcUI.open){ calcCancel(); return; }
+    if(clockUI.open){ clockCancel(); return; }
+    if(helperTool) closeHelper();
+  });
   document.addEventListener('touchstart', function(ev){
     if(!ui || ui.screen !== 'home') return;
     var t = ev && ev.target;
