@@ -128,6 +128,7 @@ a{color:var(--blue);text-decoration:none}
 .rv .ph{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
   gap:5px;padding:14px;text-align:center;font-size:12.5px;color:#93a9bd;line-height:1.6}
 .rv .ph.show{display:flex}
+.rv .ph p{margin:0;max-width:94%}
 .rv .ph b{color:#ffd79a}
 .rv .cap{display:flex;gap:8px;align-items:center;padding:7px 9px;font-size:11.5px;color:var(--dim);
   border-top:1px solid var(--line);background:#111a24}
@@ -391,13 +392,16 @@ function rvFail(img){
   try{
     img.style.display = 'none';
     var f = img.parentNode, ph = f ? f.querySelector('.ph') : null;
-    if(ph) ph.className = 'ph show';
+    if(ph){
+      ph.innerHTML = '<p>📷 이 자리 구글 로드뷰 사진을 못 불러왔어요.<br>키 제한(HTTP 리퍼러)·결제 설정을 확인하거나 <b>카카오 로드뷰</b>로 확인하세요.</p>';
+      ph.className = 'ph show';
+    }
   }catch(e){}
 }
 function rvPanelHtml(r, key){
   var ph = key
-    ? '<div class="ph">📷 이 자리 구글 로드뷰 사진을 못 불러왔어요.<br>키 제한(HTTP 리퍼러)·결제 설정을 확인하거나 <b>카카오 로드뷰</b>로 확인하세요.</div>'
-    : '<div class="ph show">🔑 설정에서 <b>Google Maps API 키</b>를 넣으면 여기에 건물 사진이 나옵니다.<br>지금은 옆의 <b>카카오 로드뷰</b>로 360° 둘러보세요.</div>';
+    ? '<div class="ph"><p>📷 이 자리 구글 로드뷰 사진을 못 불러왔어요.<br>키 제한(HTTP 리퍼러)·결제 설정을 확인하거나 <b>카카오 로드뷰</b>로 확인하세요.</p></div>'
+    : '<div class="ph show"><p>🔑 설정에서 <b>Google Maps API 키</b>를 넣으면 여기에 건물 사진이 나옵니다.<br>지금은 옆의 <b>카카오 로드뷰</b>로 360° 둘러보세요.</p></div>';
   return '<div class="rv">'
     + '<div class="frame">'
     +   (key ? '<img alt="로드뷰 사진" loading="lazy" src="' + streetUrl(r, key) + '" onerror="rvFail(this)">' : '')
