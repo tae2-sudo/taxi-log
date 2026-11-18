@@ -527,8 +527,8 @@ body.sheet-open{overflow:hidden}
 .dial-face{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 50% 45%,#12203A 0%,#0C1626 100%);border:1px solid #24334F}
 .dial-hand{position:absolute;left:50%;top:50%;height:2px;background:linear-gradient(90deg,rgba(96,165,250,.15),var(--sky));
   transform-origin:0 50%;border-radius:2px;margin-top:-1px}
-.dial-pin{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--sky);transform:translate(-50%,-50%);
-  box-shadow:0 0 0 5px rgba(96,165,250,.16)}
+.dial-pin{position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:50%;background:var(--sky);transform:translate(-50%,-50%);
+  box-shadow:0 0 0 5px rgba(96,165,250,.16);pointer-events:none}
 .dial-num{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:0;background:transparent;
   color:#C6D2E2;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;line-height:1;font-variant-numeric:tabular-nums}
 .dial-num.on{background:var(--sky);color:#04121F;font-weight:800}
@@ -2351,12 +2351,10 @@ function clockDialHtml(){
   var handAng = isHour ? (clockParts(clockUI.hour).h12 % 12) * 30 : clockUI.minute * 6;
   /* 시계판 각도(12시=0도, 시계방향)를 CSS 회전값으로: 오른쪽을 향한 막대를 90도 돌려 위에서 시작한다. */
   var handRot = handAng - 90;
-  var hx = 50 + (isHour ? 26 : 32) * Math.sin(handAng * Math.PI / 180);
-  var hy = 50 - (isHour ? 26 : 32) * Math.cos(handAng * Math.PI / 180);
   return '<div class="dial" id="clockDial" aria-label="원형 시계판">'
     + '<div class="dial-face"></div>'
     + '<div class="dial-hand" style="width:' + (isHour ? 26 : 32) + '%;transform:rotate(' + handRot + 'deg)"></div>'
-    + '<span class="dial-pin" style="left:' + hx.toFixed(2) + '%;top:' + hy.toFixed(2) + '%"></span>'
+    + '<span class="dial-pin"></span>'
     + items.join('')
     + '</div>'
     + '<div class="dial-hint">' + (isHour ? '시를 고르면 분으로 넘어갑니다' : '끌어서 1분 단위로 맞출 수 있습니다') + '</div>';
@@ -2365,6 +2363,27 @@ function clockKbHtml(){
   return '<div class="clock-kb-wrap"><label>24시간으로 입력 (예: 20:15)</label>'
     + '<input id="clockKbInput" class="num" type="text" inputmode="numeric" maxlength="5" value="' + esc(clockUI.text) + '" placeholder="20:15"></div>'
     + '<div class="dial-hint">직접 입력을 마치고 확인을 누르세요</div>';
+}
+/* 끌어서 시각을 맞출 때는 판을 다시 그리지 않고 바늘·숫자만 갱신한다(손가락이 떼지 않고 계속 끌 수 있게). */
+function clockSyncLive(){
+  var p = clockParts(clockUI.hour);
+  var hb = document.querySelector('#clockModal .ct-box[data-mode="hour"]');
+  var mb = document.querySelector('#clockModal .ct-box[data-mode="minute"]');
+  if(hb) hb.textContent = pad2(p.h12);
+  if(mb) mb.textContent = pad2(clockUI.minute);
+  var isHour = (clockUI.mode === 'hour');
+  var ang = isHour ? (p.h12 % 12) * 30 : clockUI.minute * 6;
+  var hand = document.querySelector('#clockModal .dial-hand');
+  if(hand){
+    hand.style.width = (isHour ? 26 : 32) + '%';
+    hand.style.transform = 'rotate(' + (ang - 90) + 'deg)';
+  }
+  var nums = document.querySelectorAll('#clockModal .dial-num');
+  for(var i = 0; i < nums.length; i++){
+    var v = Number(nums[i].getAttribute('data-v'));
+    var on = isHour ? (v === p.h12) : (v === (Math.round(clockUI.minute / 5) * 5) % 60);
+    if(nums[i].classList) nums[i].classList[on ? 'add' : 'remove']('on');
+  }
 }
 function clockBindDial(){
   var dial = document.getElementById('clockDial');
@@ -2375,20 +2394,32 @@ function clockBindDial(){
     var cy = (ev.touches && ev.touches[0]) ? ev.touches[0].clientY : ev.clientY;
     return {dx: cx - (r.left + r.width / 2), dy: cy - (r.top + r.height / 2)};
   }
-  function move(ev){
+  var dragging = false, moved = false, sx = 0, sy = 0;
+  function down(ev){
     var p = point(ev);
+    dragging = true; moved = false; sx = p.dx; sy = p.dy;
+  }
+  function move(ev){
+    if(!dragging) return;
+    var p = point(ev);
+    if(!moved){
+      var dx = p.dx - sx, dy = p.dy - sy;
+      if((dx * dx + dy * dy) < 100) return;   /* 10px 넘게 움직여야 끌기로 본다 */
+      moved = true;
+    }
     if(clockUI.mode === 'hour') clockUI.hour = clockSetHourPart(clockUI.hour, clockPointToHour(p.dx, p.dy));
     else clockUI.minute = clockPointToMinute(p.dx, p.dy);
-    renderClock();
+    clockSyncLive();
   }
-  var dragging = false;
-  dial.addEventListener('touchstart', function(ev){ dragging = true; move(ev); if(ev.preventDefault) ev.preventDefault(); }, {passive:false});
-  dial.addEventListener('touchmove', function(ev){ if(dragging) move(ev); if(ev.preventDefault) ev.preventDefault(); }, {passive:false});
-  dial.addEventListener('touchend', function(){ dragging = false; });
-  dial.addEventListener('mousedown', function(ev){ dragging = true; move(ev); });
-  dial.addEventListener('mousemove', function(ev){ if(dragging) move(ev); });
-  dial.addEventListener('mouseup', function(){ dragging = false; });
-  dial.addEventListener('mouseleave', function(){ dragging = false; });
+  function up(){ dragging = false; moved = false; }
+  dial.addEventListener('touchstart', function(ev){ down(ev); }, {passive:true});
+  dial.addEventListener('touchmove', function(ev){ move(ev); if(moved && ev.preventDefault) ev.preventDefault(); }, {passive:false});
+  dial.addEventListener('touchend', up);
+  dial.addEventListener('touchcancel', up);
+  dial.addEventListener('mousedown', down);
+  dial.addEventListener('mousemove', move);
+  dial.addEventListener('mouseup', up);
+  dial.addEventListener('mouseleave', up);
 }
 function clockTap(kind, val){
   if(!clockUI.open) return;
