@@ -192,6 +192,10 @@ main{padding:6px 16px calc(104px + env(safe-area-inset-bottom));max-width:560px;
 .course-card .map-hint{margin:0;border:0;border-radius:0;padding:26px 16px;text-align:center}
 .course-map{position:relative;background:#0B1120;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
 .course-map .map-box{height:208px}
+.map-svg-box{background:
+  repeating-linear-gradient(0deg,rgba(36,48,73,.5) 0 1px,transparent 1px 36px),
+  repeating-linear-gradient(90deg,rgba(36,48,73,.5) 0 1px,transparent 1px 36px),
+  linear-gradient(180deg,#12203A,#0C1526)}
 .route-svg{display:block;width:100%;height:100%}
 .course-sum{display:grid;grid-template-columns:1fr 1px 1fr;align-items:stretch;background:var(--surface3)}
 .course-sum .div{background:var(--line-soft);margin:9px 0}
@@ -3204,7 +3208,7 @@ function mapBoxHtml(id, pts){
   var list = (pts || []).filter(function(p){ return p && isFinite(p.lat) && isFinite(p.lng); });
   if(!list.length) return '<div class="map-hint">GPS 기록이 아직 없습니다. START를 누르고 위치를 허용해 주세요.</div>';
   /* 키가 없으면 GPS 점만으로 그리는 지도(SVG)로 같은 빨간 경로를 보여 준다. */
-  if(!key) return '<div class="map-wrap"><div class="map-box" id="' + id + 'Svg">' + routeSvg(list, {uid:id}) + '</div></div>';
+  if(!key) return '<div class="map-wrap"><div class="map-box map-svg-box" id="' + id + 'Svg">' + routeSvg(list, {uid:id}) + '</div></div>';
   return '<div class="map-wrap"><div class="map-box" id="' + id + '"></div><div class="map-msg" id="' + id + 'Msg">지도를 불러오는 중…</div></div>';
 }
 function mountMap(id, pts){
@@ -3319,16 +3323,6 @@ function routeSvg(pts, opts){
   var lx = Math.min(W - 44, a[0] + 12), ly = Math.max(16, a[1] - 9);
   var uid = String(opts.uid || 'm').replace(/[^A-Za-z0-9_]/g, '');
   return '<svg class="route-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="운행 경로">'
-    + '<defs>'
-    +   '<linearGradient id="rsBg' + uid + '" x1="0" y1="0" x2="0" y2="1">'
-    +     '<stop offset="0" stop-color="#12203A"/><stop offset="1" stop-color="#0C1526"/>'
-    +   '</linearGradient>'
-    +   '<pattern id="rsGrid' + uid + '" width="36" height="36" patternUnits="userSpaceOnUse">'
-    +     '<path d="M36 0H0V36" fill="none" stroke="#243049" stroke-width="1" stroke-opacity="0.55"/>'
-    +   '</pattern>'
-    + '</defs>'
-    + '<rect width="' + W + '" height="' + H + '" fill="url(#rsBg' + uid + ')"/>'
-    + '<rect width="' + W + '" height="' + H + '" fill="url(#rsGrid' + uid + ')"/>'
     + '<path d="' + d + '" fill="none" stroke="#0B1120" stroke-opacity="0.65" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>'
     + '<path d="' + d + '" fill="none" stroke="#DC2626" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/>'
     + (list.length > 1 ? '<circle cx="' + lastQ[0].toFixed(1) + '" cy="' + lastQ[1].toFixed(1) + '" r="4.4" fill="#0B1120" stroke="#60A5FA" stroke-width="2.6"/>' : '')
