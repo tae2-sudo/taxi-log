@@ -434,7 +434,7 @@ body.helper-open{overflow:hidden}
 .cal-grid.thin .cell.pat{background:rgba(255,255,255,.02)}
 .cal-grid.thin .cell .ln{font-size:8.5px;line-height:1.28;font-variant-numeric:tabular-nums;letter-spacing:-.35px;white-space:nowrap}
 .cal-grid.thin .cell .ln.sales{color:var(--amber-2);font-weight:800}
-.cal-grid.thin .cell .ln.card{color:var(--sky);font-weight:700}
+.cal-grid.thin .cell .ln.kcard{color:var(--sky);font-weight:700}
 .cal-grid.thin .cell .ln.cash{color:#A9B6C9;font-weight:700}
 .cal-grid.thin .cell .ln.out{color:#8899AD;font-weight:600;font-size:8px;margin-top:1px}
 .cal-grid.thin .cell .t-hours{font-size:9.5px;font-weight:800;color:var(--emerald-2);line-height:1.25;letter-spacing:-.2px}
@@ -2743,7 +2743,7 @@ function calCellHtml(c, today, view){
     if(inc.sales > 0) html += '<div class="ln sales">' + fmtNum(inc.sales) + '</div>';
   } else {
     if(inc.sales > 0) html += '<div class="ln sales">' + fmtNum(inc.sales) + '</div>';
-    if(inc.card > 0) html += '<div class="ln card">' + fmtNum(inc.card) + '</div>';
+    if(inc.card > 0) html += '<div class="ln kcard">' + fmtNum(inc.card) + '</div>';
     if(cashAll > 0) html += '<div class="ln cash">' + fmtNum(cashAll) + '</div>';
   }
   if(outTotal > 0) html += '<div class="ln out">' + fmtNum(outTotal) + '</div>';
