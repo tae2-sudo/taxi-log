@@ -309,7 +309,7 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
     </div>
     <div class="field">
       <label for="fModel">모델</label>
-      <input id="fModel" type="text" autocomplete="off" spellcheck="false" placeholder="gemini-2.5-flash">
+      <input id="fModel" type="text" autocomplete="off" spellcheck="false" placeholder="gemini-flash-latest">
     </div>
     <div class="field">
       <label for="fKey">API 키</label>
@@ -685,7 +685,8 @@ var S = {
   wx: null,
   evts: lsGet("evts", []),
   ai: lsGet("ai", {provider:"gemini", key:"", model:""}),
-  aiDone: false
+  aiDone: false,
+  briefMode: "rule"
 };
 if(!S.base || typeof S.base.lat !== "number") S.base = {id:"oryu", name:"오류동", lat:37.4956, ln:126.8427, gps:false};
 if(!Array.isArray(S.evts)) S.evts = [];
@@ -954,7 +955,7 @@ function selectBase(id){
   for(var i=0;i<BASES.length;i++){
     if(BASES[i].id === id){
       S.base = {id:BASES[i].id, name:BASES[i].name, lat:BASES[i].lat, ln:BASES[i].ln, gps:false};
-      lsSet("base", S.base); renderAll();
+      S.briefMode = "rule"; lsSet("base", S.base); renderAll();
       return;
     }
   }
@@ -969,7 +970,7 @@ function locate(){
     var near = nearestBase(lat, ln);
     var nm = (near && near.d <= 3) ? near.b.name + " 근처" : "현재 위치";
     S.base = {id:"gps", name:nm, lat:lat, ln:ln, gps:true, at:Date.now()};
-    lsSet("base", S.base); renderAll();
+    S.briefMode = "rule"; lsSet("base", S.base); renderAll();
     toast("현재 위치로 잡았습니다" + (near && near.d <= 3 ? " (" + near.b.name + " 근처)" : ""));
   }, function(err){
     b.disabled = false; b.textContent = "내 위치 잡기";
@@ -1021,7 +1022,7 @@ function renderEvents(){
 function toggleEvent(id){
   var i = S.evts.indexOf(id);
   if(i >= 0) S.evts.splice(i,1); else S.evts.push(id);
-  lsSet("evts", S.evts); renderEvents(); renderAll();
+  S.briefMode = "rule"; lsSet("evts", S.evts); renderEvents(); renderAll();
 }
 
 /* ===================== 렌더: 리스트 ===================== */
@@ -1037,7 +1038,8 @@ function listSlotAndTitle(){
   else if(tab === "day"){ slotKey = "day"; title = "낮·병원·쇼핑 스팟"; }
   else if(tab === "weather"){
     slotKey = k;
-    title = "비·눈 올 때 노릴 자리";
+    var wetNow = S.wx && (S.wx.kind === "rain" || S.wx.kind === "snow");
+    title = wetNow ? "비·눈 지금 노릴 자리" : "비·눈 올 때 노릴 자리 (지금은 강수 없음)";
   }
   else { title = "지금 " + SLOTS[k].label + " 스팟"; }
   return {slotKey:slotKey, title:title};
@@ -1103,6 +1105,7 @@ function renderBrief(){
   html += "</ol>";
   $("briefBody").innerHTML = html;
   $("briefSrc").textContent = "자동(규칙)";
+  S.briefMode = "rule";
 }
 
 /* ===================== AI 브리핑 ===================== */
@@ -1126,21 +1129,54 @@ function aiPrompt(){
    + "- 후보 자리(시간대 수요 기준):\n" + topLine + "\n\n"
    + "참고 패턴: 하루 중 택시 승차 최다 시간대는 23시~01시(홍대·강남·가로수길·선릉·신림·건대 순). 심야(0~4시) 유동인구는 역삼1동·서교동·여의동·논현·신당·화양동 순. 금·토는 유흥 상권이 강하고, 일요일은 고속터미널·서울역·용산 같은 환승 거점이 강하다. 강북 3구(노원·강북·도봉)는 오전 8시 호출이 심야보다 많다. 새벽 4~6시엔 명동·을지로 호텔가와 서울역에서 공항 출발 콜이 나온다.";
 }
-function callGemini(key, model, prompt){
-  var m = model || "gemini-2.5-flash";
-  var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(m) + ":generateContent?key=" + encodeURIComponent(key);
+var GEM_FALLBACK = ["gemini-flash-latest", "gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
+function gemOnce(key, model, prompt){
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+  var ac = null;
+  try{ ac = new AbortController(); }catch(e){}
+  var timer = setTimeout(function(){ try{ ac.abort(); }catch(e){} }, 25000);
   return fetch(url, {
     method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({contents:[{parts:[{text:prompt}]}], generationConfig:{temperature:0.6, maxOutputTokens:600}})
+    body: JSON.stringify({contents:[{parts:[{text:prompt}]}], generationConfig:{temperature:0.6, maxOutputTokens:600}}),
+    signal: ac ? ac.signal : undefined
   }).then(function(r){
-    return r.json().then(function(j){
-      if(!r.ok){ throw new Error((j && j.error && j.error.message) ? j.error.message : ("HTTP " + r.status)); }
+    return r.text().then(function(txt){
+      var j = null; try{ j = JSON.parse(txt); }catch(e){}
+      clearTimeout(timer);
+      if(!r.ok){
+        var msg = (j && j.error && j.error.message) ? j.error.message : ("HTTP " + r.status);
+        var err = new Error(msg); err.status = r.status; err.model = model; throw err;
+      }
       var c = j && j.candidates && j.candidates[0];
       var t = c && c.content && c.content.parts && c.content.parts[0] && c.content.parts[0].text;
-      if(!t) throw new Error("응답이 비어 있습니다");
+      if(!t){ var e2 = new Error("응답이 비어 있습니다 (안전 필터 가능성)"); e2.status = 200; e2.model = model; throw e2; }
       return t;
     });
+  }).catch(function(err){
+    clearTimeout(timer);
+    if(err && err.name === "AbortError"){ var e3 = new Error("응답 시간 초과"); e3.status = 408; e3.model = model; throw e3; }
+    throw err;
   });
+}
+/* 모델이 만료·혼잡하면 다음 후보로 자동 재시도 */
+function callGemini(key, model, prompt){
+  var chain = [], list = [(model||"").trim()].concat(GEM_FALLBACK);
+  for(var i=0;i<list.length;i++){ var m = list[i]; if(m && chain.indexOf(m) < 0) chain.push(m); }
+  chain = chain.slice(0, 3);
+  var idx = 0, lastErr = null;
+  function next(){
+    if(idx >= chain.length) throw (lastErr || new Error("Gemini 응답 없음"));
+    var m = chain[idx++];
+    return gemOnce(key, m, prompt).catch(function(err){
+      lastErr = err;
+      var st = err && err.status, msg = String((err && err.message) || "");
+      var retryable = (st === 404 || st === 503 || st === 429 || st === 408)
+        || /no longer available|not found|high demand|overload|unavailable|quota|exceeded/i.test(msg);
+      if(retryable) return next();
+      throw err;
+    });
+  }
+  return Promise.resolve().then(next);
 }
 function callOpenRouter(key, model, prompt){
   var m = model || "google/gemini-2.5-flash";
@@ -1172,11 +1208,11 @@ function makeAiBrief(){
     for(var i=0;i<lines.length;i++) html += "<p>" + esc(lines[i]) + "</p>";
     $("briefBody").innerHTML = html || '<div class="hint">응답을 읽지 못했습니다.</div>';
     $("briefSrc").textContent = "AI · " + (cfg.provider === "openrouter" ? "OpenRouter" : "Gemini");
-    S.aiDone = true;
+    S.aiDone = true; S.briefMode = "ai";
     btn.disabled = false; btn.textContent = "AI 브리핑 다시";
   }).catch(function(e){
     $("briefBody").innerHTML = '<div class="err">AI 브리핑 실패: ' + esc(e && e.message ? e.message : "알 수 없는 오류")
-      + '<br>키·모델 이름을 확인해 주세요. 계속 안 되면 아래 “브리핑 새로 만들기”로 규칙 브리핑을 쓰면 됩니다.</div>';
+      + '<br>키·모델 이름을 확인해 주세요. 제미나이가 혼잡하면 잠시 뒤 다시 누르거나, AI 설정에서 OpenRouter로 바꾸면 됩니다. 급하면 “브리핑 새로 만들기”로 규칙 브리핑을 쓰세요.</div>';
     btn.disabled = false; btn.textContent = "AI 브리핑 다시 시도";
   });
 }
@@ -1188,7 +1224,7 @@ function openSettings(){
   $("fModel").value = S.ai.model || "";
   $("fKey").value = S.ai.key || "";
   updateKeyState();
-  $("fModel").placeholder = (S.ai.provider === "openrouter") ? "google/gemini-2.5-flash" : "gemini-2.5-flash";
+  $("fModel").placeholder = (S.ai.provider === "openrouter") ? "google/gemini-2.5-flash" : "gemini-flash-latest";
 }
 function closeSettings(){ $("modal").classList.remove("open"); }
 function updateKeyState(){
@@ -1230,6 +1266,7 @@ function renderAll(){
   renderTop3();
   renderList();
   renderEvents();
+  if(S.briefMode !== "ai") renderBrief();
 }
 
 /* ===================== 이벤트 연결 ===================== */
@@ -1267,7 +1304,7 @@ $("btnAiClear").addEventListener("click", clearAi);
 $("fKey").addEventListener("input", updateKeyState);
 $("fProvider").addEventListener("change", function(){
   var p = $("fProvider").value;
-  $("fModel").placeholder = p === "openrouter" ? "google/gemini-2.5-flash" : "gemini-2.5-flash";
+  $("fModel").placeholder = p === "openrouter" ? "google/gemini-2.5-flash" : "gemini-flash-latest";
 });
 $("modal").addEventListener("click", function(e){ if(e.target === $("modal")) closeSettings(); });
 $("btnBrief").addEventListener("click", function(){
@@ -1284,7 +1321,7 @@ if(btnSort){
 }
 
 /* ===================== 시작 ===================== */
-renderClock(); renderBase(); renderEvents(); renderWx(); renderAll(); renderBrief();
+renderClock(); renderBase(); renderEvents(); renderWx(); renderAll();
 loadWx();
 var lastSlot = slotOf(new Date());
 setInterval(function(){
