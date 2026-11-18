@@ -127,6 +127,17 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
 .navbtn.naver{background:#0C2A1E;border-color:#1c4d38;color:#A7F3D0}
 .navbtn.google{background:#1B2436;border-color:#2b3a54;color:#CBD5E1}
 
+/* ===== rank mode toggle ===== */
+.modebar{display:flex;gap:6px;margin:10px 0 2px}
+.mtab{flex:1;border:1px solid var(--line);background:var(--surface3);color:var(--muted);font-size:12.5px;font-weight:800;padding:10px 8px;border-radius:12px;cursor:pointer;line-height:1.25}
+.mtab[aria-pressed="true"]{background:var(--emerald);border-color:var(--emerald);color:#03251A;box-shadow:0 4px 14px rgba(16,185,129,.25)}
+.mtab small{display:block;font-size:10px;font-weight:700;opacity:.75;margin-top:2px}
+.distpill{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:800;color:#BFDBFE;background:#0C1A2E;border:1px solid #1d3557;padding:5px 9px;border-radius:9px;margin-top:8px;font-variant-numeric:tabular-nums}
+.distpill b{font-size:14px;letter-spacing:-.02em;color:#DBEAFE}
+.distpill .sep{color:#3E5C82;font-weight:700}
+.distpill.far{color:#FDE68A;background:#241a07;border-color:#4a3512}
+.distpill.far b{color:#FDE68A}
+
 /* ===== event check ===== */
 .ev-box{margin-top:12px;padding:12px 14px}
 .ev-box summary{cursor:pointer;font-size:13px;font-weight:800;list-style:none;display:flex;align-items:center;gap:7px}
@@ -136,6 +147,21 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
 .ev-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
 .ev{font-size:12px;font-weight:700;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface3);color:var(--muted);cursor:pointer}
 .ev[aria-pressed="true"]{border-color:var(--amber);color:#FDE68A;background:#241a07}
+.ev-auto{display:flex;flex-direction:column;gap:7px;margin-top:9px}
+.eva{display:flex;align-items:flex-start;gap:9px;padding:10px 11px;border-radius:12px;border:1px solid var(--line);background:#101B2E;cursor:pointer;text-align:left;width:100%}
+.eva[aria-pressed="true"]{border-color:#4a3512;background:#1d1707}
+.eva .box{width:18px;height:18px;border-radius:6px;border:1.5px solid #475569;flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0B1120;font-weight:900}
+.eva[aria-pressed="true"] .box{background:var(--amber);border-color:var(--amber)}
+.eva .txt{flex:1;min-width:0}
+.eva .t1{font-size:13px;font-weight:800;line-height:1.35;letter-spacing:-.01em}
+.eva .t2{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px;line-height:1.4}
+.eva .t2 b{color:var(--amber-2);font-weight:800}
+.eva.off .t1{color:var(--dim);text-decoration:line-through}
+.ev-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--dim);font-weight:600}
+.ev-meta .dot{width:6px;height:6px;border-radius:50%;background:var(--emerald)}
+.ev-meta .dot.bad{background:#F87171}
+.ev-meta .ref{margin-left:auto;background:var(--surface3);border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer}
+.ev-sub{font-size:11px;font-weight:800;color:var(--dim);margin:12px 0 0;letter-spacing:.02em}
 
 /* ===== list ===== */
 .list{margin-top:10px;display:flex;flex-direction:column;gap:8px}
@@ -249,15 +275,22 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
       <h2>🎯 지금 내 위치 기준 추천 TOP 3</h2>
       <span class="when" id="top3When"></span>
     </div>
+    <div class="modebar" id="modeBar" role="group" aria-label="추천 기준">
+      <button class="mtab" data-mode="near" aria-pressed="true">📍 가까운 순<small>이동거리 페널티 강화 (기본)</small></button>
+      <button class="mtab" data-mode="yield" aria-pressed="false">💰 전체 고수익<small>서울 전체 수요 우선</small></button>
+    </div>
     <div class="hint" id="top3Basis">시간대 수요 · 날씨 가중치 · 이동 거리로 계산 (실시간 콜 데이터 아님)</div>
     <div id="top3List"></div>
   </section>
 
   <!-- 행사 체크 -->
   <details class="card ev-box" id="evBox">
-    <summary>🚩 오늘 행사 체크 <span class="cnt" id="evCnt">0</span></summary>
-    <div class="hint">오늘 경기·콘서트·집회가 있는 곳을 눌러두면 그 자리 점수에 가산됩니다. (기기 저장)</div>
-    <div class="ev-list" id="evList" role="group" aria-label="오늘 행사"></div>
+    <summary>🚩 오늘·내일 행사 <span class="cnt" id="evCnt">0</span></summary>
+    <div class="ev-meta" id="evMeta"></div>
+    <div class="hint" id="evHint">공연장·경기장 일정을 자동으로 받아 옵니다. 체크된 행사는 그 자리 점수에 가산됩니다. (수동 체크는 아래에서 보조로)</div>
+    <div class="ev-auto" id="evAuto" role="group" aria-label="자동 연동 행사"></div>
+    <div class="ev-sub">직접 체크 (자동 연동에 없는 집회·임시 행사)</div>
+    <div class="ev-list" id="evList" role="group" aria-label="직접 체크"></div>
   </details>
 
   <div class="section-h">
