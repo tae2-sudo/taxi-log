@@ -345,6 +345,44 @@ table.data td.blue{color:var(--sky)}
 .modal img{max-width:100%;max-height:86vh;border-radius:12px}
 .modal .x{position:absolute;top:calc(14px + env(safe-area-inset-top));right:16px;background:rgba(255,255,255,.14);border:0;color:#fff;width:40px;height:40px;border-radius:50%;font-size:19px;font-weight:700;cursor:pointer}
 
+/* ---------- 운행 도우미: 홈 퀵 메뉴 ---------- */
+.helper-wrap{margin:2px 0 4px}
+.helper-grid{display:grid;gap:10px}
+.helper-btn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;font-family:inherit;
+  background:linear-gradient(135deg,#1A2841 0%,#131C31 68%);border:1px solid var(--line);border-radius:var(--r);
+  padding:13px 14px;min-height:68px;color:var(--text);box-shadow:var(--shadow)}
+.helper-btn:active{transform:translateY(1px)}
+.helper-btn:focus-visible{outline:2px solid var(--emerald-2);outline-offset:2px}
+.helper-btn .hb-ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:21px;flex:0 0 auto;line-height:1;
+  background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.26)}
+.helper-btn.spots .hb-ico{background:rgba(245,158,11,.13);border-color:rgba(245,158,11,.3)}
+.helper-btn .hb-txt{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.helper-btn .hb-txt b{font-size:14.5px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.helper-btn .hb-txt i{font-style:normal;font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.helper-btn .hb-go{font-size:21px;font-weight:700;color:var(--dim);flex:0 0 auto;line-height:1}
+
+/* ---------- 운행 도우미: 전체화면 오버레이 ---------- */
+.helper-view{position:fixed;inset:0;z-index:80;display:none;flex-direction:column;background:var(--bg-deep)}
+.helper-view.show{display:flex}
+body.helper-open{overflow:hidden}
+.helper-bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;
+  padding:calc(6px + env(safe-area-inset-top)) 10px 6px;background:rgba(9,14,26,.97);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.helper-bar .hb-back{display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 12px;border-radius:11px;cursor:pointer;
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.26);color:var(--emerald-2);
+  font-size:12.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;flex:0 0 auto}
+.helper-bar .hb-back:active{transform:translateY(1px)}
+.helper-bar .hb-title{flex:1;min-width:0;text-align:center;font-size:12px;font-weight:700;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.helper-bar .hb-ext{width:36px;height:36px;border-radius:11px;flex:0 0 auto;cursor:pointer;display:grid;place-items:center;
+  background:var(--surface2);border:1px solid var(--line);color:var(--muted);font-size:15px;line-height:1}
+.helper-body{position:relative;flex:1;min-height:0;background:var(--bg-deep)}
+.helper-body iframe{display:block;width:100%;height:100%;border:0;background:var(--bg-deep)}
+.helper-load{position:absolute;inset:0;display:grid;place-items:center;background:var(--bg-deep);
+  color:var(--muted);font-size:12.5px;font-weight:600;pointer-events:none}
+.helper-load.hide{display:none}
+@media (max-width:400px){.helper-bar .hb-title{display:none}}
+
 @media (min-width:560px){
   main{max-width:600px;padding-left:20px;padding-right:20px}
   .app-header{padding-left:calc((100vw - 600px)/2 + 20px);padding-right:calc((100vw - 600px)/2 + 20px)}
@@ -444,6 +482,18 @@ table.data td.blue{color:var(--sky)}
 
 <div class="toast" id="toast" role="status"></div>
 <div class="modal" id="modal" role="dialog" aria-label="사진 보기"><button class="x" data-act="closePhoto" aria-label="닫기">✕</button><img id="modalImg" alt="첨부 사진"></div>
+
+<div class="helper-view" id="helperView" role="dialog" aria-modal="true" aria-hidden="true" aria-label="야간·운행 도우미">
+  <div class="helper-bar">
+    <button class="hb-back" data-act="closeHelper">← 운행관리로 돌아가기</button>
+    <span class="hb-title" id="helperTitle">🌙 심야 화장실·충전소</span>
+    <button class="hb-ext" data-act="helperExternal" aria-label="새 탭에서 열기" title="새 탭에서 열기">⧉</button>
+  </div>
+  <div class="helper-body">
+    <iframe id="helperFrame" title="야간·운행 도우미" src="about:blank" referrerpolicy="no-referrer"></iframe>
+    <div class="helper-load" id="helperLoad">불러오는 중…</div>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -1639,6 +1689,23 @@ views.home = function(){
           : '<button class="btn btn-block" disabled>구글 지도에서 오늘 코스 열기</button>')
   +       '<div class="tiny muted" style="margin-top:8px;line-height:1.5;text-align:center" id="gpsLine"></div>'
   +     '</div>'
+  +   '</div>'
+  + '</section>'
+
+  /* 4) 맨 아래: 운행 도우미 (앱 안에서 바로 열리는 작은 화면 두 개) */
+  + '<section class="helper-wrap" aria-label="운행 도우미">'
+  +   '<div class="section-h"><h2>운행 도우미</h2><span class="sec-meta">앱 안에서 바로</span></div>'
+  +   '<div class="helper-grid">'
+  +     '<button class="helper-btn night" data-act="openHelper" data-tool="night">'
+  +       '<span class="hb-ico" aria-hidden="true">🌙</span>'
+  +       '<span class="hb-txt"><b>심야 화장실·충전소</b><i>24시간 상시 2,039곳 · 길안내</i></span>'
+  +       '<span class="hb-go" aria-hidden="true">›</span>'
+  +     '</button>'
+  +     '<button class="helper-btn spots" data-act="openHelper" data-tool="spots">'
+  +       '<span class="hb-ico" aria-hidden="true">💰</span>'
+  +       '<span class="hb-txt"><b>돈 되는 자리 TOP 3</b><i>내 위치 콜 추천 · 날씨 반영</i></span>'
+  +       '<span class="hb-go" aria-hidden="true">›</span>'
+  +     '</button>'
   +   '</div>'
   + '</section>';
 };
@@ -3399,6 +3466,7 @@ function handleAct(act, el){
     case 'opinetLoad': loadOpinetPrices(); break;
     case 'saveOpinet':
       saveNow();
+      syncHelperKeys();
       setHtml('opinetMsg', '<div class="ok-box">오피넷 키와 중계 주소를 이 기기에 저장했습니다. 자료입력 → 충전에서 <b>실시간 LPG 가격 불러오기</b>를 눌러 보세요.</div>');
       toast('오피넷 설정을 저장했습니다');
       break;
@@ -3408,6 +3476,7 @@ function handleAct(act, el){
     case 'aiPhotoClear': aiState.photo = null; setText('aiPhotoName', '선택한 사진 없음'); break;
     case 'saveGemini':
       saveNow();
+      syncHelperKeys();
       aiSetMsg('geminiMsg', '<div class="ok-box">제미나이 키와 모델을 저장했습니다. 이 기기와 구글 드라이브 동기화에 함께 저장됩니다.</div>');
       toast('제미나이 설정을 저장했습니다');
       break;
@@ -3415,6 +3484,9 @@ function handleAct(act, el){
     case 'signIn': signIn(); break;
     case 'signOut': signOut(); break;
     case 'syncNow': syncNow({interactive:true}); break;
+    case 'openHelper': openHelper(el.getAttribute('data-tool')); break;
+    case 'closeHelper': closeHelper(); break;
+    case 'helperExternal': openHelperExternal(); break;
     default: break;
   }
 }
@@ -3461,6 +3533,117 @@ function closePhotoIfDocumentClick(ev, el){
   if(modal && modal.classList.contains('show') && !el.closest('#modal')) closePhoto();
 }
 
+/* ---------- 운행 도우미: 인앱 오버레이 ---------- */
+var APP_TITLE = 'taxi-log · 개인택시 운행관리';
+var HELPERS = {
+  night: {file:'./night.html', label:'🌙 심야 화장실·충전소', title:'심야 화장실·충전소 · taxi-log'},
+  spots: {file:'./spots.html', label:'💰 돈 되는 자리 TOP 3', title:'서울 돈 되는 자리 · taxi-log'}
+};
+var helperTool = '', helperPushed = false;
+
+/* 도우미 앱이 쓰는 저장소 키 — 같은 주소(도메인)에서 열리면 localStorage를 함께 쓴다.
+   night.html → night.settings.v1 {opinetKey, opinetProxy}
+   spots.html → sjd_ai {provider, key, model} */
+var HELPER_NIGHT_KEY = 'night.settings.v1';
+var HELPER_SPOTS_KEY = 'sjd_ai';
+var HELPER_NIGHT_PROXY = 'https://opinet-proxy.love1004kl.workers.dev';
+
+function readKeyJson(key){
+  try{
+    var raw = localStorage.getItem(key);
+    if(!raw) return null;
+    var v = JSON.parse(raw);
+    return (v && typeof v === 'object') ? v : null;
+  }catch(e){ return null; }
+}
+function writeKeyJson(key, obj){
+  try{ localStorage.setItem(key, JSON.stringify(obj)); }catch(e){}
+}
+/* 설정에 넣어 둔 오피넷 키·중계 주소, 제미나이 키·모델을 도우미 앱에도 맞춰 둔다.
+   도우미 앱에서 직접 고친 값(다른 AI 제공자, 다른 모델, 즐겨찾기)은 건드리지 않는다. */
+function syncHelperKeys(){
+  if(!state || !state.settings) return;
+  var s = state.settings;
+  var opinetKey = String(s.opinetKey || '').trim();
+  var proxy = String(s.opinetProxyUrl || '').trim();
+  var night = readKeyJson(HELPER_NIGHT_KEY) || {};
+  var nightChanged = false;
+  if(opinetKey && night.opinetKey !== opinetKey){ night.opinetKey = opinetKey; nightChanged = true; }
+  if(proxy && night.opinetProxy !== proxy){ night.opinetProxy = proxy; nightChanged = true; }
+  if(!night.opinetProxy && HELPER_NIGHT_PROXY){ night.opinetProxy = HELPER_NIGHT_PROXY; nightChanged = true; }
+  if(nightChanged) writeKeyJson(HELPER_NIGHT_KEY, night);
+
+  var geminiKey = String(s.geminiKey || '').trim();
+  var model = String(s.geminiModel || '').trim();
+  if(!geminiKey) return;
+  var ai = readKeyJson(HELPER_SPOTS_KEY) || {};
+  if(ai.provider && ai.provider !== 'gemini') return;
+  var aiChanged = false;
+  if(ai.key !== geminiKey){
+    ai.key = geminiKey;
+    ai.provider = 'gemini';
+    if(model) ai.model = model;
+    aiChanged = true;
+  } else if(!ai.model && model){
+    ai.model = model;
+    aiChanged = true;
+  }
+  if(aiChanged) writeKeyJson(HELPER_SPOTS_KEY, ai);
+}
+function helperEl(id){ return document.getElementById(id); }
+function openHelper(tool){
+  var cfg = HELPERS[tool];
+  if(!cfg) return;
+  helperTool = tool;
+  syncHelperKeys();
+  var box = helperEl('helperView'), frame = helperEl('helperFrame');
+  var title = helperEl('helperTitle'), load = helperEl('helperLoad');
+  if(title) title.textContent = cfg.label;
+  if(load) load.classList.remove('hide');
+  if(frame){
+    if(frame.getAttribute('data-tool') !== tool){
+      frame.setAttribute('data-tool', tool);
+      frame.setAttribute('title', cfg.label);
+      frame.setAttribute('src', cfg.file);
+    }
+  }
+  if(box){ box.classList.add('show'); box.setAttribute('aria-hidden', 'false'); }
+  document.body.classList.add('helper-open');
+  document.title = cfg.title;
+  try{
+    if(typeof history !== 'undefined' && history && history.pushState){
+      history.pushState({helper: tool}, '');
+      helperPushed = true;
+    }
+  }catch(e){}
+}
+function closeHelper(keepHistory){
+  var box = helperEl('helperView');
+  if(box){ box.classList.remove('show'); box.setAttribute('aria-hidden', 'true'); }
+  if(document.body && document.body.classList) document.body.classList.remove('helper-open');
+  document.title = APP_TITLE;
+  helperTool = '';
+  if(!keepHistory && helperPushed){
+    helperPushed = false;
+    try{ if(typeof history !== 'undefined' && history && history.back) history.back(); }catch(e){}
+  }
+}
+function openHelperExternal(){
+  var cfg = HELPERS[helperTool || 'night'];
+  if(!cfg) return;
+  try{
+    if(typeof window !== 'undefined' && window && window.open){
+      window.open(cfg.file, '_blank');
+      return;
+    }
+  }catch(e){}
+  toast('새 탭을 열지 못했습니다. 브라우저 주소창에 ' + cfg.file + ' 를 직접 입력해 열어 주세요.');
+}
+function helperFrameLoaded(){
+  var load = helperEl('helperLoad');
+  if(load) load.classList.add('hide');
+}
+
 /* ---------- 시계 ---------- */
 function tick(){
   if(!state || !state.session) return;
@@ -3485,6 +3668,7 @@ function boot(){
   checkStorage();
   loadAll();
   initUi();
+  syncHelperKeys();
   ui.date = todayKey();
   if(state.session) startGeo();
   render();
@@ -3507,6 +3691,10 @@ function boot(){
   });
   window.addEventListener('online', function(){ if(syncMeta.email) scheduleAutoSync(); });
   window.addEventListener('offline', function(){ /* 로컬 저장은 계속 */ });
+  window.addEventListener('popstate', function(){ helperPushed = false; if(helperTool) closeHelper(true); });
+  document.addEventListener('keydown', function(ev){ if(ev && ev.key === 'Escape' && helperTool) closeHelper(); });
+  var hframe = helperEl('helperFrame');
+  if(hframe && hframe.addEventListener) hframe.addEventListener('load', helperFrameLoaded);
 }
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
 else boot();
