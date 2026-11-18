@@ -1,0 +1,128 @@
+{
+ "generated_at": "2026-11-19T08:48:56+09:00",
+ "window": {
+  "from": "2026-11-19",
+  "to": "2026-11-21"
+ },
+ "sources": [
+  {
+   "name": "Spotts",
+   "ok": true,
+   "venues": 12,
+   "note": ""
+  },
+  {
+   "name": "네이버 스포츠",
+   "ok": false,
+   "series": 0,
+   "note": "일정 API 응답 없음"
+  }
+ ],
+ "counts": {
+  "events": 5,
+  "performances": 5,
+  "games": 0
+ },
+ "events": [
+  {
+   "id": "spotts:concert-2026-yerin-baek-x-yoon-seok-cheol-seoul",
+   "source": "Spotts",
+   "venue_key": "sejong-center",
+   "venue": "세종문화회관 대극장",
+   "spot": "gwanghwamun",
+   "title": "SJF at the Theater 2026 - 백예린X윤석철",
+   "category": "콘서트",
+   "start_date": "2026-11-17",
+   "end_date": "2026-11-21",
+   "hint": "서울재즈페스티벌의 공연장 시리즈 'SJF at the Theater 2026'에서 백예린과 재즈 피아니스트 윤석철이 한 무대에 서요.",
+   "url": "https://spotts.kr/f/concert-2026-yerin-baek-x-yoon-seok-cheol-seoul",
+   "start_time": "20:00",
+   "time_exact": true,
+   "geo": [
+    37.57286,
+    126.97607
+   ],
+   "end_est": "22:30"
+  },
+  {
+   "id": "spotts:concert-2026-christopher-seoul",
+   "source": "Spotts",
+   "venue_key": "sejong-center",
+   "venue": "세종문화회관 대극장",
+   "spot": "gwanghwamun",
+   "title": "SJF at the Theater 2026 - Christopher",
+   "category": "콘서트",
+   "start_date": "2026-11-19",
+   "end_date": "2026-11-20",
+   "hint": "서울 종로구에서 열리는 콘서트예요.",
+   "url": "https://spotts.kr/f/concert-2026-christopher-seoul",
+   "start_time": "20:00",
+   "time_exact": true,
+   "end_est": "21:30",
+   "geo": [
+    37.57286,
+    126.97607
+   ]
+  },
+  {
+   "id": "spotts:concert-2026-close-your-eyes-seoul",
+   "source": "Spotts",
+   "venue_key": "coex-artium",
+   "venue": "코엑스아티움 우리은행홀",
+   "spot": "samseong",
+   "title": "2026 CLOSE YOUR EYES FANCON",
+   "category": "콘서트",
+   "start_date": "2026-11-20",
+   "end_date": "2026-11-22",
+   "hint": "CLOSE YOUR EYES가 코엑스아티움 우리은행홀에서 팬콘서트를 열어요.",
+   "url": "https://spotts.kr/f/concert-2026-close-your-eyes-seoul",
+   "start_time": "19:30",
+   "time_exact": true,
+   "geo": [
+    37.50981,
+    127.06165
+   ],
+   "end_est": "22:00"
+  },
+  {
+   "id": "spotts:concert-2026-roy-kim-seoul",
+   "source": "Spotts",
+   "venue_key": "kspo-dome",
+   "venue": "올림픽공원 KSPO DOME",
+   "spot": "olympicpark",
+   "title": "2026-27 ROY KIM LIVE TOUR R:O:Y IN SEOUL",
+   "category": "콘서트",
+   "start_date": "2026-11-20",
+   "end_date": "2026-11-22",
+   "hint": "로이킴(ROY KIM)의 2026-27 라이브 투어 'R:O:Y' 서울 공연이자, 데뷔 후 처음 KSPO DOME에 서는 단독 콘서트예요.",
+   "url": "https://spotts.kr/f/concert-2026-roy-kim-seoul",
+   "start_time": "20:00",
+   "time_exact": true,
+   "geo": [
+    37.51923,
+    127.12747
+   ],
+   "end_est": "22:30"
+  },
+  {
+   "id": "spotts:concert-2026-evnne-seoul",
+   "source": "Spotts",
+   "venue_key": "yes24-live-hall",
+   "venue": "YES24 LIVE HALL",
+   "spot": "kondae",
+   "title": "EVNNE FAN-CONCERT [ONE TAKE] IN SEOUL",
+   "category": "콘서트",
+   "start_date": "2026-11-21",
+   "end_date": "2026-11-22",
+   "hint": "EVNNE가 이틀 동안 YES24 LIVE HALL에서 여는 노래 중심 팬콘서트예요. 공연장에 주차장이 없어 대중교통으로 가야 해요.",
+   "url": "https://spotts.kr/f/concert-2026-evnne-seoul",
+   "start_time": "18:00",
+   "time_exact": true,
+   "geo": [
+    37.54573,
+    127.10797
+   ],
+   "end_est": "20:30"
+  }
+ ]
+}

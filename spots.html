@@ -286,7 +286,9 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
       <li><b>수요 점수</b> — 서울시 택시 운행(OD) 분석에서 확인되는 시간대·요일별 승차 패턴과 심야 유동인구 분포를 스팟별 0~100으로 정리했습니다. 하루 중 승차 최다 시간대는 23시~01시이고, 심야(0~4시) 유동인구는 역삼1동·서교동(홍대)·여의동·논현1동·신당동·화양동(건대) 순입니다.</li>
       <li><b>요일 가중</b> — 금·토는 유흥 상권(건대·홍대·이태원·사당)이 강해지고 오피스 혼재 상권(강남·선릉·서울역)은 상대적으로 줄며, 일요일은 고속터미널·서울역·용산 같은 환승 거점이 늘어납니다. 금요일 퇴근 이후 호출은 월요일 같은 시간대의 2.5배 수준으로 보고됩니다.</li>
       <li><b>날씨 가중</b> — 비·눈·한파·강풍이면 역세권·오피스·쇼핑몰·병원 앞 대기 수요를 올려 잡습니다. 실시간 값은 Open-Meteo(서울 중심 좌표) 현재값과 앞 2~3시간 강수확률입니다.</li>
-      <li><b>거리 페널티</b> — 직선거리와 시간대별 평균 속도로 이동 부담을 빼고, 공항·장거리 콜은 먼 거리를 감수하는 편이 낫기 때문에 페널티를 줄였습니다.</li>
+      <li><b>거리 페널티 (📍 가까운 순 기본)</b> — 집(기준 위치)에서 그 자리까지의 직선거리를 1.9×km<sup>1.5</sup>로 빼고, 8km를 넘으면 공차 손실을 한 번 더 깎습니다. 그래서 오류동 기준 5~7km 안쪽(구로디지털·가산·신도림·개봉·영등포 등)이 먼저 올라옵니다. 공항·장거리형은 먼 거리를 감수하는 편이 낫기 때문에 페널티를 줄였습니다.</li>
+      <li><b>전체 고수익 모드 (💰)</b> — 같은 수요·날씨에 거리 페널티를 완만하게(3.2×km<sup>0.8</sup>) 적용해 서울 전체의 수익 잠재를 그대로 비교합니다. 카드의 <b>km·약 N분</b>이 공차 이동 부담이니 출발 전에 한 번 보세요.</li>
+      <li><b>행사 자동 연동</b> — 매일 06시·18시에 주요 공연장(올림픽공원 KSPO DOME·올림픽홀, 고척스카이돔, 잠실학생체육관, 장충체육관, 코엑스아티움, 세종문화회관, 예술의전당, 블루스퀘어, 예스24라이브홀)의 일정과 서울 구장 경기(KBO·K리그·KBL·V리그)를 모아 <code>events.json</code>으로 저장합니다. 행사 종료 예상 시각은 공연 시간이 공개되지 않은 경우 종목별 평균으로 추정한 값입니다.</li>
       <li><b>한계</b> — 이 화면은 실시간 호출량이 아니라 <b>패턴 기반 추정</b>입니다. KTX·공항 도착편, 갑작스러운 집회·사고, 비 예보가 빗나가는 경우는 반영되지 않습니다. 경쟁 차량이 몰리는 자리(역 출구 정면)는 한 블록 옆이 오히려 빠를 수 있습니다.</li>
       <li><b>참고</b> — <a href="https://news.seoul.go.kr/traffic/archives/507582" target="_blank" rel="noopener">서울시 올빼미버스 분석(심야 유동인구)</a> · <a href="https://report.kakaomobility.com/taxi-problem-with-big-data-demand" target="_blank" rel="noopener">카카오모빌리티 택시 수요 리포트</a> · <a href="https://www.airport.kr/ap_ko/987/subview.do" target="_blank" rel="noopener">인천공항 택시 이용안내</a></li>
     </ul>
@@ -681,15 +683,24 @@ var S = {
   slot: "am",
   tab: "now",
   sortBy: "score",
+  rankMode: lsGet("rankMode", "near"),
   expanded: false,
   wx: null,
   evts: lsGet("evts", []),
+  auto: null,
+  autoMeta: null,
+  autoOff: lsGet("autoOff", []),
   ai: lsGet("ai", {provider:"gemini", key:"", model:""}),
   aiDone: false,
   briefMode: "rule"
 };
 if(!S.base || typeof S.base.lat !== "number") S.base = {id:"oryu", name:"오류동", lat:37.4956, ln:126.8427, gps:false};
 if(!Array.isArray(S.evts)) S.evts = [];
+if(!Array.isArray(S.autoOff)) S.autoOff = [];
+if(S.rankMode !== "yield") S.rankMode = "near";
+
+/* 자동 연동 행사 데이터 — 6시·18시에 갱신된 events.json */
+var EVENTS_URL = "events.json";
 
 /* ===================== 유틸 ===================== */
 function $(id){ return document.getElementById(id); }
@@ -736,14 +747,32 @@ function nearestBase(lat, ln){
   return best;
 }
 
-/* ===================== 점수 계산 ===================== */
+/* ===================== 점수 계산 =====================
+   가까운 순(기본) = 이동거리(공차) 페널티를 1.9×km^1.5 로 세게 주고, 8km 넘으면 추가 가중.
+   전체 고수익     = 완만한 페널티로 서울 전체 수요를 그대로 비교(이동 부담은 별도 표시).
+   ================================================================= */
+function dtStr(d){ return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+function autoToday(){ return autoInWindow(0); }
+function autoTomorrow(){ return autoInWindow(1); }
+function autoInWindow(plus){
+  if(!S.auto || !S.auto.events) return [];
+  var d = new Date(); d.setDate(d.getDate() + plus);
+  var t = dtStr(d);
+  return S.auto.events.filter(function(e){ return e.start_date <= t && t <= e.end_date; });
+}
+function autoForSpot(sp, list){
+  for(var i=0;i<list.length;i++){ if(list[i].spot === sp.id) return list[i]; }
+  return null;
+}
+function autoIsOff(e){ return S.autoOff.indexOf(e.id) >= 0; }
 function spotHasEvent(sp){
   for(var i=0;i<EVENTS.length;i++){
     var ev = EVENTS[i];
     if(S.evts.indexOf(ev.id) < 0) continue;
     if(ev.spots.indexOf(sp.id) >= 0) return true;
   }
-  return false;
+  var a = autoForSpot(sp, autoToday());
+  return !!(a && !autoIsOff(a));
 }
 function weekdayFactor(sp, slotKey, dow){
   var f = 1, note = "";
@@ -775,25 +804,34 @@ function weatherBoost(sp){
   if(w.temp >= 33){ add += 4; note = note || "폭염 → 냉방 대기 수요 ↑"; }
   return {add: Math.min(30, add), note: note};
 }
-function scoreOf(sp, slotKey){
+/* 이동 부담(공차) 페널티 — 공항·장거리형은 먼 거리를 감수하는 편이 낫다 */
+function movePenalty(sp, km, mode){
+  var vf = sp.v === "airport" ? 0.55 : (sp.v === "long" ? 0.8 : 1);
+  if(mode === "yield"){
+    return Math.min(42, 3.2 * Math.pow(Math.max(km, 0.3), 0.8)) * (sp.v === "airport" ? 0.55 : (sp.v === "long" ? 0.75 : 1));
+  }
+  var pen = 1.9 * Math.pow(Math.max(km, 0.3), 1.5) * vf;
+  if(km > 8) pen += (km - 8) * 3.0 * vf;
+  return pen;
+}
+function scoreOf(sp, slotKey, mode){
   var now = new Date(), dow = now.getDay();
+  mode = mode || S.rankMode;
   var dem = sp.d[slotKey]; if(typeof dem !== "number") dem = 25;
   var wf = weekdayFactor(sp, slotKey, dow);
   dem = Math.min(100, dem * wf.f);
   var wb = weatherBoost(sp);
   var km = distKm(sp);
-  var pen = Math.min(42, 3.2 * Math.pow(Math.max(km, 0.3), 0.8));
-  var vf = sp.v === "airport" ? 0.55 : (sp.v === "long" ? 0.75 : (sp.v === "short" ? 1.25 : 1));
-  pen = pen * vf;
+  var pen = movePenalty(sp, km, mode);
   var ev = spotHasEvent(sp);
   var score = Math.round(dem*0.82 + 22 + wb.add - pen + (ev ? 16 : 0));
   score = Math.max(4, Math.min(99, score));
   var eta = Math.round(km / SLOTS[slotKey].speed * 60 + 2);
   return {sp:sp, score:score, dem:Math.round(dem), wb:wb, ev:ev, km:km, eta:eta, pen:pen, wf:wf};
 }
-function computeAll(slotKey){
+function computeAll(slotKey, mode){
   var out = [];
-  for(var i=0;i<SPOTS.length;i++) out.push(scoreOf(SPOTS[i], slotKey));
+  for(var i=0;i<SPOTS.length;i++) out.push(scoreOf(SPOTS[i], slotKey, mode));
   out.sort(function(a,b){ return b.score - a.score; });
   return out;
 }
@@ -982,12 +1020,18 @@ function locate(){
 }
 
 /* ===================== 렌더: TOP 3 ===================== */
+function shortTitle(t){ t = String(t || ""); return t.length > 16 ? t.slice(0,15) + "…" : t; }
+function md(s){ if(!s) return ""; return s.slice(5,7).replace(/^0/,"") + "/" + s.slice(8).replace(/^0/,""); }
+function hhmm(d){ return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
 function renderTop3(){
   var k = slotOf(new Date());
-  var all = computeAll(k).slice(0,3);
+  var mode = S.rankMode;
+  var all = computeAll(k, mode).slice(0,3);
   var html = "";
   for(var i=0;i<all.length;i++){
     var r = all[i], sp = r.sp, t = tierOf(r.score);
+    var auto = autoForSpot(sp, autoToday());
+    var far = r.km > 8 && sp.v !== "airport";   /* 공항은 먼 거리를 감수하는 자리라 표시를 달리한다 */
     html += '<article class="t3 r' + (i+1) + '">'
       + '<div class="t3-head">'
       +   '<div class="rk">' + (i+1) + '</div>'
@@ -995,36 +1039,118 @@ function renderTop3(){
       +     '<div class="pt">' + esc(sp.pt) + '</div></div>'
       +   '<div class="score s-' + t.c + '"><b>' + r.score + '</b><small>' + t.t + '</small></div>'
       + '</div>'
+      + '<div class="distpill' + (far ? ' far' : '') + '">🚗 <b>' + fmtKm(r.km) + 'km</b><span class="sep">·</span> 약 ' + r.eta + '분'
+      +   (far ? ' <span class="sep">·</span> 공차 이동' : '') + '</div>'
       + '<div class="bar s-' + t.c + '"><i style="width:' + r.score + '%"></i></div>'
       + '<div class="reason">' + reasonText(r, k) + '</div>'
       + '<div class="badge-row">'
       +   '<span class="badge">' + esc(sp.tg) + '</span>'
       +   '<span class="badge sky">' + (sp.v === "airport" ? "공항·장거리 유리" : (sp.v === "short" ? "짧은 회전" : "중거리")) + '</span>'
-      +   (r.ev ? '<span class="badge am">🚩 행사</span>' : '')
+      +   (r.ev ? '<span class="badge am">🚩 ' + (auto ? esc(shortTitle(auto.title)) + ' ' + esc(auto.end_est || '') + ' 종료' : '행사') + '</span>' : '')
       + '</div>'
       + navRow(sp)
       + '</article>';
   }
   $("top3List").innerHTML = html || '<div class="empty">추천을 계산할 수 없습니다.</div>';
-  $("top3Basis").textContent = "시간대 수요 " + SLOTS[k].label + " · 날씨 가중 · 이동거리 페널티로 계산 (실시간 콜 데이터 아님)";
+  $("top3Basis").textContent = mode === "yield"
+    ? "서울 전체 수요 우선 · 이동거리 페널티는 완만(공차 시간은 카드의 km·분 확인)"
+    : "가까운 곳 우선 · 이동거리(공차) 페널티 강화 · 5~7km 이내를 먼저 봅니다";
+  var btns = $("modeBar").querySelectorAll(".mtab");
+  for(var j=0;j<btns.length;j++){
+    btns[j].setAttribute("aria-pressed", btns[j].getAttribute("data-mode") === mode ? "true" : "false");
+  }
 }
 
 /* ===================== 렌더: 행사 ===================== */
+function evWhen(e){
+  var t = new Date(), today = dtStr(t);
+  var tm = new Date(); tm.setDate(tm.getDate() + 1); var tomorrow = dtStr(tm);
+  var head;
+  if(e.start_date === e.end_date) head = (e.start_date === today) ? "오늘" : (e.start_date === tomorrow ? "내일" : md(e.start_date));
+  else if(e.start_date <= today && today <= e.end_date) head = (e.start_date === today ? "오늘" : "오늘까지 (" + md(e.end_date) + ")");
+  else head = (e.start_date === today ? "오늘" : md(e.start_date)) + "~" + md(e.end_date);
+  return head + " · " + (e.start_time || "") + "~" + (e.end_est || "") + " 종료 예상";
+}
+function renderEvMeta(){
+  var m = S.autoMeta, el = $("evMeta");
+  if(!m){ el.innerHTML = '<span class="dot bad"></span>자동 연동 확인 중…'; return; }
+  if(!m.ok){ el.innerHTML = '<span class="dot bad"></span>자동 연동 실패 · 아래 직접 체크를 쓰세요'; return; }
+  var at = new Date(m.at), age = (Date.now() - at.getTime()) / 3600000;
+  var srcs = (m.sources || []).filter(function(s){ return s.ok; }).map(function(s){ return s.name; }).join("·") || "출처";
+  el.innerHTML = '<span class="dot' + (age > 30 ? " bad" : "") + '"></span>'
+    + (age > 30 ? "자동 갱신 " + Math.round(age) + "시간 전 (오래됨)" : "자동 갱신 " + md(dtStr(at)) + " " + hhmm(at))
+    + " · " + esc(srcs) + " · " + (m.n || 0) + "건"
+    + '<button class="ref" id="btnEvReload">↻ 새로받기</button>';
+}
 function renderEvents(){
+  var today = autoToday(), tom = autoTomorrow();
   var html = "";
-  for(var i=0;i<EVENTS.length;i++){
-    var ev = EVENTS[i], on = S.evts.indexOf(ev.id) >= 0;
-    html += '<button class="ev" data-ev="' + ev.id + '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(ev.n) + '</button>';
+  for(var i=0;i<today.length;i++){
+    var e = today[i], off = autoIsOff(e);
+    html += '<button class="eva' + (off ? " off" : "") + '" data-auto="' + esc(e.id) + '" aria-pressed="' + (off ? "false" : "true") + '">'
+      + '<span class="box">' + (off ? "" : "✓") + '</span>'
+      + '<span class="txt"><span class="t1">' + esc(e.title) + '</span>'
+      + '<span class="t2">' + esc(e.venue) + ' · ' + esc(evWhen(e)) + '</span></span>'
+      + '</button>';
   }
-  $("evList").innerHTML = html;
-  $("evCnt").textContent = S.evts.length;
+  for(var j=0;j<tom.length;j++){
+    var t2 = tom[j];
+    var dup = false;
+    for(var q=0;q<today.length;q++){ if(today[q].id === t2.id) dup = true; }
+    if(dup) continue;
+    html += '<div class="eva off">'
+      + '<span class="box">·</span>'
+      + '<span class="txt"><span class="t1">' + esc(t2.title) + '</span>'
+      + '<span class="t2">' + esc(t2.venue) + ' · <b>' + esc(evWhen(t2)) + '</b> · 내일</span></span>'
+      + '</div>';
+  }
+  if(!html){
+    html = '<div class="hint">' + (S.autoMeta && S.autoMeta.ok
+      ? "오늘·내일 등록된 주요 공연·경기가 없습니다."
+      : "자동 일정을 못 받았습니다. 아래 직접 체크로 표시하세요.") + '</div>';
+  }
+  $("evAuto").innerHTML = html;
+  renderEvMeta();
+
+  var mh = "";
+  for(var m=0;m<EVENTS.length;m++){
+    var ev = EVENTS[m], on = S.evts.indexOf(ev.id) >= 0;
+    mh += '<button class="ev" data-ev="' + ev.id + '" aria-pressed="' + (on ? "true" : "false") + '">' + esc(ev.n) + '</button>';
+  }
+  $("evList").innerHTML = mh;
+  var active = 0;
+  for(var n=0;n<today.length;n++){ if(!autoIsOff(today[n])) active++; }
+  $("evCnt").textContent = (active + S.evts.length);
 }
 function toggleEvent(id){
   var i = S.evts.indexOf(id);
   if(i >= 0) S.evts.splice(i,1); else S.evts.push(id);
   S.briefMode = "rule"; lsSet("evts", S.evts); renderEvents(); renderAll();
 }
-
+function toggleAuto(id){
+  var i = S.autoOff.indexOf(id);
+  if(i >= 0) S.autoOff.splice(i,1); else S.autoOff.push(id);
+  S.briefMode = "rule"; lsSet("autoOff", S.autoOff); renderEvents(); renderAll();
+}
+function loadEvents(){
+  var url = EVENTS_URL + "?v=" + Date.now();
+  var ac = null, timer = null;
+  try{ ac = new AbortController(); timer = setTimeout(function(){ try{ ac.abort(); }catch(e){} }, 9000); }catch(e){}
+  fetch(url, {cache:"no-store", signal: ac ? ac.signal : undefined})
+    .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function(d){
+      if(timer) clearTimeout(timer);
+      if(!d || !Array.isArray(d.events)) throw new Error("형식 오류");
+      S.auto = d;
+      S.autoMeta = {ok:true, at:d.generated_at, n:d.events.length, sources:d.sources || []};
+      renderEvents(); renderAll();
+    })
+    .catch(function(){
+      if(timer) clearTimeout(timer);
+      S.autoMeta = {ok:false};
+      renderEvents();
+    });
+}
 /* ===================== 렌더: 리스트 ===================== */
 function listSlotAndTitle(){
   var k = slotOf(new Date());
@@ -1046,7 +1172,7 @@ function listSlotAndTitle(){
 }
 function renderList(){
   var cfg = listSlotAndTitle();
-  var list = computeAll(cfg.slotKey);
+  var list = computeAll(cfg.slotKey, S.rankMode);
   if(S.tab === "weather"){
     list = list.filter(function(r){ return r.sp.wx >= 0.7; });
     list = list.slice().sort(function(a,b){
@@ -1071,7 +1197,7 @@ function renderList(){
       + '<div class="badge-row"><span class="badge sky">' + dirName(S.base.lat,S.base.ln,sp.lat,sp.ln) + '쪽 ' + fmtKm(r.km) + 'km · 약 ' + r.eta + '분</span>'
       +   '<span class="badge">' + SLOTS[cfg.slotKey].short + ' 수요 ' + r.dem + '</span>'
       +   '<span class="badge">' + esc(sp.tg) + '</span>'
-      +   (r.ev ? '<span class="badge am">🚩 행사</span>' : '')
+      +   (r.ev ? '<span class="badge am">🚩 ' + (autoForSpot(sp, autoToday()) ? esc(shortTitle(autoForSpot(sp, autoToday()).title)) + ' ' + esc(autoForSpot(sp, autoToday()).end_est || '') + ' 종료' : '행사') + '</span>' : '')
       + '</div>'
       + '<details><summary>대기 팁 보기</summary><div class="rtip">' + esc(sp.tip) + '</div></details>'
       + navRow(sp)
@@ -1096,9 +1222,9 @@ function weatherSentence(){
 }
 function ruleBrief(){
   var k = slotOf(new Date());
-  var all = computeAll(k);
+  var all = computeAll(k, S.rankMode);
   var t1 = all[0], t2 = all[1], t3 = all[2];
-  var ns = nextSlot(k), nt = computeAll(ns)[0];
+  var ns = nextSlot(k), nt = computeAll(ns, S.rankMode)[0];
   var lines = [];
   lines.push("지금 " + SLOTS[k].short + "시간대. " + t1.sp.n + " — " + t1.sp.tg + " 수요가 가장 큽니다. 여기서 " + fmtKm(t1.km) + "km, 약 " + t1.eta + "분.");
   lines.push("2순위 " + t2.sp.n + "(" + fmtKm(t2.km) + "km), 3순위 " + t3.sp.n + "(" + fmtKm(t3.km) + "km). 이동 부담이 적은 쪽부터 붙으세요.");
@@ -1119,7 +1245,7 @@ function renderBrief(){
 /* ===================== AI 브리핑 ===================== */
 function aiPrompt(){
   var now = new Date(), k = slotOf(now);
-  var tops = computeAll(k).slice(0,5);
+  var tops = computeAll(k, S.rankMode).slice(0,5);
   var w = S.wx;
   var wxLine = w ? (w.temp + "도, " + wxText(w.code) + ", 강수 " + w.precip + "mm, 적설 " + w.snow + "cm, 바람 " + w.wind + "km/h, 앞 3시간 강수확률 " + w.pop + "%")
                  : "날씨 정보 없음";
@@ -1133,7 +1259,9 @@ function aiPrompt(){
    + "- 현재 구간: " + SLOTS[k].label + " (" + SLOTS[k].peak + ")\n"
    + "- 기준 위치: " + S.base.name + " (" + S.base.lat.toFixed(4) + ", " + S.base.ln.toFixed(4) + ")\n"
    + "- 서울 날씨: " + wxLine + "\n"
-   + "- 오늘 켠 행사: " + (S.evts.length ? S.evts.join(", ") : "없음") + "\n"
+   + "- 추천 기준: " + (S.rankMode === "yield" ? "서울 전체 고수익(공차 이동 별도)" : "가까운 곳 우선") + "\n"
+   + "- 오늘 직접 켠 행사: " + (S.evts.length ? S.evts.join(", ") : "없음") + "\n"
+   + "- 오늘 자동 연동 행사: " + (autoToday().filter(function(e){ return !autoIsOff(e); }).map(function(e){ return e.venue + " " + e.title + " " + (e.start_time||"") + "~" + (e.end_est||""); }).join(" / ") || "없음") + "\n"
    + "- 후보 자리(시간대 수요 기준):\n" + topLine + "\n\n"
    + "참고 패턴: 하루 중 택시 승차 최다 시간대는 23시~01시(홍대·강남·가로수길·선릉·신림·건대 순). 심야(0~4시) 유동인구는 역삼1동·서교동·여의동·논현·신당·화양동 순. 금·토는 유흥 상권이 강하고, 일요일은 고속터미널·서울역·용산 같은 환승 거점이 강하다. 강북 3구(노원·강북·도봉)는 오전 8시 호출이 심야보다 많다. 새벽 4~6시엔 명동·을지로 호텔가와 서울역에서 공항 출발 콜이 나온다.";
 }
@@ -1297,6 +1425,25 @@ $("evList").addEventListener("click", function(e){
   if(!b) return;
   toggleEvent(b.getAttribute("data-ev"));
 });
+$("evAuto").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("[data-auto]") : null;
+  if(!b) return;
+  toggleAuto(b.getAttribute("data-auto"));
+});
+$("evMeta").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest("#btnEvReload") : null;
+  if(!b) return;
+  S.autoMeta = null; renderEvMeta(); loadEvents(); toast("행사 일정을 다시 받는 중…");
+});
+$("modeBar").addEventListener("click", function(e){
+  var b = e.target.closest ? e.target.closest(".mtab") : null;
+  if(!b) return;
+  var m = b.getAttribute("data-mode");
+  if(m === S.rankMode) return;
+  S.rankMode = m; lsSet("rankMode", m); S.expanded = false; S.briefMode = "rule";
+  renderAll(); renderBrief();
+  toast(m === "near" ? "📍 가까운 순 — 이동거리 페널티를 세게 줬습니다" : "💰 전체 고수익 — 공차 이동 시간은 카드에서 확인");
+});
 $("list").addEventListener("click", function(e){
   var b = e.target.closest ? e.target.closest("#btnMore") : null;
   if(!b) return;
@@ -1331,6 +1478,8 @@ if(btnSort){
 /* ===================== 시작 ===================== */
 renderClock(); renderBase(); renderEvents(); renderWx(); renderAll();
 loadWx();
+loadEvents();
+setInterval(loadEvents, 30 * 60 * 1000);
 var lastSlot = slotOf(new Date());
 setInterval(function(){
   var k = slotOf(new Date());

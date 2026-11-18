@@ -1,0 +1,69 @@
+# GitHub Actions 로 돌리는 행사 자동 갱신 (보관용)
+#
+# 지금은 쓰지 않는다 — Pickle 의 GitHub 연결(GitHub App)에 `workflows` 권한이 없어
+# `.github/workflows/` 아래 파일을 푸시할 수 없다. GitHub 에서 워크플로 파일을 직접
+# 추가할 수 있게 되면 이 파일을 `.github/workflows/events.yml` 로 옮기고
+# `Pickle` 스케줄 액션은 지우면 된다. (동작·스케줄은 동일: 06:00·18:00 KST)
+name: events-auto-update
+
+on:
+  schedule:
+    - cron: '0 21 * * *'   # 06:00 KST
+    - cron: '0 9 * * *'    # 18:00 KST
+  workflow_dispatch:
+
+concurrency:
+  group: events-auto-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TZ: Asia/Seoul
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 행사 수집
+        run: python3 scripts/update_events.py --days 3 --out events.json
+
+      - name: 결과 검사
+        run: |
+          python3 scripts/update_events.py --check --out events.json
+          python3 scripts/summary_events.py events.json
+
+      - name: 커밋·푸시
+        run: |
+          git config user.name "taxi-log-events-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add events.json
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 생략"
+            exit 0
+          fi
+          git commit -m "행사 자동 갱신 $(date '+%m/%d %H:%M') KST"
+          for i in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase --autostash || true
+            sleep 5
+          done
+          echo "푸시 실패"; exit 1
+
+      - name: 요약
+        run: |
+          {
+            echo "### 행사 자동 갱신 $(date '+%Y-%m-%d %H:%M') KST"
+            echo '```'
+            python3 scripts/summary_events.py events.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
