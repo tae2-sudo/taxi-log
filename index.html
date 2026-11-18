@@ -1265,8 +1265,23 @@ function mergeStates(local, remote){
     days: {},
     deleted: {},
     meta: {created: Math.min(num(l.meta&&l.meta.created)||Date.now(), num(r.meta&&r.meta.created)||Date.now())},
-    syncedAt: Date.now()
+    syncedAt: Date.now(),
+    session: null
   };
+  /* 운행 중(시작만 있고 끝이 없는) 기록은 최신 시각(u)과 상관없이 살려 둔다.
+     한쪽 기기에서 같은 시작 시각으로 STOP을 눌러 끝난 기록이 있으면 그때만 끝난 쪽을 따른다. */
+  function unfinishedRunsOf(d){
+    var list = (d && Array.isArray(d.runs)) ? d.runs : [];
+    var res = [];
+    list.forEach(function(rr){ if(rr && rr.s && !rr.e) res.push(rr); });
+    return res;
+  }
+  function finishedStartsOf(d){
+    var m = {};
+    var list = (d && Array.isArray(d.runs)) ? d.runs : [];
+    list.forEach(function(rr){ if(rr && rr.s && rr.e) m[String(rr.s)] = true; });
+    return m;
+  }
   var keys = {};
   Object.keys(l.days||{}).forEach(function(k){ keys[k]=1; });
   Object.keys(r.days||{}).forEach(function(k){ keys[k]=1; });
@@ -1277,10 +1292,64 @@ function mergeStates(local, remote){
     else pick = a || b;
     var del = Math.max(num((l.deleted||{})[k]), num((r.deleted||{})[k]));
     if(del && del >= num(pick && pick.u)) pick = null;
-    if(pick) out.days[k] = pick;
+    if(pick){
+      var merged = {};
+      Object.keys(pick).forEach(function(f){ merged[f] = pick[f]; });
+      merged.runs = Array.isArray(pick.runs) ? pick.runs.slice() : [];
+      var aFin = finishedStartsOf(a), bFin = finishedStartsOf(b);
+      var haveStart = {};
+      merged.runs.forEach(function(rr){ if(rr && rr.s) haveStart[String(rr.s)] = true; });
+      [a, b].forEach(function(src){
+        unfinishedRunsOf(src).forEach(function(rr){
+          var sk = String(rr.s);
+          if(haveStart[sk]) return;
+          if(aFin[sk] || bFin[sk]) return;
+          merged.runs.push({s: rr.s, e: ''});
+          haveStart[sk] = true;
+        });
+      });
+      out.days[k] = merged;
+    }
     if(del) out.deleted[k] = del;
   });
+  /* 세션 표시도 유지한다. 두 기기 세션이 다르면 늦게 시작한 쪽을 따르고,
+     병합 결과에 그 시작 시각으로 끝난 운행만 있으면 지운다. */
+  var sess = null;
+  [l.session, r.session].forEach(function(c){
+    if(!c || !c.start || !parseDT(c.start)) return;
+    if(!sess){ sess = {start:String(c.start), dayKey:String(c.dayKey||'')}; return; }
+    var t0 = parseDT(sess.start), t1 = parseDT(c.start);
+    if(t0 && t1 && t1.getTime() > t0.getTime()) sess = {start:String(c.start), dayKey:String(c.dayKey||'')};
+  });
+  if(sess){
+    var sessDay = sess.dayKey || '', sessUnfinished = false, sessFinished = false;
+    Object.keys(out.days).forEach(function(k){
+      var runs = Array.isArray(out.days[k].runs) ? out.days[k].runs : [];
+      runs.forEach(function(rr){
+        if(!rr || String(rr.s) !== String(sess.start)) return;
+        if(rr.e) sessFinished = true;
+        else { sessUnfinished = true; sessDay = k; }
+      });
+    });
+    if(sessFinished && !sessUnfinished) sess = null;
+    else { sess.dayKey = sessDay; out.session = sess; }
+  }
   return out;
+}
+/* 병합 결과에서 이 시작 시각이 이미 끝난 운행으로만 남아 있으면 true.
+   (다른 기기에서 STOP한 운행을 세션 표시만 보고 다시 운행 중으로 되살리지 않게) */
+function sessionAlreadyEnded(st, start){
+  if(!st || !st.days || !start) return false;
+  var found = false, unfinished = false;
+  Object.keys(st.days).forEach(function(k){
+    var runs = (st.days[k] && Array.isArray(st.days[k].runs)) ? st.days[k].runs : [];
+    runs.forEach(function(rr){
+      if(!rr || String(rr.s) !== String(start)) return;
+      found = true;
+      if(!rr.e) unfinished = true;
+    });
+  });
+  return found && !unfinished;
 }
 
 /* ---------- 자주 가는 충전소 단가 기억 ---------- */
@@ -1868,6 +1937,15 @@ function saveNow(){
   var ok = saveLocal();
   scheduleAutoSync();
   return ok;
+}
+/* START/STOP으로 바뀐 세션은 다른 기기·재로그인 뒤 STOP 버튼 복원에 쓰이므로
+   저장 직후 클라우드 동기화를 확실히 예약한다. 토큰이 만료됐으면 조용히 새로 받는다. */
+function syncSessionNow(delay){
+  if(!syncMeta.email) return;
+  if(!isHttpsOrigin(location.protocol, location.hostname)) return;
+  if(!navigator.onLine) return;
+  if(accessToken && Date.now() < tokenExp){ scheduleAutoSync(delay || 300); return; }
+  ensureToken(false).then(function(){ scheduleAutoSync(delay || 300); }).catch(function(){});
 }
 function ensureDay(key){
   if(!state.days[key]) state.days[key] = blankDay();
@@ -2987,7 +3065,7 @@ views.settings = function(){
   +       '<button class="btn btn-sm" data-act="signOut"' + (signed?'':' disabled') + '>로그아웃</button>'
   +     '</div>'
   +     (httpsOK ? '' : '<div class="warn-box" style="margin-top:10px"><b>지금은 파일로 열린 화면(file://)입니다.</b><br>구글 로그인은 <b>https:// 웹 주소(GitHub Pages 등)</b>에 올렸을 때 동작합니다. 그전에도 모든 기록은 이 기기에 저장되고, JSON 백업으로 옮길 수 있어요.</div>')
-  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">로그인하면 기록이 드라이브의 앱 전용 공간(<b>appDataFolder</b>)에 <b>tapp_personal_taxi_sync.json</b> 파일 하나로 저장되고, 저장·수정·START/STOP 때마다 자동으로 맞춰집니다. 같은 날짜를 두 기기에서 동시에 고치면 <b>나중에 고친 기록</b>이 남습니다. 운행 중 표시는 기기별로만 유지됩니다. <b>지도 API 키·OAuth 클라이언트 ID·오피넷 인증키는 이 기기에만 저장되고 동기화되지 않습니다. 제미나이 키는 앱 전용 공간에 함께 동기화됩니다.</b><br>준비물: Google Cloud 콘솔 → <b>OAuth 클라이언트 ID(웹 애플리케이션)</b> 만들고 승인된 JavaScript 원본에 이 페이지 주소 추가 → 같은 프로젝트에서 <b>Google Drive API</b> 사용 설정. OAuth 동의 화면이 ‘테스트’ 상태라면 본인 구글 계정을 테스트 사용자로 추가해야 로그인됩니다.</div>'
+  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">로그인하면 기록이 드라이브의 앱 전용 공간(<b>appDataFolder</b>)에 <b>tapp_personal_taxi_sync.json</b> 파일 하나로 저장되고, 저장·수정·START/STOP 때마다 자동으로 맞춰집니다. 같은 날짜를 두 기기에서 동시에 고치면 <b>나중에 고친 기록</b>이 남습니다. START/STOP으로 바뀐 <b>운행 중 표시</b>도 함께 맞춰집니다. <b>지도 API 키·OAuth 클라이언트 ID·오피넷 인증키는 이 기기에만 저장되고 동기화되지 않습니다. 제미나이 키는 앱 전용 공간에 함께 동기화됩니다.</b><br>준비물: Google Cloud 콘솔 → <b>OAuth 클라이언트 ID(웹 애플리케이션)</b> 만들고 승인된 JavaScript 원본에 이 페이지 주소 추가 → 같은 프로젝트에서 <b>Google Drive API</b> 사용 설정. OAuth 동의 화면이 ‘테스트’ 상태라면 본인 구글 계정을 테스트 사용자로 추가해야 로그인됩니다.</div>'
   +   '</div>'
   + '</section>'
 
@@ -3055,6 +3133,7 @@ function startRunAt(now){
   d.runs.push({s: dtInput(now), e: ''});
   state.session = {start: dtInput(now), dayKey: key};
   saveNow();
+  syncSessionNow();
   startGeo();
   ui.courseKey = '';
   ui.date = key;
@@ -3093,6 +3172,7 @@ function stopRunAt(now){
   state.session = null;
   stopGeo();
   saveNow();
+  syncSessionNow();
   /* STOP을 누르면 방금 끝낸 운행일(START를 누른 날)의 자료입력으로 바로 넘어간다. */
   ui.courseKey = '';
   ui.date = key;
@@ -3831,7 +3911,7 @@ function syncPayload(st){
   Object.keys(st.settings || {}).forEach(function(k){
     if(k !== 'gmapsKey' && k !== 'oauthClientId' && k !== 'opinetKey') settings[k] = st.settings[k];
   });
-  return {version:1, appVersion:'1.0', settings:settings, settingsUpdated: st.settingsUpdated, days: st.days, deleted: st.deleted, meta: st.meta};
+  return {version:1, appVersion:'1.0', settings:settings, settingsUpdated: st.settingsUpdated, days: st.days, deleted: st.deleted, meta: st.meta, session: st.session || null};
 }
 async function syncNow(opts){
   opts = opts || {};
@@ -3858,7 +3938,9 @@ async function syncNow(opts){
     var session = state.session;
     var localKey = state.settings.gmapsKey, localCid = state.settings.oauthClientId, localOpinet = state.settings.opinetKey, localGemini = state.settings.geminiKey;
     var next = normalizeState(payload);
-    next.session = session;
+    next.session = next.session || session || (base && base.session) || null;
+    /* 병합 결과에 그 시작 시각이 이미 끝난 운행으로만 남아 있으면 세션을 되살리지 않는다. */
+    if(next.session && sessionAlreadyEnded(next, next.session.start)) next.session = null;
     next.settings.gmapsKey = localKey;
     next.settings.oauthClientId = localCid;
     next.settings.opinetKey = localOpinet;
