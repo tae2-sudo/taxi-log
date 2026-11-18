@@ -179,6 +179,43 @@ main{padding:6px 16px calc(104px + env(safe-area-inset-bottom));max-width:560px;
 .gpin{width:26px;height:26px;border-radius:50% 50% 50% 4px;transform:rotate(45deg);display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
 .gpin i{transform:rotate(-45deg);font-style:normal;font-size:11px;font-weight:800;color:#fff;font-family:-apple-system,sans-serif}
 
+/* ---------- 운행 코스 카드 ---------- */
+.course-card{padding:0;overflow:hidden}
+.course-head{display:flex;align-items:center;gap:6px;padding:11px 10px}
+.course-nav{width:34px;height:34px;flex:0 0 auto;border-radius:11px;border:1px solid var(--line-soft);background:var(--surface3);
+  color:var(--muted);font-size:16px;font-weight:800;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0}
+.course-nav:active{background:var(--surface2);color:var(--text)}
+.course-nav[disabled]{opacity:.25}
+.course-date{flex:1;text-align:center;min-width:0}
+.course-date b{display:block;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.course-date span{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px}
+.course-card .map-hint{margin:0;border:0;border-radius:0;padding:26px 16px;text-align:center}
+.course-map{position:relative;background:#0B1120;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft)}
+.course-map .map-box{height:208px}
+.route-svg{display:block;width:100%;height:100%}
+.course-sum{display:grid;grid-template-columns:1fr 1px 1fr;align-items:stretch;background:var(--surface3)}
+.course-sum .div{background:var(--line-soft);margin:9px 0}
+.course-sum .cs{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 8px;min-width:0}
+.course-sum .cs .ico{font-size:15px;line-height:1;opacity:.95;flex:0 0 auto}
+.course-sum .cs .txt{min-width:0;text-align:left}
+.course-sum .cs .k{display:block;font-size:10.5px;color:var(--muted);font-weight:700;letter-spacing:-.01em}
+.course-sum .cs .v{display:block;font-size:17px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.25}
+.course-sum .cs .v .u{font-size:11.5px;font-weight:700;color:var(--muted);margin-left:1px}
+.course-sum .cs .sub{display:block;font-size:10.5px;color:var(--dim);font-weight:600;margin-top:1px;font-variant-numeric:tabular-nums}
+.course-tl{padding:13px 15px 2px}
+.ct{display:grid;grid-template-columns:16px 1fr;gap:11px}
+.ct + .ct{margin-top:13px}
+.ct-rail{display:flex;flex-direction:column;align-items:center;padding-top:4px}
+.ct-dot{width:9px;height:9px;border-radius:50%;background:#0B1120;border:2.5px solid #EF4444;flex:0 0 auto}
+.ct-dot.end{border-color:#60A5FA}
+.ct-line{flex:1;width:2px;border-radius:2px;margin-top:5px;margin-bottom:-13px;min-height:20px;
+  background:linear-gradient(180deg,rgba(239,68,68,.5),rgba(96,165,250,.32))}
+.ct-body{min-width:0;padding-bottom:1px}
+.ct-k{font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.01em}
+.ct-d{font-size:14px;font-weight:700;color:#C6D2E2;margin-top:1px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.ct-loc{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.course-foot{padding:11px 14px 13px}
+
 /* ---------- 월간 요약 ---------- */
 .sum-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
 .sum-card .sum-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;color:var(--muted)}
@@ -999,6 +1036,52 @@ function gpsDistanceKm(points){
   var d=0; for(var i=1;i<points.length;i++) d += haversineM(points[i-1], points[i]);
   return round1(d/1000);
 }
+
+/* ---------- 운행 코스 카드 계산 ---------- */
+function shiftKey(key, delta){
+  var d = keyDate(key);
+  d.setDate(d.getDate() + delta);
+  return dateKey(d);
+}
+/* 그 날 기록이 있는지 — 운행·GPS·수입·주행거리 중 하나라도 있으면 있다 */
+function hasDayRecords(day){
+  if(!day) return false;
+  if(runsOf(day).length) return true;
+  if(day.gps && day.gps.points && day.gps.points.length) return true;
+  if(incomeOf(day).sales > 0) return true;
+  if(num(day.distance && day.distance.total) > 0) return true;
+  return false;
+}
+/* 11:16 처럼 시간:분 */
+function hmDur(min){
+  var m = Math.round(Math.max(0, num(min)));
+  return Math.floor(m/60) + ':' + pad2(m%60);
+}
+/* 2026. 11. 17. 20:15 */
+function dotDateTime(d){
+  if(!d) return '';
+  return d.getFullYear() + '. ' + pad2(d.getMonth()+1) + '. ' + pad2(d.getDate()) + '. ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+/* 그 날 운행 시간·출발/도착 시각·거리 요약 (코스 카드용) */
+function courseSummary(day, nowTs, key){
+  var runs = runsOf(day), min = 0, start = null, end = null, open = false;
+  for(var i=0;i<runs.length;i++){
+    var r = runs[i];
+    if(!r || !r.s) continue;
+    min += runMinutes(r, nowTs);
+    var s = parseDT(r.s);
+    if(s && (!start || s.getTime() < start.getTime())) start = s;
+    if(!r.e){ if(key && key === dateKey(new Date(toTs(nowTs)))) open = true; continue; }
+    var e = runEndDate(r, nowTs);
+    if(e && (!end || e.getTime() > end.getTime())) end = e;
+  }
+  var pts = (day && day.gps && day.gps.points) || [];
+  return {
+    min: min, start: start, end: open ? null : end, open: open, pts: pts,
+    gpsKm: gpsDistanceKm(pts),
+    manualKm: num(day && day.distance && day.distance.total)
+  };
+}
 function shouldRecordPoint(prev, p){
   if(!p || !isFinite(p.lat) || !isFinite(p.lng)) return false;
   if(!prev) return true;
@@ -1649,7 +1732,7 @@ var PAY_KINDS = ['카드','현금'];
 var FUEL_KINDS = ['LPG','휘발유','경유','전기','기타'];
 
 var state = null;
-var ui = {screen:'home', date:'', calMonth:'', year:0, csvMonth:'', photoId:null, memoQuery:'', keyTest:'', sumPage:0};
+var ui = {screen:'home', date:'', calMonth:'', year:0, csvMonth:'', photoId:null, memoQuery:'', keyTest:'', sumPage:0, courseKey:''};
 var syncMeta = {email:'', lastSyncAt:0, fileId:''};
 var gpsState = {status:'off', lastAt:0, watch:null};
 var toastTimer = null;
@@ -1875,8 +1958,9 @@ function go(screen){
 }
 function afterRender(){
   if(ui.screen === 'home'){
-    var td = state.days[todayKey()];
-    mountMap('homeMap', (td && td.gps && td.gps.points) || []);
+    var cd = courseDayFor();
+    mountMap('homeMap', cd.pts);
+    fillCoursePlaces(cd.pts);
   } else if(ui.screen === 'input'){
     mountMap('inputMap', coursePoints());
     if(ui.memoQuery) runMemoSearch(ui.memoQuery, true);
@@ -1915,21 +1999,13 @@ views.home = function(){
   var startAt = sess ? parseDT(sess.start) : null;
   var elapsed = startAt ? Math.max(0, ts - startAt.getTime()) : 0;
   var stale = !!(sess && elapsed > 20*3600*1000);
-  var pts = (day && day.gps && day.gps.points) || [];
-  var courseUrl = buildMapsDirUrl(pts);
   var ch = chargeTotals(day);
-  var dist = (day && day.distance) || {};
-  var km = num(dist.total), bizKm = num(dist.business);
-  var rideRate = km > 0 ? round1(bizKm/km*100) : null;
-  var runs = runsOf(day);
-  var lastRun = null;
-  for(var ri=0; ri<runs.length; ri++){ if(runs[ri] && runs[ri].s) lastRun = runs[ri]; }
-  var startTxt = sess ? hm(sess.start) : (lastRun ? hm(lastRun.s) : '--:--');
-  var endTxt = sess ? '--:--' : ((lastRun && lastRun.e) ? hm(lastRun.e) : '--:--');
-  var clockTxt = sess ? fmtClock(elapsed) : fmtClock(todayMin*60000);
-  var subTxt = sess
-    ? (hm(sess.start) + ' 시작 · ' + fmtDur(elapsed/60000) + ' 경과')
-    : (todayMin > 0 ? ('오늘 누적 ' + fmtDur(todayMin) + ' · 영업금액 ' + fmtWon(inc.sales)) : 'START를 누르면 오늘 운행이 기록됩니다');
+  /* STOP 뒤 홈 시계·시작/종료 칸은 늘 비운 상태(00:00:00 · --:--)로 돌아간다.
+     실제 기록은 자료입력·달력·월간 카드에 남는다. */
+  var startTxt = sess ? hm(sess.start) : '--:--';
+  var endTxt = '--:--';
+  var clockTxt = sess ? fmtClock(elapsed) : '00:00:00';
+  var subTxt = sess ? (hm(sess.start) + ' 시작 · ' + fmtDur(elapsed/60000) + ' 경과') : '';
   var workVal = Math.floor(todayMin/60) + '<span class="unit">h</span> ' + pad2(todayMin%60) + '<span class="unit">m</span>';
   var avgSale = stats.workDays > 0 ? Math.round(stats.sales / stats.workDays / 100) * 100 : 0;
   var avgMin = stats.workDays > 0 ? Math.round(stats.workMinutes / stats.workDays) : 0;
@@ -1995,9 +2071,9 @@ views.home = function(){
 
   /* 2) 가운데: START / STOP */
   + '<section class="drive' + (sess ? ' running' : '') + '" id="drive" aria-label="운행 기록">'
-  +   '<p class="elapsed-label"><span class="dot"></span><span id="stateLabel">' + (sess ? '운행 중' : (todayMin > 0 ? '오늘 누적' : '대기 중')) + '</span></p>'
+  +   '<p class="elapsed-label"><span class="dot"></span><span id="stateLabel">' + (sess ? '운행 중' : '대기 중') + '</span></p>'
   +   '<p class="elapsed num" id="elapsedClock" aria-live="polite">' + clockTxt + '</p>'
-  +   '<p class="run-sub" id="runSub">' + esc(subTxt) + '</p>'
+  +   (subTxt ? '<p class="run-sub" id="runSub">' + esc(subTxt) + '</p>' : '')
   +   '<div class="btn-wrap">'
   +     '<span class="ring" aria-hidden="true"></span>'
   +     (sess
@@ -2012,23 +2088,7 @@ views.home = function(){
   + '</section>'
 
   /* 3) 아래: 오늘의 운행 코스 */
-  + '<section aria-label="오늘의 운행 코스">'
-  +   '<div class="section-h"><h2>오늘의 운행 코스</h2><span class="sec-meta">GPS ' + pts.length + '지점</span></div>'
-  +   '<div class="card map">'
-  +     mapBoxHtml('homeMap', pts)
-  +     '<div class="map-stats">'
-  +       '<div><p class="k">주행거리</p><p class="v num">' + fmtDec1(km) + '<span class="unit">km</span></p></div>'
-  +       '<div><p class="k">영업거리</p><p class="v num">' + fmtDec1(bizKm) + '<span class="unit">km</span></p></div>'
-  +       '<div><p class="k">실차율</p><p class="v num' + (rideRate === null ? '' : ' hi') + '">' + (rideRate === null ? '－' : rideRate + '<span class="unit">%</span>') + '</p></div>'
-  +     '</div>'
-  +     '<div class="map-foot">'
-  +       (courseUrl
-          ? '<a class="btn btn-primary btn-block" href="' + esc(courseUrl) + '" target="_blank" rel="noopener">구글 지도에서 오늘 코스 열기</a>'
-          : '<button class="btn btn-block" disabled>구글 지도에서 오늘 코스 열기</button>')
-  +       '<div class="tiny muted" style="margin-top:8px;line-height:1.5;text-align:center" id="gpsLine"></div>'
-  +     '</div>'
-  +   '</div>'
-  + '</section>'
+  + courseCardHtml()
 
   /* 4) 월간·연간 상세: 수입·지출 / 주행 / 충전 (위 슬라이드와 같이 움직인다) */
   + '<div class="sum-blocks-wrap' + (ui.sumPage ? ' year' : '') + '" id="sumBlocks" aria-label="' + (ui.sumPage ? '연간' : '월간') + ' 상세">'
@@ -2894,7 +2954,7 @@ views.settings = function(){
   +       '<button class="btn btn-sm" data-act="testMapKey">지도 연결 테스트</button>'
   +     '</div>'
   +     '<div id="mapKeyMsg" style="margin-top:9px"></div>'
-  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">키는 <b>이 기기 브라우저(localStorage)</b>에만 저장되고 코드에 들어가지 않습니다. 키가 없거나 오프라인이어도 앱의 다른 기능은 모두 그대로 동작하고, <b>구글 지도에서 코스 열기</b> 버튼도 항상 동작합니다.<br>Google Cloud에서 <b>Maps JavaScript API</b>를 사용 설정하고, 키 제한을 쓸 때는 <b>HTTP 리퍼러</b>에 이 페이지 주소를 넣으세요. 파일로 열었다면 리퍼러 제한을 끄거나 웹 주소로 올려야 지도가 보입니다.</div>'
+  +     '<div class="tiny muted" style="margin-top:9px;line-height:1.6">키는 <b>이 기기 브라우저(localStorage)</b>에만 저장되고 코드에 들어가지 않습니다. 키가 없으면 GPS 기록을 이은 <b>간단한 지도에 빨간 경로</b>로 보여 주고, <b>구글 지도에서 코스 열기</b> 버튼도 항상 동작합니다. 같은 키가 심야 화장실·충전소(night.html)에도 함께 넘어갑니다.<br>Google Cloud에서 <b>Maps JavaScript API</b>를 사용 설정하고, 키 제한을 쓸 때는 <b>HTTP 리퍼러</b>에 이 페이지 주소를 넣으세요. 파일로 열었다면 리퍼러 제한을 끄거나 웹 주소로 올려야 지도가 보입니다.</div>'
   +   '</div>'
   + '</section>'
 
@@ -2992,6 +3052,7 @@ function startRunAt(now){
   state.session = {start: dtInput(now), dayKey: key};
   saveNow();
   startGeo();
+  ui.courseKey = '';
   ui.date = key;
   ui.screen = 'home';
   render();
@@ -3028,8 +3089,13 @@ function stopRunAt(now){
   state.session = null;
   stopGeo();
   saveNow();
+  /* STOP을 누르면 방금 끝낸 운행일(START를 누른 날)의 자료입력으로 바로 넘어간다. */
+  ui.courseKey = '';
+  ui.date = key;
+  ui.screen = 'input';
   render();
-  toast('운행 종료 · ' + fmtDur(dayWorkMinutes(d, Date.now())));
+  try{ window.scrollTo(0,0); }catch(e){}
+  toast('운행 종료 · ' + fmtDur(dayWorkMinutes(d, Date.now())) + ' · 자료입력으로 이동');
 }
 
 /* ---------- GPS ---------- */
@@ -3086,7 +3152,7 @@ function updateGpsLine(){
   } else {
     var td = state.days[todayKey()];
     var n2 = td && td.gps && td.gps.points ? td.gps.points.length : 0;
-    txt = n2 ? ('오늘 GPS ' + n2 + '지점 · 설정에서 지도를 켜면 코스가 보입니다') : 'START를 누르면 위치 기록이 시작됩니다';
+    txt = n2 ? ('오늘 GPS ' + n2 + '지점 기록됨') : 'START를 누르면 위치 기록이 시작됩니다';
   }
   el.textContent = txt;
 }
@@ -3099,8 +3165,8 @@ function refreshCourse(){
   updateMap('inputMap', pts);
 }
 function refreshHomeCourse(){
-  var td = state.days[todayKey()];
-  updateMap('homeMap', (td && td.gps && td.gps.points) || []);
+  var cd = courseDayFor();
+  updateMap('homeMap', cd.pts);
 }
 
 /* ---------- 구글 지도 ---------- */
@@ -3135,8 +3201,10 @@ function loadGmaps(key){
 }
 function mapBoxHtml(id, pts){
   var key = (state.settings.gmapsKey || '').trim();
-  if(!key) return '<div class="map-hint">설정에서 <b>Google Maps API 키</b>를 넣으면 여기에 오늘 코스가 지도로 표시됩니다. 키가 없어도 아래 버튼으로 구글 지도에서 볼 수 있어요.</div>';
-  if(!pts || !pts.length) return '<div class="map-hint">GPS 기록이 아직 없습니다. START를 누르고 위치를 허용해 주세요.</div>';
+  var list = (pts || []).filter(function(p){ return p && isFinite(p.lat) && isFinite(p.lng); });
+  if(!list.length) return '<div class="map-hint">GPS 기록이 아직 없습니다. START를 누르고 위치를 허용해 주세요.</div>';
+  /* 키가 없으면 GPS 점만으로 그리는 지도(SVG)로 같은 빨간 경로를 보여 준다. */
+  if(!key) return '<div class="map-wrap"><div class="map-box" id="' + id + 'Svg">' + routeSvg(list, {uid:id}) + '</div></div>';
   return '<div class="map-wrap"><div class="map-box" id="' + id + '"></div><div class="map-msg" id="' + id + 'Msg">지도를 불러오는 중…</div></div>';
 }
 function mountMap(id, pts){
@@ -3172,7 +3240,7 @@ function drawRoute(id, pts){
       center: path[0], zoom: 14, mapTypeControl: false, streetViewControl: false,
       fullscreenControl: false, clickableIcons: false, gestureHandling: 'cooperative'
     });
-    var line = new google.maps.Polyline({path: path, strokeColor: '#10B981', strokeOpacity: 0.9, strokeWeight: 5, map: map});
+    var line = new google.maps.Polyline({path: path, strokeColor: '#EF4444', strokeOpacity: 0.95, strokeWeight: 5, map: map});
     var markers = [];
     try{ markers.push(new google.maps.Marker({map: map, position: path[0], title: '출발', label: '출'})); }catch(e){}
     if(path.length > 1){
@@ -3189,7 +3257,13 @@ function drawRoute(id, pts){
 }
 function updateMap(id, pts){
   var rec = mapRegistry.get(id);
-  if(!rec){ mountMap(id, pts); return; }
+  if(!rec){
+    var svgBox = document.getElementById(id + 'Svg');
+    var list = (pts || []).filter(function(p){ return p && isFinite(p.lat) && isFinite(p.lng); });
+    if(svgBox && list.length){ svgBox.innerHTML = routeSvg(list, {uid:id}); return; }
+    mountMap(id, pts);
+    return;
+  }
   if(!pts || !pts.length) return;
   var path = pts.map(function(p){ return {lat:Number(p.lat), lng:Number(p.lng)}; });
   try{
@@ -3210,6 +3284,261 @@ async function testMapKey(){
   }catch(e){
     setHtml('mapKeyMsg', '<div class="warn-box">지도를 불러오지 못했습니다. Google Cloud에서 <b>Maps JavaScript API</b> 사용 설정·결제·키 제한(HTTP 리퍼러)을 확인해 주세요.</div>');
   }
+}
+
+/* ---------- 키 없이도 보이는 코스 지도 (SVG) ---------- */
+function routeSvg(pts, opts){
+  opts = opts || {};
+  var W = 360, H = 220, PAD = 24;
+  var list = (pts || []).filter(function(p){ return p && isFinite(p.lat) && isFinite(p.lng); });
+  if(!list.length) return '';
+  list = sampleEvenly(list, 900);
+  var minLat = 90, maxLat = -90, minLng = 180, maxLng = -180, i, p;
+  for(i=0;i<list.length;i++){
+    p = list[i];
+    if(p.lat < minLat) minLat = p.lat;
+    if(p.lat > maxLat) maxLat = p.lat;
+    if(p.lng < minLng) minLng = p.lng;
+    if(p.lng > maxLng) maxLng = p.lng;
+  }
+  var midLat = (minLat + maxLat) / 2, kx = Math.cos(midLat * Math.PI / 180);
+  if(!(kx > 0.2)) kx = 0.2;
+  var spanX = Math.max((maxLng - minLng) * kx, 1e-9), spanY = Math.max(maxLat - minLat, 1e-9);
+  var s = Math.min((W - PAD*2) / spanX, (H - PAD*2) / spanY);
+  if(!isFinite(s) || s <= 0) s = 1;
+  var cx = (minLng + maxLng) / 2, cy = (minLat + maxLat) / 2;
+  function xy(q){ return [W/2 + (q.lng - cx) * kx * s, H/2 - (q.lat - cy) * s]; }
+  var step = Math.max(1, Math.round(list.length / 260)), d = '';
+  for(i=0;i<list.length;i+=step){
+    var q = xy(list[i]);
+    d += (d ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1);
+  }
+  var lastQ = xy(list[list.length - 1]);
+  d += 'L' + lastQ[0].toFixed(1) + ' ' + lastQ[1].toFixed(1);
+  var a = xy(list[0]);
+  var lx = Math.min(W - 44, a[0] + 12), ly = Math.max(16, a[1] - 9);
+  var uid = String(opts.uid || 'm').replace(/[^A-Za-z0-9_]/g, '');
+  return '<svg class="route-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="운행 경로">'
+    + '<defs>'
+    +   '<linearGradient id="rsBg' + uid + '" x1="0" y1="0" x2="0" y2="1">'
+    +     '<stop offset="0" stop-color="#12203A"/><stop offset="1" stop-color="#0C1526"/>'
+    +   '</linearGradient>'
+    +   '<pattern id="rsGrid' + uid + '" width="36" height="36" patternUnits="userSpaceOnUse">'
+    +     '<path d="M36 0H0V36" fill="none" stroke="#243049" stroke-width="1" stroke-opacity="0.55"/>'
+    +   '</pattern>'
+    + '</defs>'
+    + '<rect width="' + W + '" height="' + H + '" fill="url(#rsBg' + uid + ')"/>'
+    + '<rect width="' + W + '" height="' + H + '" fill="url(#rsGrid' + uid + ')"/>'
+    + '<path d="' + d + '" fill="none" stroke="#0B1120" stroke-opacity="0.65" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<path d="' + d + '" fill="none" stroke="#DC2626" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"/>'
+    + (list.length > 1 ? '<circle cx="' + lastQ[0].toFixed(1) + '" cy="' + lastQ[1].toFixed(1) + '" r="4.4" fill="#0B1120" stroke="#60A5FA" stroke-width="2.6"/>' : '')
+    + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7.4" fill="#EF4444" stroke="#FFFFFF" stroke-width="2.4"/>'
+    + '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" font-size="11.5" font-weight="800" fill="#E8EDF5" stroke="#0B1120" stroke-width="3" paint-order="stroke">출발</text>'
+    + '</svg>';
+}
+
+/* ---------- 좌표 → 동네 이름 (역지오코딩 · 결과는 이 기기에 캐시) ---------- */
+var GEO_CACHE_KEY = 'taxi.geo.v1';
+var geoNameCache = null;
+function geoCache(){
+  if(geoNameCache) return geoNameCache;
+  geoNameCache = {};
+  try{
+    var raw = localStorage.getItem(GEO_CACHE_KEY);
+    if(raw){ var v = JSON.parse(raw); if(v && typeof v === 'object') geoNameCache = v; }
+  }catch(e){}
+  return geoNameCache;
+}
+function geoSaveCache(){
+  try{
+    var keys = Object.keys(geoNameCache || {});
+    if(keys.length > 300){
+      var keep = {};
+      keys.slice(keys.length - 200).forEach(function(k){ keep[k] = geoNameCache[k]; });
+      geoNameCache = keep;
+    }
+    localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(geoNameCache));
+  }catch(e){}
+}
+function geoKeyOf(p){ return Number(p.lat).toFixed(3) + ',' + Number(p.lng).toFixed(3); }
+function coordText(p){ return Number(p.lat).toFixed(4) + ', ' + Number(p.lng).toFixed(4); }
+/* 구글 지오코더 결과 → "구로구 개봉동"(출발) / "구로구 경인로8길"(도착) */
+function placeFromGoogle(res, mode){
+  var comps = (res && res.address_components) || [];
+  function pick(type){
+    for(var i=0;i<comps.length;i++){ if(comps[i] && comps[i].types && comps[i].types.indexOf(type) !== -1) return comps[i].long_name || ''; }
+    return '';
+  }
+  var gu = pick('sublocality_level_1') || pick('administrative_area_level_2') || pick('locality') || '';
+  var dong = pick('sublocality_level_2') || pick('sublocality_level_3') || pick('neighborhood') || '';
+  var road = pick('route') || '';
+  var num = pick('street_number') || '';
+  var roadFull = road ? (road + (num ? ' ' + num : '')) : '';
+  var main = (mode === 'end') ? (roadFull || dong) : (dong || roadFull);
+  var out = [gu, main].filter(Boolean).join(' ');
+  if(!out && res && res.formatted_address) out = String(res.formatted_address).split(',').slice(0,2).join(' ').trim();
+  return out;
+}
+/* Nominatim(무료) 결과 → 같은 형식 */
+function placeFromNominatim(j, mode){
+  var a = j && j.address;
+  if(!a){
+    if(j && j.display_name) return String(j.display_name).split(',').slice(0,2).join(' ').trim();
+    return '';
+  }
+  var gu = a.city_district || a.borough || a.county || a.city || a.town || a.province || '';
+  var dong = a.quarter || a.neighbourhood || a.suburb || a.village || a.hamlet || a.city_district || '';
+  var road = a.road || a.pedestrian || a.footway || '';
+  var num = a.house_number || '';
+  var roadFull = road ? (road + (num ? ' ' + num : '')) : '';
+  var main = (mode === 'end') ? (roadFull || dong) : (dong || roadFull);
+  var out = main ? ((gu && main !== gu) ? (gu + ' ' + main) : main) : gu;
+  if(!out && j.display_name) out = String(j.display_name).split(',').slice(0,2).join(' ').trim();
+  return out;
+}
+function reverseGeocode(p, mode){
+  mode = mode || 'start';
+  return new Promise(function(resolve){
+    if(!p || !isFinite(p.lat) || !isFinite(p.lng)){ resolve(''); return; }
+    var tag = geoKeyOf(p) + '|' + mode;
+    var c = geoCache();
+    if(c[tag]){ resolve(c[tag]); return; }
+    function done(name){
+      if(name){ c[tag] = name; geoSaveCache(); }
+      resolve(name || '');
+    }
+    function nominatim(){
+      if(typeof fetch !== 'function'){ done(''); return; }
+      var url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=ko&lat=' + Number(p.lat).toFixed(5) + '&lon=' + Number(p.lng).toFixed(5);
+      fetch(url, {headers:{'Accept':'application/json'}}).then(function(r){ return r.json(); })
+        .then(function(j){ done(placeFromNominatim(j, mode)); })
+        .catch(function(){ done(''); });
+    }
+    var gkey = String((state.settings && state.settings.gmapsKey) || '').trim();
+    if(gkey && typeof window !== 'undefined' && window.google && window.google.maps && window.google.maps.Geocoder){
+      try{
+        new google.maps.Geocoder().geocode({location:{lat:Number(p.lat), lng:Number(p.lng)}, language:'ko'}, function(res, status){
+          if(status === 'OK' && res && res[0]) done(placeFromGoogle(res[0], mode));
+          else nominatim();
+        });
+        return;
+      }catch(e){}
+    }
+    nominatim();
+  });
+}
+function placeText(p, mode){
+  if(!p) return '위치 기록 없음';
+  return geoCache()[geoKeyOf(p) + '|' + (mode || 'start')] || '위치 확인 중…';
+}
+function fillPlace(id, p, mode){
+  var el = document.getElementById(id);
+  if(!el || !p) return;
+  var tag = geoKeyOf(p) + '|' + mode;
+  if(el.getAttribute('data-pt') !== tag) el.setAttribute('data-pt', tag);
+  var cached = geoCache()[tag];
+  if(cached){ el.textContent = cached; return; }
+  if(typeof navigator !== 'undefined' && navigator && navigator.onLine === false){ el.textContent = coordText(p); return; }
+  el.textContent = '위치 확인 중…';
+  reverseGeocode(p, mode).then(function(name){
+    var cur = document.getElementById(id);
+    if(!cur || cur.getAttribute('data-pt') !== tag) return;
+    cur.textContent = name || coordText(p);
+  });
+}
+function fillCoursePlaces(pts){
+  var list = (pts || []).filter(function(p){ return p && isFinite(p.lat) && isFinite(p.lng); });
+  if(!list.length) return;
+  fillPlace('courseLocStart', list[0], 'start');
+  fillPlace('courseLocEnd', list[list.length - 1], 'end');
+}
+
+/* ---------- 홈: 오늘(최근)의 운행 코스 카드 ---------- */
+/* 카드가 보여 줄 날 — 직접 고른 날이 있으면 그 날, 없으면 최근 기록이 있는 날 */
+function courseDayFor(){
+  var today = todayKey(), key = '';
+  if(ui.courseKey) key = ui.courseKey;
+  else if(state.session && state.session.dayKey) key = state.session.dayKey;
+  else {
+    key = today;
+    for(var i=0;i<=21;i++){
+      var k = shiftKey(today, -i);
+      if(hasDayRecords(state.days[k])){ key = k; break; }
+    }
+  }
+  var day = state.days[key] || null;
+  return {key:key, day:day, pts:(day && day.gps && day.gps.points) || []};
+}
+function prevCourseKey(from){
+  for(var i=1;i<=120;i++){ var k = shiftKey(from, -i); if(hasDayRecords(state.days[k])) return k; }
+  return '';
+}
+function nextCourseKey(from){
+  var today = todayKey();
+  for(var i=1;i<=120;i++){
+    var k = shiftKey(from, i);
+    if(k > today) break;
+    if(hasDayRecords(state.days[k])) return k;
+  }
+  return '';
+}
+function courseCardHtml(){
+  var cd = courseDayFor();
+  var day = cd.day, pts = cd.pts;
+  var st = courseSummary(day, Date.now(), cd.key);
+  var courseUrl = buildMapsDirUrl(pts);
+  var today = todayKey();
+  var sub = cd.key === today ? '오늘' : (cd.key === shiftKey(today, -1) ? '어제' : (day ? '지난 운행일' : '기록 없는 날'));
+  var prevKey = prevCourseKey(cd.key);
+  var nextKey = nextCourseKey(cd.key);
+  var canNext = !!nextKey || !!ui.courseKey;
+  var hasKey = !!(state.settings.gmapsKey || '').trim();
+  var durTxt = st.min > 0 ? hmDur(st.min) : '－';
+  var kmMain = st.manualKm > 0 ? st.manualKm : st.gpsKm;
+  var kmTxt = kmMain > 0 ? (fmtDec1(kmMain) + '<span class="u">km</span>') : '－';
+  var kmLabel = st.manualKm > 0 ? '총 주행거리' : '총 GPS 거리';
+  var kmSub = (st.manualKm > 0 && st.gpsKm > 0) ? ('GPS ' + fmtDec1(st.gpsKm) + ' km') : '';
+  var startTxt = st.start ? dotDateTime(st.start) : '－';
+  var endTxt = st.open ? '운행 중' : (st.end ? dotDateTime(st.end) : '－');
+  var startPt = pts.length ? pts[0] : null;
+  var endPt = pts.length ? pts[pts.length - 1] : null;
+  return ''
+  + '<section aria-label="오늘의 운행 코스">'
+  +   '<div class="section-h"><h2>오늘의 운행 코스</h2><span class="sec-meta">GPS ' + pts.length + '지점</span></div>'
+  +   '<div class="card course-card">'
+  +     '<div class="course-head">'
+  +       '<button class="course-nav" data-act="courseDay" data-key="' + esc(prevKey) + '"' + (prevKey ? '' : ' disabled') + ' aria-label="이전 운행일">‹</button>'
+  +       '<div class="course-date"><b>' + dateLabelKR(cd.key) + ' (' + weekdayKR(cd.key) + ')</b><span>' + esc(sub) + '</span></div>'
+  +       '<button class="course-nav" data-act="courseDay" data-key="' + esc(nextKey) + '"' + (canNext ? '' : ' disabled') + ' aria-label="다음 운행일">›</button>'
+  +     '</div>'
+  +     '<div class="course-map">' + mapBoxHtml('homeMap', pts) + '</div>'
+  +     '<div class="course-sum">'
+  +       '<div class="cs"><span class="ico">⏱</span><span class="txt"><span class="k">총 운행시간</span><span class="v num">' + durTxt + '</span></span></div>'
+  +       '<div class="div"></div>'
+  +       '<div class="cs"><span class="ico">🚗</span><span class="txt"><span class="k">' + kmLabel + '</span><span class="v num">' + kmTxt + '</span>'
+  +         (kmSub ? '<span class="sub num">' + kmSub + '</span>' : '') + '</span></div>'
+  +     '</div>'
+  +     '<div class="course-tl">'
+  +       '<div class="ct">'
+  +         '<div class="ct-rail"><span class="ct-dot"></span><span class="ct-line"></span></div>'
+  +         '<div class="ct-body"><p class="ct-k">운행시작</p><p class="ct-d num">' + startTxt + '</p>'
+  +           '<p class="ct-loc" id="courseLocStart" data-pt="' + esc(startPt ? geoKeyOf(startPt) + '|start' : '') + '">' + esc(placeText(startPt, 'start')) + '</p></div>'
+  +       '</div>'
+  +       '<div class="ct">'
+  +         '<div class="ct-rail"><span class="ct-dot end"></span></div>'
+  +         '<div class="ct-body"><p class="ct-k">운행마침</p><p class="ct-d num">' + endTxt + '</p>'
+  +           '<p class="ct-loc" id="courseLocEnd" data-pt="' + esc(endPt ? geoKeyOf(endPt) + '|end' : '') + '">' + esc(placeText(endPt, 'end')) + '</p></div>'
+  +       '</div>'
+  +     '</div>'
+  +     '<div class="course-foot">'
+  +       (courseUrl
+          ? '<a class="btn btn-primary btn-block" href="' + esc(courseUrl) + '" target="_blank" rel="noopener">구글 지도에서 이 코스 열기</a>'
+          : '<button class="btn btn-block" disabled>구글 지도에서 이 코스 열기</button>')
+  +       '<div class="tiny muted" style="margin-top:8px;line-height:1.5;text-align:center" id="gpsLine"></div>'
+  +       (hasKey ? '' : '<div class="tiny muted" style="margin-top:4px;line-height:1.5;text-align:center">설정에 <b>Google Maps API 키</b>를 넣으면 실제 지도로 보입니다.</div>')
+  +     '</div>'
+  +   '</div>'
+  + '</section>';
 }
 
 /* ---------- 사진 ---------- */
@@ -4059,7 +4388,8 @@ function onField(el){
     saveSoon();
     if(path === 'settings.plate'){ var p = document.getElementById('hdrPlate'); if(p) p.textContent = val; }
     if(path === 'settings.vehicle'){ var sb = document.getElementById('hdrSub'); if(sb) sb.textContent = val + ' · 광고 없음'; }
-    if(path === 'settings.oauthClientId' || path === 'settings.gmapsKey' || path === 'settings.opinetKey' || path === 'settings.opinetProxyUrl'){ /* 저장만 */ }
+    if(path === 'settings.oauthClientId' || path === 'settings.opinetKey' || path === 'settings.opinetProxyUrl'){ /* 저장만 */ }
+    if(path === 'settings.gmapsKey'){ syncHelperKeys(); }
     return;
   }
   var day = ensureDay(key);
@@ -4229,6 +4559,12 @@ function handleAct(act, el){
     case 'nextDay': shiftDate(1); break;
     case 'today': ui.date = todayKey(); render(); break;
     case 'openDay': ui.date = el.getAttribute('data-key'); ui.screen = 'input'; render(); try{ window.scrollTo(0,0); }catch(e){} break;
+    case 'courseDay':
+      ui.courseKey = el.getAttribute('data-key') || '';
+      if(ui.screen !== 'home') ui.screen = 'home';
+      render();
+      try{ window.scrollTo(0,0); }catch(e){}
+      break;
     case 'addRun': d = touchDay(ui.date); d.runs.push({s:'', e:''}); saveSoon(); render(); break;
     case 'delRun':
       idx = Number(el.getAttribute('data-idx'));
@@ -4318,6 +4654,7 @@ function handleAct(act, el){
     case 'reset': resetAll(); break;
     case 'saveMapsKey':
       saveNow();
+      syncHelperKeys();
       setHtml('mapKeyMsg', '<div class="ok-box">키를 이 기기에 저장했습니다. 홈·입력 화면에서 코스 지도를 확인해 보세요.</div>');
       toast('Google Maps API 키를 저장했습니다');
       break;
@@ -4458,7 +4795,14 @@ function syncHelperKeys(){
   if(opinetKey && night.opinetKey !== opinetKey){ night.opinetKey = opinetKey; nightChanged = true; }
   if(proxy && night.opinetProxy !== proxy){ night.opinetProxy = proxy; nightChanged = true; }
   if(!night.opinetProxy && HELPER_NIGHT_PROXY){ night.opinetProxy = HELPER_NIGHT_PROXY; nightChanged = true; }
+  /* 지도 키도 도우미 앱(night.html 로드뷰 등)이 같은 값으로 쓸 수 있게 넘긴다. */
+  var gmapsKey = String(s.gmapsKey || '').trim();
+  if(gmapsKey && night.gmapsKey !== gmapsKey){ night.gmapsKey = gmapsKey; nightChanged = true; }
   if(nightChanged) writeKeyJson(HELPER_NIGHT_KEY, night);
+  try{
+    if(gmapsKey) localStorage.setItem('taxi_gmaps_key', gmapsKey);
+    else localStorage.removeItem('taxi_gmaps_key');
+  }catch(e){}
 
   var geminiKey = String(s.geminiKey || '').trim();
   var model = String(s.geminiModel || '').trim();
