@@ -2521,7 +2521,8 @@ views.input = function(){
   var warn = '';
   runs.forEach(function(r){
     var s = parseDT(r.s), e = parseDT(r.e);
-    if(s && e && e.getTime() <= s.getTime()) warn = '종료 시각이 시작보다 빠릅니다. 날짜를 확인해 주세요.';
+    /* 같은 날 종료가 더 이르면 자정을 넘긴 운행으로 계산하므로 경고하지 않는다. */
+    if(s && e && e.getTime() <= s.getTime() && !isOvernightRun(r)) warn = '종료 시각이 시작보다 빠릅니다. 날짜를 확인해 주세요.';
   });
   var pattern = (state.settings.offWeekdays || []).map(function(x){ return WEEKDAYS[x]; }).join('·');
   var stationOpts = normalizeStations(state.settings.stations);
@@ -4206,7 +4207,8 @@ function updateDayComputeds(key){
   var warn = '';
   (d.runs || []).forEach(function(r){
     var s = parseDT(r.s), e = parseDT(r.e);
-    if(s && e && e.getTime() <= s.getTime()) warn = '종료 시각이 시작보다 빠릅니다. 날짜를 확인해 주세요.';
+    /* 같은 날 종료가 더 이르면 자정을 넘긴 운행으로 계산하므로 경고하지 않는다. */
+    if(s && e && e.getTime() <= s.getTime() && !isOvernightRun(r)) warn = '종료 시각이 시작보다 빠릅니다. 날짜를 확인해 주세요.';
   });
   if(warnEl){ warnEl.textContent = warn; warnEl.style.display = warn ? '' : 'none'; }
 }
