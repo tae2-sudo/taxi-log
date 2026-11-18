@@ -3154,9 +3154,11 @@ function updateGpsLine(){
     var n = pts && pts.points ? pts.points.length : 0;
     txt = gpsState.status === 'on' ? ('GPS ' + n + '지점 기록 중') : 'GPS 위치 확인 중…';
   } else {
-    var td = state.days[todayKey()];
-    var n2 = td && td.gps && td.gps.points ? td.gps.points.length : 0;
-    txt = n2 ? ('오늘 GPS ' + n2 + '지점 기록됨') : 'START를 누르면 위치 기록이 시작됩니다';
+    var cd = courseDayFor();
+    var n2 = cd.pts.length;
+    txt = n2
+      ? ((cd.key === todayKey() ? '오늘' : ((keyDate(cd.key).getMonth()+1) + '월 ' + keyDate(cd.key).getDate() + '일')) + ' GPS ' + n2 + '지점 기록됨')
+      : 'START를 누르면 위치 기록이 시작됩니다';
   }
   el.textContent = txt;
 }
