@@ -1047,7 +1047,15 @@ function listSlotAndTitle(){
 function renderList(){
   var cfg = listSlotAndTitle();
   var list = computeAll(cfg.slotKey);
-  if(S.tab === "weather") list = list.filter(function(r){ return r.sp.wx >= 0.7; });
+  if(S.tab === "weather"){
+    list = list.filter(function(r){ return r.sp.wx >= 0.7; });
+    list = list.slice().sort(function(a,b){
+      var av = a.sp.wx * (((a.sp.d[cfg.slotKey]||0) + (a.sp.d.late||0) + (a.sp.d.pm||0)) / 3);
+      var bv = b.sp.wx * (((b.sp.d[cfg.slotKey]||0) + (b.sp.d.late||0) + (b.sp.d.pm||0)) / 3);
+      if(bv !== av) return bv - av;
+      return b.score - a.score;
+    });
+  }
   if(S.sortBy === "dist") list = list.slice().sort(function(a,b){ return a.km - b.km; });
   $("listTitle").textContent = cfg.title;
   $("listCount").textContent = list.length + "곳";
