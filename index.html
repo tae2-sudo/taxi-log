@@ -423,6 +423,21 @@ body.helper-open{overflow:hidden}
 .mrow.major .mv{font-size:24px;font-weight:800;color:#F4F8FF;letter-spacing:-.035em}
 .mrow .mv.hi{color:var(--emerald-2)}
 
+/* ---------- 요약 카드: 월간 ↔ 연간 슬라이드 ---------- */
+.sum-wrap{margin-bottom:16px}
+.sum-view{overflow:hidden;border-radius:22px;box-shadow:0 16px 38px rgba(0,0,0,.34)}
+.sum-track{display:flex;width:200%;transition:transform .3s cubic-bezier(.22,.61,.36,1);will-change:transform;touch-action:pan-y}
+.sum-track.year{transform:translateX(-50%)}
+.sum-page{width:50%;flex:0 0 50%;min-width:0}
+.sum-page > .month-card{margin-bottom:0;box-shadow:none;height:100%}
+.sum-dots{display:flex;align-items:center;justify-content:center;gap:9px;padding:10px 0 2px}
+.sum-dots .dot{width:7px;height:7px;border-radius:50%;padding:0;border:0;background:rgba(255,255,255,.2);cursor:pointer;transition:background .2s,transform .2s}
+.sum-dots .dot.on{background:var(--emerald-2);transform:scale(1.2)}
+.sum-dots .dot:focus-visible{outline:2px solid var(--emerald-2);outline-offset:3px}
+.month-head button.mt{background:none;border:0;padding:0;font:inherit;font-size:15px;font-weight:800;letter-spacing:-.01em;color:#EAF1FB;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.month-head button.mt:active{opacity:.65}
+@media (max-width:360px){.sum-dots{padding:8px 0 0}}
+
 /* ---------- AI ---------- */
 .ai-card{border-color:rgba(52,211,153,.22);background:linear-gradient(160deg,#152238,#131C31 60%)}
 .ai-pick{display:flex;align-items:center;gap:9px;margin-bottom:9px;flex-wrap:wrap}
@@ -733,6 +748,20 @@ function monthStats(days, ym, nowTs){
   out.net = out.sales - out.expenses - out.chargeAmount;
   return out;
 }
+function yearStats(days, year, nowTs){
+  var ymd = String(year);
+  var out = {year:Number(year), sales:0, card:0, cash:0, kakaoCash:0, toll:0, workMinutes:0, workDays:0, avgMinutes:0};
+  Object.keys(days||{}).forEach(function(k){
+    if(k.slice(0,4) !== ymd) return;
+    var d = days[k]; if(!d) return;
+    var inc = incomeOf(d);
+    out.sales += inc.sales; out.card += inc.card; out.cash += inc.cash; out.kakaoCash += inc.kakaoCash; out.toll += inc.toll;
+    out.workMinutes += dayWorkMinutes(d, nowTs);
+    if(workDayOf(d, nowTs)) out.workDays++;
+  });
+  out.avgMinutes = out.workDays > 0 ? out.workMinutes/out.workDays : 0;
+  return out;
+}
 function calendarCells(year, month){
   var first = new Date(year, month-1, 1);
   var startDow = first.getDay();
@@ -902,7 +931,7 @@ function csvEscape(v){
   return s;
 }
 function monthCsv(days, ym, nowTs){
-  var head = ['날짜','요일','휴무','운행시작','운행종료','총운행(분)','총운행시간','영업금액','카드수입','현금수입','카콜현금','통행료','총주행(km)','영업주행(km)','승차율(%)','충전량(L)','충전금액','지출합계','순수입','메모','GPS지점'];
+  var head = ['날짜','요일','휴무','운행시작','운행종료','총운행(분)','총운행시간','영업금액','카드수입','현금수입','카콜현금','통행요금','총주행(km)','영업주행(km)','승차율(%)','충전량(L)','충전금액','지출합계','순수입','메모','GPS지점'];
   var rows = [head];
   var keys = Object.keys(days||{}).filter(function(k){ return k.slice(0,7)===ym; }).sort();
   var tot = {min:0,sales:0,card:0,cash:0,kakao:0,toll:0,km:0,biz:0,L:0,A:0,ex:0,net:0,gps:0};
@@ -1359,7 +1388,7 @@ var PAY_KINDS = ['카드','현금'];
 var FUEL_KINDS = ['LPG','휘발유','경유','전기','기타'];
 
 var state = null;
-var ui = {screen:'home', date:'', calMonth:'', year:0, csvMonth:'', photoId:null, memoQuery:'', keyTest:''};
+var ui = {screen:'home', date:'', calMonth:'', year:0, csvMonth:'', photoId:null, memoQuery:'', keyTest:'', sumPage:0};
 var syncMeta = {email:'', lastSyncAt:0, fileId:''};
 var gpsState = {status:'off', lastAt:0, watch:null};
 var toastTimer = null;
@@ -1514,6 +1543,7 @@ function initUi(){
   ui.calMonth = ui.date.slice(0,7);
   ui.year = now.getFullYear();
   ui.csvMonth = ui.date.slice(0,7);
+  ui.sumPage = ui.sumPage ? 1 : 0;
 }
 function toast(msg){
   var el = document.getElementById('toast');
@@ -1620,7 +1650,25 @@ views.home = function(){
   var workVal = Math.floor(todayMin/60) + '<span class="unit">h</span> ' + pad2(todayMin%60) + '<span class="unit">m</span>';
   var avgSale = stats.workDays > 0 ? Math.round(stats.sales / stats.workDays / 100) * 100 : 0;
   var avgMin = stats.workDays > 0 ? Math.round(stats.workMinutes / stats.workDays) : 0;
+  var thisYear = now.getFullYear();
+  var ystats = yearStats(state.days, thisYear, ts);
+  var yAvgSale = ystats.workDays > 0 ? Math.round(ystats.sales / ystats.workDays / 100) * 100 : 0;
+  var yAvgMin = ystats.workDays > 0 ? Math.round(ystats.workMinutes / ystats.workDays) : 0;
   function won(v){ return fmtNum(v) + '<span class="u">원</span>'; }
+  function sumRows(st, avSale, avMin){
+    return '<div class="month-rows">'
+      + '<div class="mrow major"><span class="mk">영업금액</span><b class="mv">' + won(st.sales) + '</b></div>'
+      + '<div class="mrow"><span class="mk">카드수입</span><b class="mv">' + won(st.card) + '</b></div>'
+      + '<div class="mrow"><span class="mk">현금수입</span><b class="mv">' + won(st.cash) + '</b></div>'
+      + '<div class="mrow"><span class="mk">카콜현금</span><b class="mv">' + won(st.kakaoCash) + '</b></div>'
+      + '<div class="mrow"><span class="mk">통행요금</span><b class="mv">' + won(st.toll) + '</b></div>'
+      + '<div class="mrow"><span class="mk">근무일수</span><b class="mv">' + st.workDays + '<span class="u">일</span></b></div>'
+      + '<div class="mrow"><span class="mk">근무시간</span><b class="mv">' + fmtDur(st.workMinutes)
+      +   '<span class="note">' + (st.workDays > 0 ? '일평균 ' + fmtDur(avMin) : '기록 없음') + '</span></b></div>'
+      + '<div class="mrow"><span class="mk">평균매출</span><b class="mv hi">' + won(avSale)
+      +   '<span class="note">영업금액 ÷ 근무일수</span></b></div>'
+      + '</div>';
+  }
 
   var staleBox = stale ? ('<div class="warn-box" style="margin:0 0 12px">'
     + '<b>START가 ' + fmtDur(elapsed/60000) + '째 켜져 있습니다.</b><br>'
@@ -1638,20 +1686,27 @@ views.home = function(){
   +     (sess ? '<span class="live-dot" aria-hidden="true"></span>' : '') + '</div>'
   + '</div>'
 
-  /* 1) 맨 위: 이번 달 요약 */
-  + '<section class="month-card" aria-label="월간 요약">'
-  +   '<div class="month-head"><span class="mt">월간</span><span class="my">' + ymLabel(ym) + ' · 근무 ' + stats.workDays + '일</span></div>'
-  +   '<div class="month-rows">'
-  +     '<div class="mrow major"><span class="mk">영업금액</span><b class="mv">' + won(stats.sales) + '</b></div>'
-  +     '<div class="mrow"><span class="mk">카드수입</span><b class="mv">' + won(stats.card) + '</b></div>'
-  +     '<div class="mrow"><span class="mk">현금수입</span><b class="mv">' + won(stats.cash) + '</b></div>'
-  +     '<div class="mrow"><span class="mk">카콜 현금</span><b class="mv">' + won(stats.kakaoCash) + '</b></div>'
-  +     '<div class="mrow"><span class="mk">통행료</span><b class="mv">' + won(stats.toll) + '</b></div>'
-  +     '<div class="mrow"><span class="mk">근무일수</span><b class="mv">' + stats.workDays + '<span class="u">일</span></b></div>'
-  +     '<div class="mrow"><span class="mk">근무시간</span><b class="mv">' + fmtDur(stats.workMinutes)
-  +       '<span class="note">' + (stats.workDays > 0 ? '일평균 ' + fmtDur(avgMin) : '기록 없음') + '</span></b></div>'
-  +     '<div class="mrow"><span class="mk">평균매출</span><b class="mv hi">' + won(avgSale)
-  +       '<span class="note">영업금액 ÷ 근무일수</span></b></div>'
+  /* 1) 맨 위: 월간 ↔ 연간을 좌우로 넘기는 요약 카드 */
+  + '<section class="sum-wrap" aria-label="요약">'
+  +   '<div class="sum-view" id="sumView">'
+  +     '<div class="sum-track' + (ui.sumPage ? ' year' : '') + '" id="sumTrack">'
+  +       '<div class="sum-page" data-page-view="0">'
+  +         '<section class="month-card" aria-label="월간 요약">'
+  +           '<div class="month-head"><button class="mt" data-act="sumPage" data-page="1" aria-label="연간 요약 보기">월간</button><span class="my">' + ymLabel(ym) + ' · 근무 ' + stats.workDays + '일</span></div>'
+  +           sumRows(stats, avgSale, avgMin)
+  +         '</section>'
+  +       '</div>'
+  +       '<div class="sum-page" data-page-view="1">'
+  +         '<section class="month-card year-card" aria-label="연간 요약">'
+  +           '<div class="month-head"><button class="mt" data-act="sumPage" data-page="0" aria-label="월간 요약 보기">연간</button><span class="my">' + thisYear + '년 · 근무 ' + ystats.workDays + '일</span></div>'
+  +           sumRows(ystats, yAvgSale, yAvgMin)
+  +         '</section>'
+  +       '</div>'
+  +     '</div>'
+  +   '</div>'
+  +   '<div class="sum-dots" role="tablist" aria-label="월간·연간 전환">'
+  +     '<button class="dot' + (ui.sumPage ? '' : ' on') + '" data-act="sumPage" data-page="0" role="tab" aria-selected="' + (ui.sumPage ? 'false' : 'true') + '" aria-label="월간 요약"></button>'
+  +     '<button class="dot' + (ui.sumPage ? ' on' : '') + '" data-act="sumPage" data-page="1" role="tab" aria-selected="' + (ui.sumPage ? 'true' : 'false') + '" aria-label="연간 요약"></button>'
   +   '</div>'
   + '</section>'
 
@@ -1709,6 +1764,30 @@ views.home = function(){
   +   '</div>'
   + '</section>';
 };
+
+/* ---------- 요약 카드: 월간 ↔ 연간 ---------- */
+var sumDrag = {x:0, y:0, dx:0, dy:0, active:false};
+function setSumPage(page){
+  var p = (Number(page) === 1) ? 1 : 0;
+  ui.sumPage = p;
+  var track = document.getElementById('sumTrack');
+  if(track && track.classList) track.classList[p ? 'add' : 'remove']('year');
+  var dots = document.querySelectorAll ? document.querySelectorAll('.sum-dots .dot') : [];
+  for(var i=0; i<dots.length; i++){
+    var on = Number(dots[i].getAttribute('data-page')) === p;
+    if(dots[i].classList) dots[i].classList[on ? 'add' : 'remove']('on');
+    dots[i].setAttribute('aria-selected', on ? 'true' : 'false');
+  }
+  return p;
+}
+function sumSwipeFinish(){
+  if(!sumDrag.active) return;
+  var dx = sumDrag.dx || 0, dy = sumDrag.dy || 0;
+  sumDrag.active = false;
+  if(Math.abs(dx) < 36) return;
+  if(Math.abs(dx) < Math.abs(dy)) return;
+  setSumPage(dx < 0 ? 1 : 0);
+}
 
 function miniCalendarHtml(today){
   var ym = today.slice(0,7);
@@ -1778,12 +1857,12 @@ views.input = function(){
   +     '<input id="aiPhotoInput" type="file" accept="image/*" style="display:none">'
   +     '<span class="tiny muted" id="aiPhotoName">선택한 사진 없음</span>'
   +   '</div>'
-  +   '<textarea id="aiText" placeholder="예: 오늘 카드 24만, 현금 1만5천, 카콜 현금 8천, 통행료 4천, 대성 오류동에서 38리터 충전"></textarea>'
+  +   '<textarea id="aiText" placeholder="예: 오늘 카드 24만, 현금 1만5천, 카콜현금 8천, 통행요금 4천, 대성 오류동에서 38리터 충전"></textarea>'
   +   '<div class="row wrap" style="gap:8px;margin-top:9px">'
   +     '<button class="btn btn-sm btn-primary" data-act="aiFill">✨ AI로 채우기</button>'
   +     '<button class="btn btn-sm btn-ghost" data-act="aiPhotoClear">사진 지우기</button>'
   +   '</div>'
-  +   '<div class="tiny muted" style="margin-top:7px">사진·문장은 그때 제미나이로 보내집니다. 키가 없으면 <b>설정 → AI(제미나이)</b>.</div>'
+  +   '<div class="tiny muted" style="margin-top:7px">티머니 택시투데이 정산 화면도 그대로 넣으면 <b>카드수입·건수</b>를 채웁니다. 날짜는 지금 고른 날짜에 넣습니다. 사진·문장은 그때 제미나이로 보내집니다. 키가 없으면 <b>설정 → AI(제미나이)</b>.</div>'
   +   '<div id="aiMsg" style="margin-top:9px"></div>'
   + '</section>'
 
@@ -1821,8 +1900,8 @@ views.input = function(){
   +   '<div class="grid2">'
   +     '<div class="field"><label>카드수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.card" value="' + esc(ival(d.income.card)) + '"></div>'
   +     '<div class="field"><label>현금수입 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.cash" value="' + esc(ival(d.income.cash)) + '"></div>'
-  +     '<div class="field"><label>카콜 현금 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.kakaoCash" value="' + esc(ival(d.income.kakaoCash)) + '"></div>'
-  +     '<div class="field"><label>통행료 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.toll" value="' + esc(ival(d.income.toll)) + '"></div>'
+  +     '<div class="field"><label>카콜현금 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.kakaoCash" value="' + esc(ival(d.income.kakaoCash)) + '"></div>'
+  +     '<div class="field"><label>통행요금 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="0" data-day="' + key + '" data-field="income.toll" value="' + esc(ival(d.income.toll)) + '"></div>'
   +   '</div>'
   +   (d.income.mode==='direct' ? '<div class="field" style="margin-top:8px"><label>영업금액 직접 입력 (원)</label><input class="num" type="number" inputmode="numeric" min="0" placeholder="카드+현금과 다른 금액" data-day="' + key + '" data-field="income.direct" value="' + esc(ival(d.income.direct)) + '"></div>' : '')
   +   '<div class="total-line" style="margin-top:10px"><span>영업금액 <span class="tiny muted">' + (d.income.mode==='direct'?'직접 입력':'카드+현금+카콜 자동') + '</span></span><b id="salesTotal">' + fmtWon(inc.sales) + '</b></div>'
@@ -2028,7 +2107,7 @@ views.stats = function(){
   + '</section>'
   + '<section class="card">'
   +   '<div class="card-h"><div class="card-t">✨ AI 운행·세무 코치</div><div class="card-sub">이번 달 기록 기준</div></div>'
-  +   '<div class="tiny muted" style="line-height:1.6;margin-bottom:10px">이번 달 매출·근무시간·실차율·LPG·통행료 기록을 제미나이가 읽고 수익성과 경비 증빙을 정리합니다. 숫자는 기록에 있는 값만 씁니다.</div>'
+  +   '<div class="tiny muted" style="line-height:1.6;margin-bottom:10px">이번 달 매출·근무시간·실차율·LPG·통행요금 기록을 제미나이가 읽고 수익성과 경비 증빙을 정리합니다. 숫자는 기록에 있는 값만 씁니다.</div>'
   +   '<button class="btn btn-sm btn-primary" data-act="aiCoach">✨ AI 운행·세무 코치 분석</button>'
   +   '<div id="aiCoachOut" style="margin-top:10px"></div>'
   +   '<div class="tiny muted" style="margin-top:8px">세무 내용은 일반 안내입니다 · 최종 확인은 세무사·홈택스</div>'
@@ -2982,17 +3061,23 @@ var AI_SCHEMA = {type:'OBJECT', properties:{
   card:{type:'NUMBER'}, cash:{type:'NUMBER'}, kakaoCash:{type:'NUMBER'}, toll:{type:'NUMBER'},
   kmTotal:{type:'NUMBER'}, kmBusiness:{type:'NUMBER'},
   chargeAmount:{type:'NUMBER'}, chargeLiters:{type:'NUMBER'}, chargeUnit:{type:'NUMBER'},
+  cardCount:{type:'INTEGER'}, date:{type:'STRING'},
   station:{type:'STRING'}, memo:{type:'STRING'}
 }};
 var AI_SYSTEM = [
   '너는 서울 개인택시 기사의 운행일지 입력 도우미다.',
   '사진(정산 화면 캡처, LPG 영수증)이나 사용자가 적은 문장에서 운행 기록을 읽어 JSON 하나로만 답한다.',
-  'card=카드 수입(원), cash=일반 현금 수입(원), kakaoCash=카카오T 호출(카콜) 현금 결제 수입(원), toll=통행료(원),',
+  'card=카드 수입(원), cash=일반 현금 수입(원), kakaoCash=카카오T 호출(카콜) 현금 결제 수입(원), toll=통행요금(원),',
   'kmTotal=총 주행거리(km), kmBusiness=영업거리(km), chargeAmount=LPG 충전금액(원), chargeLiters=충전량(L),',
-  'chargeUnit=충전 단가(원/L), station=충전소 이름, memo=짧은 메모.',
+  'chargeUnit=충전 단가(원/L), cardCount=카드 결제 건수(정수), date=화면에 적힌 날짜(YYYY-MM-DD), station=충전소 이름, memo=짧은 메모.',
   '금액은 원 단위로 환산한다(24만 → 240000, 1만5천 → 15000).',
   '사진이나 문장에 없는 항목은 0으로 두고 추측해서 만들지 않는다.',
-  '카콜(카카오T 호출)을 구분할 수 없으면 kakaoCash는 0으로 둔다.'
+  '카콜(카카오T 호출)을 구분할 수 없으면 kakaoCash는 0으로 둔다.',
+  '티머니 택시투데이·카드단말기 정산 화면(예: "오늘 (11/18 수) 18건 354,800원", "최근 카드결제")처럼 하루 합계가 크게 보이는 사진이면 그 합계 금액은 card(카드수입)이고, cash로 넣지 않는다.',
+  '정산 화면의 "18건" 같은 결제 건수는 cardCount에 정수로 넣는다. 건수는 cardCount에만 넣고 메모에는 적을 내용이 따로 있을 때만 적는다.',
+  '"최근 카드결제 12,700원"처럼 한 건만 보여 주는 금액은 하루 합계가 아니므로 card에 넣지 않는다.',
+  '화면에 날짜가 보이면 date에 YYYY-MM-DD로 넣는다. 연도가 없으면 올해로 하고 "11/18"처럼 월/일만 있으면 올해 날짜로 만든다.',
+  '야간 운행 기사는 새벽·아침에 찍은 정산 화면을 전날 영업으로 기록한다. date는 화면에 적힌 날짜만 담고, 어느 날짜 장부에 넣을지는 앱이 정한다.'
 ].join(' ');
 var AI_COACH_SYSTEM = [
   '너는 서울 개인택시 기사를 돕는 운행·세무 코치다.',
@@ -3057,11 +3142,30 @@ function aiTextHtml(t){
     return '<p>' + lines.join('<br>') + '</p>';
   }).join('');
 }
+/* 정산 화면에 적힌 날짜("11/18", "2026-11-18")를 올해 기준 YYYY-MM-DD로 바꿔 준다. */
+function aiParseDate(v){
+  var s = String(v || '').trim();
+  if(!s) return '';
+  var y, mo, d;
+  var m = /^(\d{4})[-\/.년\s]+(\d{1,2})[-\/.월\s]+(\d{1,2})/.exec(s);
+  if(m){ y = Number(m[1]); mo = Number(m[2]); d = Number(m[3]); }
+  else {
+    m = /^(\d{1,2})[-/.]\s*(\d{1,2})/.exec(s);
+    if(!m) return '';
+    y = new Date().getFullYear(); mo = Number(m[1]); d = Number(m[2]);
+  }
+  if(!(mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return '';
+  if(y < 2000 || y > 2100) return '';
+  var dt = new Date(y, mo-1, d);
+  if(dt.getMonth() !== mo-1 || dt.getDate() !== d) return '';
+  return dateKey(dt);
+}
+function mdLabel(key){ return String(key || '').slice(5,7) + '/' + String(key || '').slice(8,10); }
 /* AI가 읽은 값을 그 날짜 기록에 채운다. 채운 항목 이름 배열을 돌려준다. */
 function applyAiToDay(day, obj){
   var applied = [];
   if(!day || !obj) return applied;
-  var labels = {card:'카드수입', cash:'현금수입', kakaoCash:'카콜 현금', toll:'통행료'};
+  var labels = {card:'카드수입', cash:'현금수입', kakaoCash:'카콜현금', toll:'통행요금'};
   ['card', 'cash', 'kakaoCash', 'toll'].forEach(function(k){
     var n = aiNum(obj[k]);
     if(n !== null && n >= 0){
@@ -3098,6 +3202,16 @@ function applyAiToDay(day, obj){
   if(obj.memo && String(obj.memo).trim() && !String(day.memo || '').trim()){
     day.memo = String(obj.memo).trim();
     applied.push('메모');
+  }
+  /* 카드 정산 건수는 메모에 "카드 18건"으로 이어 붙인다. */
+  var cnt = aiNum(obj.cardCount);
+  if(cnt !== null && cnt > 0){
+    var tag = '카드 ' + Math.round(cnt) + '건';
+    var memoNow = String(day.memo || '').trim();
+    if(memoNow.indexOf(tag) === -1){
+      day.memo = memoNow ? (memoNow + ' · ' + tag) : tag;
+    }
+    applied.push('카드 ' + Math.round(cnt) + '건');
   }
   return applied;
 }
@@ -3139,12 +3253,16 @@ async function aiAutoFill(){
     var out = await geminiCall(parts, {system: AI_SYSTEM, schema: AI_SCHEMA, temperature: 0.1});
     var obj = parseAiJson(out);
     if(!obj) throw new Error('bad_json');
+    var shotDate = aiParseDate(obj.date);   /* 화면에 적힌 날짜 — 안내에만 쓰고 입력 날짜는 그대로 둔다 */
     var d = touchDay(ui.date);
     var applied = applyAiToDay(d, obj);
     saveNow();
     render();
     if(applied.length){
-      aiSetMsg('aiMsg', '<div class="ok-box"><b>' + esc(applied.join(' · ')) + '</b>을(를) 채웠습니다.<br>금액이 맞는지 확인하고 필요하면 고쳐 주세요.</div>');
+      var dateNote = (shotDate && shotDate !== ui.date)
+        ? ('<br><span class="tiny muted" style="display:inline-block;margin-top:6px">정산 스샷(' + mdLabel(shotDate) + ' 기준) → 지금 고른 날짜(' + mdLabel(ui.date) + ')에 채웠습니다. 날짜는 그대로 두었습니다.</span>')
+        : '';
+      aiSetMsg('aiMsg', '<div class="ok-box"><b>' + esc(applied.join(' · ')) + '</b>을(를) 채웠습니다.' + dateNote + '<br>금액이 맞는지 확인하고 필요하면 고쳐 주세요.</div>');
       toast('AI가 ' + applied.length + '개 항목을 채웠습니다 · 확인해 주세요');
       aiState.photo = null;
       var nm = document.getElementById('aiPhotoName');
@@ -3184,8 +3302,8 @@ function aiCoachDataText(){
     '영업금액: ' + fmtNum(st.sales) + '원',
     '카드수입: ' + fmtNum(st.card) + '원',
     '현금수입: ' + fmtNum(st.cash) + '원',
-    '카콜 현금: ' + fmtNum(st.kakaoCash) + '원',
-    '통행료: ' + fmtNum(st.toll) + '원',
+    '카콜현금: ' + fmtNum(st.kakaoCash) + '원',
+    '통행요금: ' + fmtNum(st.toll) + '원',
     'LPG 충전금액: ' + fmtNum(st.chargeAmount) + '원 (충전량 ' + fmtDec1(st.chargeLiters) + 'L)',
     '지출 합계: ' + fmtNum(st.expenses) + '원',
     '총 주행거리: ' + fmtDec1(st.km) + 'km, 영업거리: ' + fmtDec1(st.bizKm) + 'km, 실차율: ' + (st.rideRate === null ? '기록 없음' : st.rideRate + '%'),
@@ -3209,7 +3327,7 @@ async function aiCoach(){
     var prompt = '아래는 내 실제 운행 기록이다.\n' + aiCoachDataText()
       + '\n\n다음을 한국어로 정리해 줘.\n'
       + '1) 수익성: 시간당·하루 평균 매출과 근무시간을 보고 좋은 점과 개선할 점(2~3개, 실행 가능한 것)\n'
-      + '2) 세무·경비: 부가세·종합소득세 준비에서 챙길 경비 증빙(LPG·통행료·정비·소모품 등)과 지금 기록에서 빠졌을 항목\n'
+      + '2) 세무·경비: 부가세·종합소득세 준비에서 챙길 경비 증빙(LPG·통행요금·정비·소모품 등)과 지금 기록에서 빠졌을 항목\n'
       + '3) 다음 달에 딱 하나만 바꾼다면 무엇을 할지\n'
       + '숫자는 위 기록에 있는 값만 쓰고, 없는 값은 만들지 마. 각 항목은 짧게.';
     var out = await geminiCall([{text: prompt}], {system: AI_COACH_SYSTEM, temperature: 0.4});
@@ -3485,6 +3603,7 @@ function handleAct(act, el){
     case 'signOut': signOut(); break;
     case 'syncNow': syncNow({interactive:true}); break;
     case 'openHelper': openHelper(el.getAttribute('data-tool')); break;
+    case 'sumPage': setSumPage(el.getAttribute('data-page')); break;
     case 'closeHelper': closeHelper(); break;
     case 'helperExternal': openHelperExternal(); break;
     default: break;
@@ -3693,6 +3812,20 @@ function boot(){
   window.addEventListener('offline', function(){ /* 로컬 저장은 계속 */ });
   window.addEventListener('popstate', function(){ helperPushed = false; if(helperTool) closeHelper(true); });
   document.addEventListener('keydown', function(ev){ if(ev && ev.key === 'Escape' && helperTool) closeHelper(); });
+  document.addEventListener('touchstart', function(ev){
+    if(!ui || ui.screen !== 'home') return;
+    var t = ev && ev.target;
+    if(!t || !t.closest || !t.closest('#sumView')) return;
+    if(!ev.touches || ev.touches.length !== 1) return;
+    sumDrag = {x: ev.touches[0].clientX, y: ev.touches[0].clientY, dx: 0, dy: 0, active: true};
+  }, {passive:true});
+  document.addEventListener('touchmove', function(ev){
+    if(!sumDrag.active || !ev.touches || ev.touches.length !== 1) return;
+    sumDrag.dx = ev.touches[0].clientX - sumDrag.x;
+    sumDrag.dy = ev.touches[0].clientY - sumDrag.y;
+  }, {passive:true});
+  document.addEventListener('touchend', sumSwipeFinish);
+  document.addEventListener('touchcancel', function(){ sumDrag.active = false; });
   var hframe = helperEl('helperFrame');
   if(hframe && hframe.addEventListener) hframe.addEventListener('load', helperFrameLoaded);
 }
