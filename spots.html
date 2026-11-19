@@ -338,21 +338,21 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="sheet">
     <h3 id="modalTitle">AI 브리핑 설정</h3>
-    <p class="desc">키를 넣으면 지금 시각·날씨·내 위치·상위 스팟을 바탕으로 “지금부터 2시간” 3줄 브리핑을 만들어 줍니다. 키는 <b>이 폰 브라우저(localStorage)에만</b> 저장되고, 브리핑을 만들 때 해당 AI 서버로만 전송됩니다. 페이지 코드에는 키가 들어가지 않습니다.</p>
+    <p class="desc">키를 넣으면 지금 시각·날씨·내 위치·상위 스팟을 바탕으로 “지금부터 2시간” 3줄 브리핑을 만들어 줍니다. 구글 Gemini는 크레딧이 소진되면 <b>402</b>로 막히기 때문에 지금은 <b>둘 다 무료인 Groq·OpenRouter</b>를 씁니다. 키는 <b>이 폰 브라우저(localStorage)에만</b> 저장되고, 브리핑을 만들 때 해당 AI 서버로만 전송됩니다.</p>
     <div class="field">
       <label for="fProvider">AI 서비스</label>
       <select id="fProvider">
-        <option value="gemini">Google Gemini (무료 키 발급 가능)</option>
-        <option value="openrouter">OpenRouter</option>
+        <option value="groq">Groq (무료 · 기본)</option>
+        <option value="openrouter">OpenRouter (무료 모델)</option>
       </select>
     </div>
     <div class="field">
       <label for="fModel">모델</label>
-      <input id="fModel" type="text" autocomplete="off" spellcheck="false" placeholder="gemini-flash-latest">
+      <input id="fModel" type="text" autocomplete="off" spellcheck="false" placeholder="openai/gpt-oss-120b">
     </div>
     <div class="field">
       <label for="fKey">API 키</label>
-      <input id="fKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIza… 또는 sk-or-…">
+      <input id="fKey" type="password" autocomplete="off" spellcheck="false" placeholder="gsk_… 또는 sk-or-…">
       <div class="hint" id="keyState" style="margin-top:6px"></div>
     </div>
     <div class="actions">
@@ -715,6 +715,19 @@ var LS_KEY = "sjd_";
 function lsGet(k, d){ try{ var v = localStorage.getItem(LS_KEY+k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(LS_KEY+k, JSON.stringify(v)); }catch(e){} }
 
+/* 자동 연동 행사 데이터 — 6시·18시에 갱신되는 events.json
+   APK 안에서는 로컬 파일이 아니라 공개 주소에서 받아 와야 새 일정이 자동으로 반영된다. */
+var EVENTS_URL = "events.json";
+
+/* 공개 페이지에는 키를 넣지 않는다. AI 브리핑을 쓰려면 화면의 AI 설정에서
+   무료 Groq/OpenRouter 키를 직접 넣어야 하고, 키는 그 브라우저(localStorage)에만 남는다. */
+var BUILTIN_AI = {
+  key: "",
+  model: "openai/gpt-oss-120b",
+  orKey: "",
+  orModel: "nvidia/nemotron-3.5-super-vl:free"
+};
+
 var S = {
   base: lsGet("base", null) || {id:"oryu", name:"오류동", lat:37.4956, ln:126.8427, gps:false},
   slot: "am",
@@ -727,7 +740,7 @@ var S = {
   auto: null,
   autoMeta: null,
   autoOff: lsGet("autoOff", []),
-  ai: lsGet("ai", {provider:"gemini", key:"", model:""}),
+  ai: lsGet("ai", null) || {provider:"groq", key:BUILTIN_AI.key, model:BUILTIN_AI.model, orKey:BUILTIN_AI.orKey, orModel:BUILTIN_AI.orModel},
   aiDone: false,
   briefMode: "rule"
 };
@@ -735,9 +748,13 @@ if(!S.base || typeof S.base.lat !== "number") S.base = {id:"oryu", name:"오류�
 if(!Array.isArray(S.evts)) S.evts = [];
 if(!Array.isArray(S.autoOff)) S.autoOff = [];
 if(S.rankMode !== "yield") S.rankMode = "near";
-
-/* 자동 연동 행사 데이터 — 6시·18시에 갱신된 events.json */
-var EVENTS_URL = "events.json";
+/* v1.2.0: 제미나이(402) → 무료 Groq·OpenRouter. 예전 설정이 남아 있으면 무료 키로 바꿔 둔다. */
+if(!S.ai || typeof S.ai !== "object") S.ai = {};
+if(S.ai.provider === "gemini" || !S.ai.provider){ S.ai.provider = "groq"; S.ai.key = ""; S.ai.model = ""; }
+if(!S.ai.key || !/^(gsk_|sk-or-)/.test(String(S.ai.key))) S.ai.key = BUILTIN_AI.key;
+if(!S.ai.model) S.ai.model = BUILTIN_AI.model;
+if(!S.ai.orKey || !/^sk-or-/.test(String(S.ai.orKey))) S.ai.orKey = BUILTIN_AI.orKey;
+if(!S.ai.orModel) S.ai.orModel = BUILTIN_AI.orModel;
 
 /* ===================== 유틸 ===================== */
 function $(id){ return document.getElementById(id); }
@@ -1302,15 +1319,23 @@ function aiPrompt(){
    + "- 후보 자리(시간대 수요 기준):\n" + topLine + "\n\n"
    + "참고 패턴: 하루 중 택시 승차 최다 시간대는 23시~01시(홍대·강남·가로수길·선릉·신림·건대 순). 심야(0~4시) 유동인구는 역삼1동·서교동·여의동·논현·신당·화양동 순. 금·토는 유흥 상권이 강하고, 일요일은 고속터미널·서울역·용산 같은 환승 거점이 강하다. 강북 3구(노원·강북·도봉)는 오전 8시 호출이 심야보다 많다. 새벽 4~6시엔 명동·을지로 호텔가와 서울역에서 공항 출발 콜이 나온다.";
 }
-var GEM_FALLBACK = ["gemini-flash-latest", "gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-lite-latest"];
-function gemOnce(key, model, prompt){
-  var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+/* ---- 무료 AI: Groq(글) · OpenRouter(무료 모델). 제미나이는 크레딧 소진(402)으로 뺐다. ---- */
+var GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+var GROQ_FALLBACK = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
+var OR_TEXT_FALLBACK = ["nvidia/nemotron-3.5-lightning:free", "nvidia/nemotron-3-ultra-550b-a55b:free"];
+function aiRetryable(err){
+  var st = err && err.status;
+  return st === 404 || st === 408 || st === 429 || st === 503 || st === 502 || st === 504;
+}
+function groqOnce(key, model, prompt){
   var ac = null;
   try{ ac = new AbortController(); }catch(e){}
   var timer = setTimeout(function(){ try{ ac.abort(); }catch(e){} }, 25000);
-  return fetch(url, {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({contents:[{parts:[{text:prompt}]}], generationConfig:{temperature:0.6, maxOutputTokens:600}}),
+  var body = {model:model, messages:[{role:"user", content:prompt}], max_tokens:700, temperature:0.6};
+  if(/gpt-oss/i.test(model)) body.reasoning_effort = "low";
+  return fetch(GROQ_URL, {
+    method:"POST", headers:{"Content-Type":"application/json", "Authorization":"Bearer " + key},
+    body: JSON.stringify(body),
     signal: ac ? ac.signal : undefined
   }).then(function(r){
     return r.text().then(function(txt){
@@ -1320,9 +1345,8 @@ function gemOnce(key, model, prompt){
         var msg = (j && j.error && j.error.message) ? j.error.message : ("HTTP " + r.status);
         var err = new Error(msg); err.status = r.status; err.model = model; throw err;
       }
-      var c = j && j.candidates && j.candidates[0];
-      var t = c && c.content && c.content.parts && c.content.parts[0] && c.content.parts[0].text;
-      if(!t){ var e2 = new Error("응답이 비어 있습니다 (안전 필터 가능성)"); e2.status = 200; e2.model = model; throw e2; }
+      var t = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+      if(!t){ var e2 = new Error("응답이 비어 있습니다"); e2.status = 200; e2.model = model; throw e2; }
       return t;
     });
   }).catch(function(err){
@@ -1331,39 +1355,49 @@ function gemOnce(key, model, prompt){
     throw err;
   });
 }
-/* 모델이 만료·혼잡하면 다음 후보로 자동 재시도 */
-function callGemini(key, model, prompt){
-  var chain = [], list = [(model||"").trim()].concat(GEM_FALLBACK);
+/* 모델이 막히거나 무료 한도(429)면 다음 후보로 자동 재시도 */
+function callGroq(key, model, prompt){
+  var chain = [], list = [(model||"").trim()].concat(GROQ_FALLBACK);
   for(var i=0;i<list.length;i++){ var m = list[i]; if(m && chain.indexOf(m) < 0) chain.push(m); }
   chain = chain.slice(0, 3);
   var idx = 0, lastErr = null;
   function next(){
-    if(idx >= chain.length) throw (lastErr || new Error("Gemini 응답 없음"));
+    if(idx >= chain.length) return Promise.reject(lastErr || new Error("Groq 응답 없음"));
     var m = chain[idx++];
-    return gemOnce(key, m, prompt).catch(function(err){
+    return groqOnce(key, m, prompt).catch(function(err){
       lastErr = err;
-      var st = err && err.status, msg = String((err && err.message) || "");
-      var retryable = (st === 404 || st === 503 || st === 429 || st === 408)
-        || /no longer available|not found|high demand|overload|unavailable|quota|exceeded/i.test(msg);
-      if(retryable) return next();
+      if(aiRetryable(err)) return next();
       throw err;
     });
   }
   return Promise.resolve().then(next);
 }
 function callOpenRouter(key, model, prompt){
-  var m = model || "google/gemini-2.5-flash";
+  var m = model || OR_TEXT_FALLBACK[0];
   var headers = {"Content-Type":"application/json", "Authorization":"Bearer " + key};
   try{ headers["HTTP-Referer"] = location.origin; headers["X-Title"] = "seoul-taxi-spots"; }catch(e){}
   return fetch("https://openrouter.ai/api/v1/chat/completions", {
     method:"POST", headers:headers,
-    body: JSON.stringify({model:m, messages:[{role:"user", content:prompt}], max_tokens:600, temperature:0.6})
+    body: JSON.stringify({model:m, messages:[{role:"user", content:prompt}], max_tokens:700, temperature:0.6, reasoning:{enabled:false}})
   }).then(function(r){
     return r.json().then(function(j){
       if(!r.ok){ throw new Error((j && j.error && j.error.message) ? j.error.message : ("HTTP " + r.status)); }
       var t = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
       if(!t) throw new Error("응답이 비어 있습니다");
       return t;
+    });
+  });
+}
+/* Groq 실패 → OpenRouter 무료 글 모델로 한 번 더 */
+function callAi(prompt){
+  var cfg = S.ai || {};
+  if(cfg.provider === "openrouter" && cfg.orKey){
+    return callOpenRouter(cfg.orKey, cfg.model || OR_TEXT_FALLBACK[0], prompt);
+  }
+  return callGroq(cfg.key, cfg.model, prompt).catch(function(err){
+    if(!cfg.orKey) throw err;
+    return callOpenRouter(cfg.orKey, OR_TEXT_FALLBACK[0], prompt).catch(function(e2){
+      throw (err && err.status !== 429) ? err : e2;
     });
   });
 }
@@ -1374,18 +1408,18 @@ function makeAiBrief(){
   btn.disabled = true; btn.textContent = "만드는 중…";
   $("briefBody").innerHTML = '<div class="hint">AI가 지금 상황으로 3줄 브리핑을 만드는 중입니다…</div>';
   var p = aiPrompt();
-  var call = cfg.provider === "openrouter" ? callOpenRouter(cfg.key, cfg.model, p) : callGemini(cfg.key, cfg.model, p);
+  var call = callAi(p);
   call.then(function(text){
     var lines = text.split(/\n+/).map(function(s){ return s.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim(); }).filter(function(s){ return s.length > 0; }).slice(0,4);
     var html = "";
     for(var i=0;i<lines.length;i++) html += "<p>" + esc(lines[i]) + "</p>";
     $("briefBody").innerHTML = html || '<div class="hint">응답을 읽지 못했습니다.</div>';
-    $("briefSrc").textContent = "AI · " + (cfg.provider === "openrouter" ? "OpenRouter" : "Gemini");
+    $("briefSrc").textContent = "AI · " + (cfg.provider === "openrouter" ? "OpenRouter" : "Groq");
     S.aiDone = true; S.briefMode = "ai";
     btn.disabled = false; btn.textContent = "AI 브리핑 다시";
   }).catch(function(e){
     $("briefBody").innerHTML = '<div class="err">AI 브리핑 실패: ' + esc(e && e.message ? e.message : "알 수 없는 오류")
-      + '<br>키·모델 이름을 확인해 주세요. 제미나이가 혼잡하면 잠시 뒤 다시 누르거나, AI 설정에서 OpenRouter로 바꾸면 됩니다. 급하면 “브리핑 새로 만들기”로 규칙 브리핑을 쓰세요.</div>';
+      + '<br>무료 AI는 분당·하루 호출 한도가 있어 429(혼잡)가 나면 1~2분 뒤 다시 눌러 주세요. 급하면 아래 “브리핑 새로 만들기”로 규칙 브리핑을 쓰세요.</div>';
     btn.disabled = false; btn.textContent = "AI 브리핑 다시 시도";
   });
 }
@@ -1393,11 +1427,11 @@ function makeAiBrief(){
 /* ===================== 설정 시트 ===================== */
 function openSettings(){
   $("modal").classList.add("open");
-  $("fProvider").value = S.ai.provider || "gemini";
+  $("fProvider").value = S.ai.provider || "groq";
   $("fModel").value = S.ai.model || "";
-  $("fKey").value = S.ai.key || "";
+  $("fKey").value = (S.ai.provider === "openrouter") ? (S.ai.orKey || "") : (S.ai.key || "");
   updateKeyState();
-  $("fModel").placeholder = (S.ai.provider === "openrouter") ? "google/gemini-2.5-flash" : "gemini-flash-latest";
+  $("fModel").placeholder = (S.ai.provider === "openrouter") ? OR_TEXT_FALLBACK[0] : "openai/gpt-oss-120b";
 }
 function closeSettings(){ $("modal").classList.remove("open"); }
 function updateKeyState(){
@@ -1410,19 +1444,21 @@ function saveAi(){
   var provider = $("fProvider").value;
   var model = $("fModel").value.trim();
   var key = $("fKey").value.trim();
-  S.ai = {provider:provider, model:model, key:key};
+  var next = {provider:provider, model:model, key:S.ai.key || BUILTIN_AI.key, orKey:S.ai.orKey || BUILTIN_AI.orKey, orModel:S.ai.orModel || BUILTIN_AI.orModel};
+  if(provider === "openrouter") next.orKey = key; else next.key = key;
+  S.ai = next;
   lsSet("ai", S.ai);
   updateKeyState();
-  toast(key ? "AI 설정을 저장했습니다" : "키를 지웠습니다 · 규칙 브리핑으로 동작");
+  toast(key ? "AI 설정을 저장했습니다" : "키를 지웠습니다 · 기본 키로 동작");
   closeSettings();
-  if(key) makeAiBrief(); else renderBrief();
+  makeAiBrief();
 }
 function clearAi(){
   $("fKey").value = "";
-  S.ai = {provider:S.ai.provider, model:S.ai.model, key:""};
+  S.ai = {provider:S.ai.provider, model:S.ai.model, key:BUILTIN_AI.key, orKey:BUILTIN_AI.orKey, orModel:BUILTIN_AI.orModel};
   lsSet("ai", S.ai);
   updateKeyState();
-  toast("API 키를 지웠습니다");
+  toast("직접 넣은 키를 지웠습니다 · 기본 키로 동작");
 }
 
 /* ===================== 공통 ===================== */
@@ -1496,7 +1532,9 @@ $("btnAiClear").addEventListener("click", clearAi);
 $("fKey").addEventListener("input", updateKeyState);
 $("fProvider").addEventListener("change", function(){
   var p = $("fProvider").value;
-  $("fModel").placeholder = p === "openrouter" ? "google/gemini-2.5-flash" : "gemini-flash-latest";
+  $("fModel").placeholder = p === "openrouter" ? OR_TEXT_FALLBACK[0] : "openai/gpt-oss-120b";
+  $("fKey").value = p === "openrouter" ? (S.ai.orKey || "") : (S.ai.key || "");
+  updateKeyState();
 });
 $("modal").addEventListener("click", function(e){ if(e.target === $("modal")) closeSettings(); });
 $("btnBrief").addEventListener("click", function(){
