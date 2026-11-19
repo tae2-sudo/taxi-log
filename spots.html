@@ -1325,6 +1325,8 @@ var GROQ_FALLBACK = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
 var OR_TEXT_FALLBACK = ["nvidia/nemotron-3.5-lightning:free", "nvidia/nemotron-3-ultra-550b-a55b:free"];
 function aiRetryable(err){
   var st = err && err.status;
+  var m = String((err && err.message) || '');
+  if(m === 'empty' || m === 'bad_json' || /응답이 비어/.test(m)) return true;
   return st === 404 || st === 408 || st === 429 || st === 503 || st === 502 || st === 504;
 }
 function groqOnce(key, model, prompt){
