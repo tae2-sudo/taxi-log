@@ -165,6 +165,7 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
 .ev-meta .dot.bad{background:#F87171}
 .ev-meta .ref{margin-left:auto;background:var(--surface3);border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:800;padding:5px 9px;border-radius:8px;cursor:pointer}
 .ev-sub{font-size:11px;font-weight:800;color:var(--dim);margin:12px 0 0;letter-spacing:.02em}
+.autob{display:inline-block;font-size:9.5px;font-weight:900;color:var(--emerald-2);border:1px solid #1d4d3f;background:#0a2019;padding:1px 5px;border-radius:5px;margin-left:5px;vertical-align:middle;letter-spacing:0}
 
 /* ===== list ===== */
 .list{margin-top:10px;display:flex;flex-direction:column;gap:8px}
@@ -1125,7 +1126,7 @@ function renderEvents(){
     var e = today[i], off = autoIsOff(e);
     html += '<button class="eva' + (off ? " off" : "") + '" data-auto="' + esc(e.id) + '" aria-pressed="' + (off ? "false" : "true") + '">'
       + '<span class="box">' + (off ? "" : "✓") + '</span>'
-      + '<span class="txt"><span class="t1">' + esc(e.title) + '</span>'
+      + '<span class="txt"><span class="t1">' + esc(e.title) + '<span class="autob">자동 연동</span></span>'
       + '<span class="t2">' + esc(e.venue) + ' · ' + esc(evWhen(e)) + '</span></span>'
       + '</button>';
   }
@@ -1136,7 +1137,7 @@ function renderEvents(){
     if(dup) continue;
     html += '<div class="eva next">'
       + '<span class="box">·</span>'
-      + '<span class="txt"><span class="t1">' + esc(t2.title) + '</span>'
+      + '<span class="txt"><span class="t1">' + esc(t2.title) + '<span class="autob">자동 연동</span></span>'
       + '<span class="t2">' + esc(t2.venue) + ' · <b>' + esc(evWhen(t2)) + '</b> · 내일</span></span>'
       + '</div>';
   }
