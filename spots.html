@@ -152,11 +152,14 @@ main{padding:12px 0 calc(40px + env(safe-area-inset-bottom))}
 .eva[aria-pressed="true"]{border-color:#4a3512;background:#1d1707}
 .eva .box{width:18px;height:18px;border-radius:6px;border:1.5px solid #475569;flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0B1120;font-weight:900}
 .eva[aria-pressed="true"] .box{background:var(--amber);border-color:var(--amber)}
-.eva .txt{flex:1;min-width:0}
-.eva .t1{font-size:13px;font-weight:800;line-height:1.35;letter-spacing:-.01em}
-.eva .t2{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px;line-height:1.4}
+.eva .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.eva .t1{display:block;font-size:13px;font-weight:800;line-height:1.35;letter-spacing:-.01em;word-break:keep-all;overflow-wrap:anywhere}
+.eva .t2{display:block;font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.4}
 .eva .t2 b{color:var(--amber-2);font-weight:800}
 .eva.off .t1{color:var(--dim);text-decoration:line-through}
+.eva.next{cursor:default;background:#0C1526;border-color:var(--line-soft);opacity:.9}
+.eva.next .t1{color:#B9C6D8}
+.eva.next .t2{color:var(--dim)}
 .ev-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--dim);font-weight:600}
 .ev-meta .dot{width:6px;height:6px;border-radius:50%;background:var(--emerald)}
 .ev-meta .dot.bad{background:#F87171}
@@ -1131,7 +1134,7 @@ function renderEvents(){
     var dup = false;
     for(var q=0;q<today.length;q++){ if(today[q].id === t2.id) dup = true; }
     if(dup) continue;
-    html += '<div class="eva off">'
+    html += '<div class="eva next">'
       + '<span class="box">·</span>'
       + '<span class="txt"><span class="t1">' + esc(t2.title) + '</span>'
       + '<span class="t2">' + esc(t2.venue) + ' · <b>' + esc(evWhen(t2)) + '</b> · 내일</span></span>'
