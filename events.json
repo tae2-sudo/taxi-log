@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-19T08:48:56+09:00",
+ "generated_at": "2026-11-20T06:02:39+09:00",
  "window": {
-  "from": "2026-11-19",
-  "to": "2026-11-21"
+  "from": "2026-11-20",
+  "to": "2026-11-22"
  },
  "sources": [
   {
@@ -19,8 +19,8 @@
   }
  ],
  "counts": {
-  "events": 5,
-  "performances": 5,
+  "events": 6,
+  "performances": 6,
   "games": 0
  },
  "events": [
@@ -123,6 +123,26 @@
     127.10797
    ],
    "end_est": "20:30"
+  },
+  {
+   "id": "spotts:concert-2026-diana-krall-seoul",
+   "source": "Spotts",
+   "venue_key": "sejong-center",
+   "venue": "세종문화회관 대극장",
+   "spot": "gwanghwamun",
+   "title": "SJF at the Theater 2026 - Diana Krall",
+   "category": "콘서트",
+   "start_date": "2026-11-22",
+   "end_date": "2026-11-22",
+   "hint": "서울 종로구에서 열리는 콘서트예요.",
+   "url": "https://spotts.kr/f/concert-2026-diana-krall-seoul",
+   "start_time": "18:00",
+   "time_exact": true,
+   "end_est": "19:15",
+   "geo": [
+    37.57286,
+    126.97607
+   ]
   }
  ]
 }
