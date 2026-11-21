@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-21T18:03:03+09:00",
+ "generated_at": "2026-11-22T06:01:54+09:00",
  "window": {
-  "from": "2026-11-21",
-  "to": "2026-11-23"
+  "from": "2026-11-22",
+  "to": "2026-11-24"
  },
  "sources": [
   {
@@ -19,31 +19,11 @@
   }
  ],
  "counts": {
-  "events": 5,
-  "performances": 5,
+  "events": 4,
+  "performances": 4,
   "games": 0
  },
  "events": [
-  {
-   "id": "spotts:concert-2026-yerin-baek-x-yoon-seok-cheol-seoul",
-   "source": "Spotts",
-   "venue_key": "sejong-center",
-   "venue": "세종문화회관 대극장",
-   "spot": "gwanghwamun",
-   "title": "SJF at the Theater 2026 - 백예린X윤석철",
-   "category": "콘서트",
-   "start_date": "2026-11-17",
-   "end_date": "2026-11-21",
-   "hint": "서울재즈페스티벌의 공연장 시리즈 'SJF at the Theater 2026'에서 백예린과 재즈 피아니스트 윤석철이 한 무대에 서요.",
-   "url": "https://spotts.kr/f/concert-2026-yerin-baek-x-yoon-seok-cheol-seoul",
-   "start_time": "20:00",
-   "time_exact": true,
-   "geo": [
-    37.57286,
-    126.97607
-   ],
-   "end_est": "22:30"
-  },
   {
    "id": "spotts:concert-2026-close-your-eyes-seoul",
    "source": "Spotts",
