@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-22T18:03:36+09:00",
+ "generated_at": "2026-11-23T06:03:02+09:00",
  "window": {
-  "from": "2026-11-22",
-  "to": "2026-11-24"
+  "from": "2026-11-23",
+  "to": "2026-11-25"
  },
  "sources": [
   {
@@ -19,86 +19,26 @@
   }
  ],
  "counts": {
-  "events": 4,
-  "performances": 4,
+  "events": 1,
+  "performances": 1,
   "games": 0
  },
  "events": [
   {
-   "id": "spotts:concert-2026-close-your-eyes-seoul",
-   "source": "Spotts",
-   "venue_key": "coex-artium",
-   "venue": "코엑스아티움 우리은행홀",
-   "spot": "samseong",
-   "title": "2026 CLOSE YOUR EYES FANCON",
-   "category": "콘서트",
-   "start_date": "2026-11-20",
-   "end_date": "2026-11-22",
-   "hint": "CLOSE YOUR EYES가 코엑스아티움 우리은행홀에서 팬콘서트를 열어요.",
-   "url": "https://spotts.kr/f/concert-2026-close-your-eyes-seoul",
-   "start_time": "19:30",
-   "time_exact": true,
-   "geo": [
-    37.50981,
-    127.06165
-   ],
-   "end_est": "22:00"
-  },
-  {
-   "id": "spotts:concert-2026-roy-kim-seoul",
-   "source": "Spotts",
-   "venue_key": "kspo-dome",
-   "venue": "올림픽공원 KSPO DOME",
-   "spot": "olympicpark",
-   "title": "2026-27 ROY KIM LIVE TOUR R:O:Y IN SEOUL",
-   "category": "콘서트",
-   "start_date": "2026-11-20",
-   "end_date": "2026-11-22",
-   "hint": "로이킴(ROY KIM)의 2026-27 라이브 투어 'R:O:Y' 서울 공연이자, 데뷔 후 처음 KSPO DOME에 서는 단독 콘서트예요.",
-   "url": "https://spotts.kr/f/concert-2026-roy-kim-seoul",
-   "start_time": "20:00",
-   "time_exact": true,
-   "geo": [
-    37.51923,
-    127.12747
-   ],
-   "end_est": "22:30"
-  },
-  {
-   "id": "spotts:concert-2026-evnne-seoul",
-   "source": "Spotts",
-   "venue_key": "yes24-live-hall",
-   "venue": "YES24 LIVE HALL",
-   "spot": "kondae",
-   "title": "EVNNE FAN-CONCERT [ONE TAKE] IN SEOUL",
-   "category": "콘서트",
-   "start_date": "2026-11-21",
-   "end_date": "2026-11-22",
-   "hint": "EVNNE가 이틀 동안 YES24 LIVE HALL에서 여는 노래 중심 팬콘서트예요. 공연장에 주차장이 없어 대중교통으로 가야 해요.",
-   "url": "https://spotts.kr/f/concert-2026-evnne-seoul",
-   "start_time": "18:00",
-   "time_exact": true,
-   "geo": [
-    37.54573,
-    127.10797
-   ],
-   "end_est": "20:30"
-  },
-  {
-   "id": "spotts:concert-2026-diana-krall-seoul",
+   "id": "spotts:concert-2026-woongsan-seoul",
    "source": "Spotts",
    "venue_key": "sejong-center",
    "venue": "세종문화회관 대극장",
    "spot": "gwanghwamun",
-   "title": "SJF at the Theater 2026 - Diana Krall",
+   "title": "웅산 Here's to life",
    "category": "콘서트",
-   "start_date": "2026-11-22",
-   "end_date": "2026-11-22",
+   "start_date": "2026-11-25",
+   "end_date": "2026-11-25",
    "hint": "서울 종로구에서 열리는 콘서트예요.",
-   "url": "https://spotts.kr/f/concert-2026-diana-krall-seoul",
-   "start_time": "18:00",
+   "url": "https://spotts.kr/f/concert-2026-woongsan-seoul",
+   "start_time": "19:30",
    "time_exact": true,
-   "end_est": "19:15",
+   "end_est": "21:20",
    "geo": [
     37.57286,
     126.97607
