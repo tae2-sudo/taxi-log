@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-23T18:03:12+09:00",
+ "generated_at": "2026-11-24T06:00:34+09:00",
  "window": {
-  "from": "2026-11-23",
-  "to": "2026-11-25"
+  "from": "2026-11-24",
+  "to": "2026-11-26"
  },
  "sources": [
   {
@@ -19,8 +19,8 @@
   }
  ],
  "counts": {
-  "events": 1,
-  "performances": 1,
+  "events": 2,
+  "performances": 2,
   "games": 0
  },
  "events": [
@@ -42,6 +42,26 @@
    "geo": [
     37.57286,
     126.97607
+   ]
+  },
+  {
+   "id": "spotts:concert-2026-le-poeme-harmonique-seoul",
+   "source": "Spotts",
+   "venue_key": "seoul-arts-center",
+   "venue": "예술의전당 콘서트홀",
+   "spot": "gyodae",
+   "title": "한화클래식 2026: 르 포엠 아르모니크, 태양왕의 음악",
+   "category": "콘서트",
+   "start_date": "2026-11-26",
+   "end_date": "2026-11-26",
+   "hint": "루이 14세 궁정의 화려한 음악을 고악기 연주로 들려주는 한화클래식 공연이에요.",
+   "url": "https://spotts.kr/f/concert-2026-le-poeme-harmonique-seoul",
+   "start_time": "19:30",
+   "time_exact": true,
+   "end_est": "21:20",
+   "geo": [
+    37.47931,
+    127.01175
    ]
   }
  ]
