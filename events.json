@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-24T18:00:41+09:00",
+ "generated_at": "2026-11-25T06:04:28+09:00",
  "window": {
-  "from": "2026-11-24",
-  "to": "2026-11-26"
+  "from": "2026-11-25",
+  "to": "2026-11-27"
  },
  "sources": [
   {
@@ -19,8 +19,8 @@
   }
  ],
  "counts": {
-  "events": 2,
-  "performances": 2,
+  "events": 5,
+  "performances": 5,
   "games": 0
  },
  "events": [
@@ -63,6 +63,66 @@
     37.47931,
     127.01175
    ]
+  },
+  {
+   "id": "spotts:concert-2026-ryeowook-seoul",
+   "source": "Spotts",
+   "venue_key": "coex-artium",
+   "venue": "코엑스아티움 우리은행홀",
+   "spot": "samseong",
+   "title": "RYEOWOOK’S AGIT CONCERT : 2026 Rucky draW",
+   "category": "콘서트",
+   "start_date": "2026-11-27",
+   "end_date": "2026-11-29",
+   "hint": "려욱이 아지트 콘서트 “2026 Rucky draW”로 11월 27일(금) 오후 6시, 28일(토) 오후 5시, 29일(일) 오후 4시 코엑스아티움 우리은행홀…",
+   "url": "https://spotts.kr/f/concert-2026-ryeowook-seoul",
+   "start_time": "18:00",
+   "time_exact": true,
+   "geo": [
+    37.50981,
+    127.06165
+   ],
+   "end_est": "20:30"
+  },
+  {
+   "id": "spotts:concert-2026-cho-yong-pil-seoul",
+   "source": "Spotts",
+   "venue_key": "kspo-dome",
+   "venue": "올림픽공원 KSPO DOME",
+   "spot": "olympicpark",
+   "title": "[서울] 2026 조용필 ＆ 위대한탄생 콘서트",
+   "category": "콘서트",
+   "start_date": "2026-11-27",
+   "end_date": "2026-11-29",
+   "hint": "서울 송파구에서 열리는 콘서트예요.",
+   "url": "https://spotts.kr/f/concert-2026-cho-yong-pil-seoul",
+   "start_time": "19:00",
+   "time_exact": true,
+   "geo": [
+    37.51923,
+    127.12747
+   ],
+   "end_est": "21:30"
+  },
+  {
+   "id": "spotts:concert-2026-dynamic-duo-seoul",
+   "source": "Spotts",
+   "venue_key": "olympic-hall",
+   "venue": "올림픽공원 올림픽홀",
+   "spot": "olympicpark",
+   "title": "2026 다이나믹 듀오 단독 콘서트 \"가끔씩 오래 보자\" - 서울",
+   "category": "콘서트",
+   "start_date": "2026-11-27",
+   "end_date": "2026-11-29",
+   "hint": "서울 송파구에서 열리는 콘서트예요.",
+   "url": "https://spotts.kr/f/concert-2026-dynamic-duo-seoul",
+   "start_time": "20:00",
+   "time_exact": true,
+   "geo": [
+    37.51474,
+    127.12759
+   ],
+   "end_est": "22:30"
   }
  ]
 }
