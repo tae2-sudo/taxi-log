@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-25T18:03:56+09:00",
+ "generated_at": "2026-11-26T06:03:39+09:00",
  "window": {
-  "from": "2026-11-25",
-  "to": "2026-11-27"
+  "from": "2026-11-26",
+  "to": "2026-11-28"
  },
  "sources": [
   {
@@ -19,31 +19,11 @@
   }
  ],
  "counts": {
-  "events": 5,
-  "performances": 5,
+  "events": 8,
+  "performances": 8,
   "games": 0
  },
  "events": [
-  {
-   "id": "spotts:concert-2026-woongsan-seoul",
-   "source": "Spotts",
-   "venue_key": "sejong-center",
-   "venue": "세종문화회관 대극장",
-   "spot": "gwanghwamun",
-   "title": "웅산 Here's to life",
-   "category": "콘서트",
-   "start_date": "2026-11-25",
-   "end_date": "2026-11-25",
-   "hint": "서울 종로구에서 열리는 콘서트예요.",
-   "url": "https://spotts.kr/f/concert-2026-woongsan-seoul",
-   "start_time": "19:30",
-   "time_exact": true,
-   "end_est": "21:20",
-   "geo": [
-    37.57286,
-    126.97607
-   ]
-  },
   {
    "id": "spotts:concert-2026-le-poeme-harmonique-seoul",
    "source": "Spotts",
@@ -123,6 +103,86 @@
     127.12759
    ],
    "end_est": "22:30"
+  },
+  {
+   "id": "spotts:concert-2026-ftisland-seoul",
+   "source": "Spotts",
+   "venue_key": "blue-square",
+   "venue": "블루스퀘어 우리WON뱅킹홀",
+   "spot": "itaewon",
+   "title": "2026 Awesome Stage X FTISLAND : FaTe PE",
+   "category": "콘서트",
+   "start_date": "2026-11-28",
+   "end_date": "2026-11-29",
+   "hint": "FTISLAND가 2026 어썸스테이지 “FaTe PE”로 11월 21일(토) 오후 8시와 22일(일) 오후 5시 블루스퀘어 우리WON뱅킹홀 무대에 서요. 공…",
+   "url": "https://spotts.kr/f/concert-2026-ftisland-seoul",
+   "start_time": "18:00",
+   "time_exact": true,
+   "geo": [
+    37.54061,
+    127.00264
+   ],
+   "end_est": "20:30"
+  },
+  {
+   "id": "spotts:concert-2026-hrtz-wav-seoul",
+   "source": "Spotts",
+   "venue_key": "jangchung-arena",
+   "venue": "장충체육관",
+   "spot": "ddp",
+   "title": "2026 hrtz.wav 1st CONNECT!ON 〈TUNE IN〉",
+   "category": "콘서트",
+   "start_date": "2026-11-28",
+   "end_date": "2026-11-28",
+   "hint": "서울 중구에서 열리는 콘서트예요.",
+   "url": "https://spotts.kr/f/concert-2026-hrtz-wav-seoul",
+   "start_time": "18:00",
+   "time_exact": true,
+   "end_est": "20:00",
+   "geo": [
+    37.55818,
+    127.00681
+   ]
+  },
+  {
+   "id": "spotts:concert-2026-ellegarden-seoul",
+   "source": "Spotts",
+   "venue_key": "yes24-live-hall",
+   "venue": "YES24 LIVE HALL",
+   "spot": "kondae",
+   "title": "ELLEGARDEN ‘Bad For Education Tour II (2026)’ 서울",
+   "category": "콘서트",
+   "start_date": "2026-11-28",
+   "end_date": "2026-11-29",
+   "hint": "ELLEGARDEN이 2025년 3월에 이어 다시 YES24 LIVE HALL에서 이틀 동안 여는 내한 공연이에요. 공연장에 주차장이 없어 대중교통으로 가야 …",
+   "url": "https://spotts.kr/f/concert-2026-ellegarden-seoul",
+   "start_time": "18:00",
+   "time_exact": true,
+   "end_est": "19:30",
+   "geo": [
+    37.54573,
+    127.10797
+   ]
+  },
+  {
+   "id": "spotts:concert-2026-cuatrocientos-seoul",
+   "source": "Spotts",
+   "venue_key": "seoul-arts-center",
+   "venue": "예술의전당 IBK기업은행챔버홀",
+   "spot": "gyodae",
+   "title": "피아졸라를 위하여 : 쿠아트로시엔토스",
+   "category": "콘서트",
+   "start_date": "2026-11-28",
+   "end_date": "2026-11-28",
+   "hint": "일본 최고의 탱고 밴드로 불리는 쿠아트로시엔토스가 피아졸라를 기리는 무대를 꾸려요.",
+   "url": "https://spotts.kr/f/concert-2026-cuatrocientos-seoul",
+   "start_time": "20:00",
+   "time_exact": true,
+   "end_est": "21:40",
+   "geo": [
+    37.47931,
+    127.01175
+   ]
   }
  ]
 }
