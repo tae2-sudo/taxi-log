@@ -1318,8 +1318,9 @@ function wgs84ToKatec(lat, lng){
 }
 
 /* ================= 확장 데이터 ================= */
+var EXTRA_VER = '20261127a';
 function loadExtra(){
-  var url = 'toilets-extra.json';
+  var url = 'toilets-extra.json?v=' + EXTRA_VER;
   fetch(url, {cache:'default'}).then(function(res){
     if(!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
