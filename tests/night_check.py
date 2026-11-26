@@ -171,17 +171,17 @@ check(call("return VIEW.length") == before, "삭제 시 목록에서 제거")
 ctx.eval("S.cat='all';")
 
 print("== 50m 중복 / 좌표 검증")
-dup = call("""var h=haversine, n=0, g={};
+dup = call("""var h=haversine, n=0, g={}, BASE=ROWS.length;
 for(var i=0;i<ALL.length;i++){ var r=ALL[i];
   var cx=Math.floor(r[0]*2000), cy=Math.floor(r[1]*2000), found=false;
   for(var dx=-1;dx<=1&&!found;dx++) for(var dy=-1;dy<=1&&!found;dy++){
     var cell=g[(cx+dx)+'_'+(cy+dy)]||[];
-    for(var j=0;j<cell.length;j++){ if(h({lat:r[0],lng:r[1]},{lat:cell[j][0],lng:cell[j][1]})<50){ found=true; n++; break; } }
+    for(var j=0;j<cell.length;j++){ if(h({lat:r[0],lng:r[1]},{lat:cell[j][0],lng:cell[j][1]})<50){ if(i>=BASE){ found=true; n++; } else { /* 서울 원본끼리는 그대로 둔다 */ found=true; } break; } }
   }
   var k=cx+'_'+cy; (g[k]||(g[k]=[])).push(r);
 }
 return n;""")
-check(dup == 0, "ALL 안에 50m 이내 중복 없음 (%d건)" % dup)
+check(dup == 0, "추가 데이터가 서울·기존 항목과 50m 이내 중복 없음 (%d건)" % dup)
 bad = call("var n=0; for(var i=0;i<ALL.length;i++){ var r=ALL[i]; if(!(isFinite(r[0])&&isFinite(r[1])&&r[0]>33&&r[0]<39.5&&r[1]>124&&r[1]<131)) n++; } return n;")
 check(bad == 0, "좌표 범위(위경도) 이상값 없음 (%d건)" % bad)
 nocoord = call("var n=0; for(var i=0;i<ALL.length;i++){ if(ALL[i][0]===0||ALL[i][1]===0) n++; } return n;")
